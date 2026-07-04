@@ -233,6 +233,20 @@ export interface ScheduledDate {
   journeyId: JourneyId;
 }
 
+/** Preferencias del recordatorio diario (ver lib/notify.ts + briefing.ts).
+    Sin backend: el push en segundo plano no es fiable; esto configura un
+    recordatorio LOCAL (Notifications API + service worker) que se dispara
+    mientras la app está abierta o donde el dispositivo lo permita. */
+export interface NotificationPrefs {
+  enabled: boolean;
+  /** Hora local del recordatorio (0-23). */
+  hour: number;
+  /** Minuto local (0-59). */
+  minute: number;
+  /** Última fecha (YYYY-MM-DD) en que se mostró — dedupe diario. */
+  lastShown: string;
+}
+
 /** localStorage — versión 4. Ver storage.ts (migración desde v2/v3). */
 export interface DareStore {
   version: 4;
@@ -284,4 +298,6 @@ export interface DareStore {
   dates: ScheduledDate[];
   /** Feedback diferido "+30 min"; se muestra en la próxima apertura. */
   pendingFeedback: { dareId: string; cat: Cat; at: number } | null;
+  /** Preferencias del recordatorio diario (v4). */
+  notifications: NotificationPrefs;
 }

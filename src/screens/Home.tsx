@@ -5,6 +5,7 @@ import { SPRINT_DAYS } from "../data/journeys";
 import { Ico } from "../components/Ico";
 import { Dots } from "../components/Dots";
 import { Effects } from "../components/Effects";
+import { Briefing } from "../components/Briefing";
 import { Nav } from "../components/Nav";
 import { wrap, pad } from "../components/layout";
 import { cardRevealFeedback } from "../lib/feedback";
@@ -16,7 +17,7 @@ export function Home({ app }: { app: DareApp }) {
     .toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })
     .toUpperCase();
   const greet = now.getHours() < 12 ? "Good morning." : now.getHours() < 19 ? "Good afternoon." : "Good evening.";
-  const { journey, chapter, currentDare, daresToday, card, cardOptions, dreamReward, daysDone, activeJourneys, isJourneyActive } = app;
+  const { journey, chapter, currentDare, daresToday, card, cardOptions, dreamReward, daysDone, activeJourneys, isJourneyActive, briefing } = app;
   const remaining = Math.max(0, SPRINT_DAYS - daysDone);
   const noJourney = activeJourneys.length === 0;
   const multiJourney = activeJourneys.length > 1;
@@ -66,6 +67,9 @@ export function Home({ app }: { app: DareApp }) {
         </div>
 
         <div style={{ ...pad, paddingTop: 0 }}>
+          {/* daily briefing (widget estilo Co-Star) */}
+          <Briefing briefing={briefing} accent={journey.color} />
+
           {/* daily card */}
           {!card ? (
             <div style={{ margin: "8px 0 26px" }}>

@@ -13,9 +13,14 @@
  * de modo que no duplicamos el `base: '/Dare/'` de vite.config.ts.
  *
  * CACHE lleva versión: al activar, se purgan las caches viejas. Si cambia la
- * estrategia o el shell, súbela (dare-v2, …).
+ * estrategia o el shell, súbela (dare-v3, …).
+ *
+ * NOTIFICACIONES: además de la PWA, el SW gestiona el clic del recordatorio
+ * diario (`notificationclick`) para enfocar/abrir la app. El disparo del
+ * recordatorio lo hace la app (frontera `src/lib/notify.ts`) mientras está
+ * viva; sin backend no hay push con la app cerrada. Ver CLAUDE.md.
  */
-const CACHE = "dare-v1";
+const CACHE = "dare-v2";
 const BASE = new URL("./", self.location).pathname; // "/Dare/"
 const SHELL = BASE; // documento raíz de la SPA
 
@@ -31,6 +36,24 @@ self.addEventListener("activate", (event) => {
       .keys()
       .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
+  );
+});
+
+// Clic en el recordatorio diario: enfoca una ventana ya abierta o abre una
+// nueva en la URL que la app adjuntó en `data.url`.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || BASE;
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((cs) => {
+        for (const c of cs) {
+          if ("focus" in c) return c.focus();
+        }
+        if (self.clients.openWindow) return self.clients.openWindow(target);
+      })
+      .catch(() => {}),
   );
 });
 
