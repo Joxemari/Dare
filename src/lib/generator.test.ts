@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { generateDare, allowedLocs, currentToDareLocs, destToDareLoc } from "./generator";
+import { generateDare, allowedLocs, currentToDareLocs, destToDareLoc, recentDareIds } from "./generator";
+import { DARES } from "../data/dares";
 import { journeyById } from "../data/journeys";
 import type { Checkin } from "../types";
 
@@ -64,5 +65,49 @@ describe("generateDare", () => {
   it("devuelve un `why` no vacío", () => {
     const { why } = generateDare(base, [], {}, ember);
     expect(why.length).toBeGreaterThan(0);
+  });
+
+  it("evita repetir un Dare visto recientemente si hay alternativas", () => {
+    // fija un contexto con varias opciones posibles y saca el favorito
+    const ci: Checkin = { ...base, energy: 6, time: 20, loc: "home", state: "normal" };
+    const alternatives = new Set<string>();
+    for (let i = 0; i < 30; i++) alternatives.add(generateDare(ci, [], {}, ember).dare.id);
+    expect(alternatives.size).toBeGreaterThan(1); // hay más de un Dare posible
+
+    const [repeated] = [...alternatives];
+    let repeats = 0;
+    for (let i = 0; i < 60; i++) {
+      if (generateDare(ci, [], {}, ember, [repeated]).dare.id === repeated) repeats++;
+    }
+    // el reciente sale mucho menos que sin penalización (idealmente casi nunca)
+    expect(repeats).toBeLessThan(20);
+  });
+
+  it("aún devuelve algo aunque todo el pool sea reciente", () => {
+    const ci: Checkin = { ...base, time: 3 }; // pool = smalls
+    const allSmallIds = DARES.filter((d) => d.cat === "small").map((d) => d.id);
+    const { dare } = generateDare(ci, [], {}, ember, allSmallIds);
+    expect(dare.cat).toBe("small");
+  });
+});
+
+describe("recentDareIds", () => {
+  it("devuelve ids únicos, más reciente primero", () => {
+    const history = [
+      { dareId: "a" },
+      { dareId: "b" },
+      { dareId: "a" },
+      { dareId: "c" },
+    ];
+    expect(recentDareIds(history)).toEqual(["c", "a", "b"]);
+  });
+
+  it("respeta el límite n", () => {
+    const history = [{ dareId: "a" }, { dareId: "b" }, { dareId: "c" }, { dareId: "d" }];
+    expect(recentDareIds(history, 2)).toEqual(["d", "c"]);
+  });
+
+  it("historial vacío → []", () => {
+    expect(recentDareIds([])).toEqual([]);
   });
 });
