@@ -78,6 +78,8 @@ src/
                Frontera con efectos (I/O), aisladas a propósito:
                  storage.ts    load/save/migrate sobre localStorage (v3)
                  useDare.ts    hook de React: estado de la app + orquestación
+                 feedback.ts   vibración (navigator.vibrate) + sonido sintetizado
+                               (Web Audio, sin assets). Impuro; no se testea.
   components/  Presentacionales: Ico, TarotArt, Dots, Nav, Meta, Effects,
                MilestoneModal, layout.
   screens/     Pantallas (Onboarding, Dream, Reentry, Home, Checkin, Detail,
