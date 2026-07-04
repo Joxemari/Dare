@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { C } from "../data/colors";
 
-/** Arte de una carta, servido como PNG estático desde `public/arcana/{id}.png`
+/** Arte de una carta, servido como WebP estático desde `public/arcana/{id}.webp`
     (ver CLAUDE.md — un fichero por carta, nombrado igual que su `id`).
     La URL respeta el `base: '/Dare/'` vía `import.meta.env.BASE_URL`. Si el PNG
     falta (carta aún no subida o id desconocido), cae a una marca ✦ para no
@@ -36,7 +36,7 @@ export function TarotArt({ id, size = 64 }: { id: string; size?: number }) {
 
   return (
     <img
-      src={`${import.meta.env.BASE_URL}arcana/${id}.png`}
+      src={`${import.meta.env.BASE_URL}arcana/${id}.webp`}
       alt=""
       aria-hidden="true"
       width={size}
