@@ -5,7 +5,6 @@ import { SPRINT_DAYS } from "../data/journeys";
 import { Ico } from "../components/Ico";
 import { Dots } from "../components/Dots";
 import { Effects } from "../components/Effects";
-import { TarotArt } from "../components/TarotArt";
 import { Nav } from "../components/Nav";
 import { wrap, pad } from "../components/layout";
 import type { DareApp } from "../lib/useDare";
@@ -83,15 +82,16 @@ export function Home({ app }: { app: DareApp }) {
               </div>
             </div>
           ) : (
-            // Recap de la carta ya elegida: miniatura a sangre (la imagen ya
-            // trae marco/número/nombre) + mensaje. Tocarla reabre el revelado.
+            // Recap de la carta ya elegida: icono de carta + su mensaje (la
+            // imagen no se repite aquí, ya se vio grande). Tocarlo reabre el
+            // revelado a pantalla completa.
             <button
               className="card flip"
               onClick={() => app.setScreen("card")}
               aria-label={`${card.num} ${card.name} — view card`}
               style={{
                 margin: "8px 0 26px",
-                padding: 14,
+                padding: 16,
                 borderColor: C.gold + "44",
                 display: "flex",
                 gap: 14,
@@ -103,7 +103,20 @@ export function Home({ app }: { app: DareApp }) {
                 color: C.text,
               }}
             >
-              <TarotArt id={card.id} width={64} radius={8} />
+              <span
+                style={{
+                  flexShrink: 0,
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  border: `1px solid ${C.gold}44`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Ico name="card" size={22} color={C.gold} sw={1.4} />
+              </span>
               <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
                 <p className="lbl" style={{ color: C.gold, marginBottom: 5 }}>
                   {card.num} · {card.name}
