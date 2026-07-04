@@ -13,7 +13,7 @@ export function defaultStore(): DareStore {
     journeyId: "ember",
     activeJourneyIds: [],
     journeyStartedAt: {},
-    journeyProgress: { ember: 0, iron: 0, water: 0 },
+    journeyProgress: { ember: 0, iron: 0, water: 0, clear: 0, current: 0, wild: 0, fire: 0 },
     journeysCompleted: [],
     dreamRewards: {},
     checkins: [],

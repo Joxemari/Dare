@@ -134,10 +134,26 @@ símbolo + label, nunca color a secas).
 ### Journeys — sprints de 7 días
 
 Cada Journey es un sprint de 7 días con un `plan` (día 1..7) y 4 chapters, cada
-chapter con `days:[from,to]` y `milestones` tipados (letter/goal/action/
-motivator/science) de **id estable**. The Ember e Iron Quiet están completos;
-Still Water es placeholder (sin `plan`). Los milestones son accionables (modal
-`MilestoneModal`): cada tipo tiene su CTA real y persiste en `store.milestones`.
+chapter con `days:[from,to]` y `milestones` tipados de **id estable**. Tipos de
+milestone: `letter/goal/action/motivator/science/proof/reflection/badge`. Los
+milestones son accionables (modal `MilestoneModal`): cada tipo tiene su CTA real
+y persiste en `store.milestones`.
+
+**Set final: 7 Journeys** (`JourneyId`), cada uno con símbolo, color propio
+(`JOURNEY_COLOR`) y Badge final (`identity`, 1 por Journey; su id existe también
+como Trait para el render del anillo). Los ids internos `ember/iron/water` se
+conservan (no romper datos guardados): **First Flame ✦** (slot `ember`),
+**Iron Quiet △** (`iron`), **Still Water ☾** (`water`), **Clear Signal ◇**
+(`clear`), **Steady Current ⌁** (`current`), **Wild Ground ↟** (`wild`),
+**Quiet Fire ⟁** (`fire`). Todos tienen `plan` completo (ya no hay placeholders).
+
+**Variantes de dificultad por día** (`DayPlan`): `soft` (◌ baja energía),
+`dare`/`real` (◆ recomendada), `bold` (⟁ más dura), más `trigger`, `companion`,
+`treat`, `proof` y una ficha corta `scienceTitle`/`scienceBody` ("Science Behind
+Today's Dare"). La ciencia usa lenguaje cuidadoso ("may support", "is associated
+with", "research suggests"); sin claims médicos. Pendiente (UI, próxima fase):
+selector Soft/Real/Bold en el detalle del día y usar "Day N" (no Today/Tomorrow)
+dentro de la pantalla Journey.
 
 **Arranque explícito y multi-journey.** Ningún Journey arranca solo: el
 onboarding lleva a Today sin activar nada. Un Journey se empieza pulsando

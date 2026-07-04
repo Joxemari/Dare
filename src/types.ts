@@ -33,7 +33,14 @@ export type Dest = "forest" | "pool" | "gym" | "padel" | "cafe";
 
 export type MentalState = "blocked" | "tired" | "normal" | "active" | "stressed";
 
-export type JourneyId = "ember" | "iron" | "water";
+export type JourneyId =
+  | "ember" // First Flame (id histórico conservado para no romper datos guardados)
+  | "iron" // Iron Quiet
+  | "water" // Still Water
+  | "clear" // Clear Signal
+  | "current" // Steady Current
+  | "wild" // Wild Ground
+  | "fire"; // Quiet Fire
 
 export type Tier = "common" | "rare" | "golden";
 
@@ -97,20 +104,34 @@ export interface TarotCard {
    tiene una acción real (fix del bug de "Start no hace nada"):
    letter/motivator/science abren una lectura; action abre un
    formulario; goal enruta a un Dare/flujo. */
-export type MilestoneType = "letter" | "goal" | "action" | "motivator" | "science";
+/* Tipos de milestone (spec Journey system):
+   letter (lectura), action (Setup Action: abre un formulario),
+   goal (Dare Goal: enruta a un Dare/flujo), science (ficha corta),
+   motivator (lectura breve), proof (línea de evidencia que se guarda),
+   reflection (escribe una línea), badge (Badge Unlock: cierre del Journey). */
+export type MilestoneType =
+  | "letter"
+  | "goal"
+  | "action"
+  | "motivator"
+  | "science"
+  | "proof"
+  | "reflection"
+  | "badge";
 
 export type ActionKind = "companionShelf" | "bossPlaylist" | "text";
 
 export interface Milestone {
-  /** id estable, p. ej. "ember-1-letter". Persistencia de completado. */
+  /** id estable, p. ej. "ff-1-letter". Persistencia de completado. */
   id: string;
   t: MilestoneType;
   title: string;
-  /** Cuerpo largo para letter/science/motivator (modal de lectura). */
+  /** Cuerpo largo para letter/science/motivator/reflection (modal de lectura). */
   body?: string;
   /** Para type "action": qué formulario abrir. */
   action?: ActionKind;
-  /** Para type "science": id en la biblioteca de ciencia. */
+  /** Para type "science": id en la biblioteca de ciencia. Si falta, el
+      milestone es autocontenido (title + body sirven de ficha corta). */
   scienceId?: string;
   /** Para type "goal": pista de a dónde lleva (check-in, feedback…). */
   goalHint?: string;
@@ -135,6 +156,23 @@ export interface DayPlan {
   dareId?: string;
   chapter?: boolean; // "Chapter Moment"
   dream?: boolean; // día de desbloqueo del Dream Reward
+
+  /* ---- Contenido enriquecido del día (spec Journey system) ----
+     Todo opcional para no romper planes antiguos. El día describe la
+     acción y sus variantes de dificultad, además de Trigger/Companion/
+     Treat/Proof y una ficha corta "Science Behind Today's Dare". */
+  /** ◆ Real Dare — la versión recomendada del día (descripción). */
+  dare?: string;
+  /** ◌ Soft Dare — versión de baja energía. */
+  soft?: string;
+  /** ⟁ Bold Dare — versión más dura. */
+  bold?: string;
+  trigger?: string;
+  companion?: string;
+  treat?: string;
+  proof?: string;
+  scienceTitle?: string;
+  scienceBody?: string;
 }
 
 export interface DreamRewardOption {
@@ -156,8 +194,10 @@ export interface Journey {
   lesson: string;
   /** Categorías hacia las que el Journey inclina el generador. */
   bias: Cat[];
-  /** Identidad que se desbloquea al terminar. */
+  /** Identidad / Badge que se desbloquea al terminar (1 por Journey). */
   identity: { id: string; name: string; line: string };
+  /** Línea de cierre del completion copy (spec). Opcional. */
+  completionLine?: string;
   dreamPrompt: string;
   dreamOptions: DreamRewardOption[];
   chapters: Chapter[];
