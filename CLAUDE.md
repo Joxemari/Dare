@@ -16,7 +16,7 @@ además de la operativa de desarrollo. No es solo una lista de comandos.
 - **Tailwind CSS v4** vía `@tailwindcss/vite`; los tokens viven en `src/index.css`.
 - **Vitest** para los tests.
 - Fuentes autoalojadas con `@fontsource` (Cormorant Garamond + Space Grotesk); sin CDN de Google.
-- Persistencia en **`localStorage`**, esquema versionado (v3) con migración.
+- Persistencia en **`localStorage`**, esquema versionado (v4) con migración.
 - **PWA instalable** sin dependencias extra (manifest estático + service worker
   a mano); offline y "añadir a inicio". Ver sección *PWA* más abajo.
 - Sin router: las pantallas son estado, no rutas.
@@ -59,7 +59,8 @@ src/
   data/        Datos de dominio (constantes, sin lógica): dares, wildcards,
                journeys (planes de 7 días + milestones tipados), tarot,
                symbols (mapa central de glifos), science (biblioteca),
-               traits (identidad, antes badges), rewards (treats/dates/dream,
+               traits (BADGES: hitos difíciles; persisten bajo la clave
+               `traits` del store), rewards (treats/dates/dream,
                antes draws), icons, colors.
   lib/         Lógica. La mayoría son funciones PURAS y deterministas:
                  generator.ts     selección del dare (scoring, no if/else),
@@ -101,9 +102,13 @@ usuario (`buildGenerationInput`) alimenta el prompt. Detalle completo en
 
 DARE no es un tracker de fitness: es un *Chief Energy Officer*. El vocabulario de
 producto NO usa gamificación clásica. Traducciones fijas (interno → UI):
-**Proof** (no XP) · **Identity** (no Levels) · **Traits** (no Badges) ·
-**Treat Draw** (no Reward Draw) · **Companion** (recompensa durante el dare) ·
-**Milestones** (no Marks) · **Momentum** (no flexible streak). No mostrar XP,
+**Proof** (no XP) · **Identity** (no Levels) · **Badges** (hitos con
+significado, no premios por cada acción; en el store persisten bajo la clave
+`traits` por compatibilidad) · **Treat Draw** (no Reward Draw) ·
+**Companion** (recompensa durante el dare) · **Milestones** (no Marks) ·
+**Momentum** (no flexible streak). Los Badges se ganan raramente: la mayoría de
+Dares NO desbloquean ninguno, y la completion muestra COMO MUCHO uno (el más
+importante; el resto quedan en Progress). No mostrar XP,
 niveles, "streak failed", calorías ni "burn". El sistema de recompensas está
 separado a propósito: *Trigger* (antes) · *Companion* (durante) · *Treat*
 (después) · *Date* (semanal) · *Dream Reward* (al terminar el Journey).
@@ -123,6 +128,21 @@ chapter con `days:[from,to]` y `milestones` tipados (letter/goal/action/
 motivator/science) de **id estable**. The Ember e Iron Quiet están completos;
 Still Water es placeholder (sin `plan`). Los milestones son accionables (modal
 `MilestoneModal`): cada tipo tiene su CTA real y persiste en `store.milestones`.
+
+**Arranque explícito y multi-journey.** Ningún Journey arranca solo: el
+onboarding lleva a Today sin activar nada. Un Journey se empieza pulsando
+"Begin Journey" en la pestaña Journey (`startJourney` → si falta Dream Reward,
+su setup primero). Pueden estar **varios activos a la vez**
+(`store.activeJourneyIds`): arrancar uno no detiene otro; Today ofrece una lane
+("Choose your lane") si hay más de uno. El progreso/completion de un Journey
+solo cuenta si está activo.
+
+**Capítulos por COMPLETADO, no por calendario** (`chapterState` /
+`unlockedChapterCount` / `currentChapter` en `journeys.ts`): el capítulo I nace
+desbloqueado; el N+1 se desbloquea en cuanto TODOS los milestones del N están
+hechos, aunque sea el mismo día. La línea de tiempo de la pantalla Journey usa
+etiquetas de SECUENCIA (**Day 1..Day 7**), no de calendario; la fila semanal de
+Progress (Today/Tomorrow/…) sí es de calendario.
 
 Por qué así:
 
@@ -178,24 +198,29 @@ que `index.html` enlaza manifest + apple-touch-icon.
 ### Datos persistidos (`localStorage`)
 
 - **Qué se guarda vs. qué se recalcula:** se persiste el *estado* del usuario
-  (onboarding, journey y progreso, journeys completados, dream rewards,
-  check-ins, dares del día, daily card, proof library, momentum, traits,
-  identidades, milestones, companion shelf, boss playlist, planned dares, dates,
-  historial de treats y feedback). Lo *derivable* (p. ej. el scoring de un dare,
-  el nº de proofs, la identidad actual) se recalcula, no se guarda.
+  (onboarding, journey en foco + `activeJourneyIds` + `journeyStartedAt`,
+  progreso por journey, journeys completados, dream rewards, check-ins, dares
+  del día, daily card, proof library, momentum, badges (clave `traits`),
+  `smallVersionUses`, identidades, milestones, companion shelf, boss playlist,
+  planned dares, dates, historial de treats y feedback). Lo *derivable* (p. ej.
+  el scoring de un dare, el nº de proofs, la identidad actual, el capítulo
+  desbloqueado) se recalcula, no se guarda.
 - **Guarda referencias, no copias.** Persiste **identificadores** (p. ej. el `id`
   del dare o de la carta) y re-resuelve el resto contra la fuente viva (`src/data`
   vía `lookup.ts`) al leer. Así, cambiar el contenido de un dato no rompe los
   datos antiguos guardados. Copiar el objeto entero dentro del store obliga a
   migrar en cuanto cambie su forma.
-- **Versionado de la forma + migración:** el store lleva `version` (hoy `3`) bajo
-  la clave `dare:v3`. `storage.ts` migra cualquier forma antigua/desconocida a v3
+- **Versionado de la forma + migración:** el store lleva `version` (hoy `4`) bajo
+  la clave `dare:v4`. `storage.ts` migra cualquier forma antigua/desconocida a v4
   mergeando sobre `defaultStore()` (ver `migrate()`), de modo que un campo que un
   build viejo nunca escribió recibe un valor por defecto. v2→v3 renombra el
   vocabulario del prototipo al de producto (streak→momentum, rewardDraws→treats,
-  tarot→dailyCard) y **descarta** `xp`/`badges` v2 (no mapean 1:1). La migración
-  es **idempotente**: aplicarla a un store ya v3 lo deja igual. Si cambia la
-  forma, **hay que subir la versión y ampliar la migración en la misma PR.**
+  tarot→dailyCard) y **descarta** `xp`/`badges` v2 (no mapean 1:1). v3→v4 añade el
+  modelo multi-journey: como un store v3 nunca tuvo `activeJourneyIds`, se
+  **deriva** (cualquier Journey con progreso > 0 o completado se marca activo),
+  así un usuario existente no pierde su Journey en curso. La migración es
+  **idempotente**: aplicarla a un store ya v4 lo deja igual. Si cambia la forma,
+  **hay que subir la versión y ampliar la migración en la misma PR.**
 - **Defensivo ante datos corruptos:** si el JSON no parsea, se arranca limpio con
   `defaultStore()` en vez de romper.
 

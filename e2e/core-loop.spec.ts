@@ -17,15 +17,14 @@ function guardPageErrors(page: Page): string[] {
   return errors;
 }
 
-/** Onboarding (2 pantallas) + Dream Reward → deja al usuario en Today. */
+/** Onboarding (2 pantallas) → Today. NO arranca ningún Journey (eso es explícito). */
 async function enterApp(page: Page) {
   await page.addInitScript(() => localStorage.clear()); // arranque limpio y determinista
   await page.goto("/Dare/");
   await expect(page.getByText("You don't need")).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("button", { name: "Enter DARE" }).click();
-  await expect(page.getByText(/What would make finishing/)).toBeVisible();
-  await page.getByText("Painting class").click();
+  // Onboarding lleva directo a Today, sin arrancar Journey.
   await expect(page.getByText("One dare today.")).toBeVisible();
 }
 
@@ -33,34 +32,33 @@ test("recorre el loop diario completo sin errores de página", async ({ page }) 
   const errors = guardPageErrors(page);
   await enterApp(page);
 
-  // el Dream Reward elegido aparece en Today
-  await expect(page.getByText(/Dream Reward: Painting class/)).toBeVisible();
+  // sin Journey activo, Today invita a elegir uno (sin bloquear el Dare)
+  await expect(page.getByText("Choose a Journey to begin.")).toBeVisible();
+  await expect(page.getByText("No active Journey")).toBeVisible();
 
   // draw daily card
   await page.locator('button[aria-label="Face-down daily card"]').first().click();
 
-  // check-in
+  // check-in — ningún botón viene preseleccionado
   await page.getByRole("button", { name: "Start check-in" }).click();
   await expect(page.getByText("How are you today?")).toBeVisible();
   await page.getByRole("button", { name: "6", exact: true }).click();
   await page.getByRole("button", { name: "20 min" }).click();
   await page.getByRole("button", { name: "Home", exact: true }).click();
-  await page.getByRole("button", { name: "Not now" }).click();
   await page.getByRole("button", { name: "Normal" }).click();
   await page.getByRole("button", { name: "Get my dare" }).click();
 
-  // sellado → reveal → detalle con sus secciones
-  await expect(page.getByText(/sealed/i)).toBeVisible();
-  await page.getByText(/Tap to reveal/).click();
-  await expect(page.getByText("Why this Dare today")).toBeVisible();
+  // "Get my dare" abre el Detail directamente — sin tap-to-reveal
   await expect(page.getByText("Expected Effect")).toBeVisible();
   await expect(page.getByText("Treat Locked")).toBeVisible();
+  // "Why this Dare today" existe pero al final de la página
+  await expect(page.getByText("Why this Dare today")).toBeVisible();
 
   // start → timer → finish → completion
   await page.getByRole("button", { name: "Start dare" }).click();
   await page.getByRole("button", { name: "Finish dare" }).click();
   await expect(page.getByText("Dare completed.")).toBeVisible();
-  await expect(page.getByText("Proof collected.")).toBeVisible();
+  await expect(page.getByText("Treat unlocked.")).toBeVisible();
 
   // no debe aparecer XP en ninguna parte visible de la completion
   const body = (await page.locator("body").innerText()).toLowerCase();
@@ -74,12 +72,17 @@ test("recorre el loop diario completo sin errores de página", async ({ page }) 
   expect(errors, errors.join("\n")).toEqual([]);
 });
 
-test("Journey: milestones accionables + tabs Progress/You", async ({ page }) => {
+test("Journey: Begin explícito, milestones accionables + tabs Progress/You", async ({ page }) => {
   const errors = guardPageErrors(page);
   await enterApp(page);
 
-  // Journey tab
-  await page.getByRole("button", { name: /Journey/ }).click();
+  // Journey tab — sin arrancar aún, ofrece "Begin Journey"
+  await page.getByRole("button", { name: "Journey", exact: true }).click();
+  await page.getByRole("button", { name: /Begin Journey/ }).click();
+
+  // sin Dream Reward → setup; al elegirlo, el Journey arranca y muestra el plan
+  await expect(page.getByText(/What would make finishing/)).toBeVisible();
+  await page.getByText("Painting class").click();
   await expect(page.getByText("The days ahead")).toBeVisible();
   await expect(page.getByText(/milestones completed/).first()).toBeVisible();
 
@@ -88,11 +91,12 @@ test("Journey: milestones accionables + tabs Progress/You", async ({ page }) => 
   await expect(page.getByRole("button", { name: "Mark as read" })).toBeVisible();
   await page.getByRole("button", { name: "Mark as read" }).click();
 
-  // Progress: Proof / Momentum / Traits
+  // Progress: Proof / Momentum / Badges + fila semanal
   await page.getByRole("button", { name: /Progress/ }).click();
+  await expect(page.getByText("This week")).toBeVisible();
   await expect(page.getByText("Proof collected")).toBeVisible();
   await expect(page.getByText("Momentum").first()).toBeVisible();
-  await expect(page.getByText(/Traits —/)).toBeVisible();
+  await expect(page.getByText(/Badges —/)).toBeVisible();
 
   // You: Identity
   await page.getByRole("button", { name: /You/ }).click();

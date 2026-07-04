@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { C } from "../data/colors";
 import { SYMBOLS } from "../data/symbols";
 import { wrap, pad } from "../components/layout";
@@ -36,8 +35,7 @@ const planOpts: [Dest, string][] = [
 ];
 
 export function Checkin({ app }: { app: DareApp }) {
-  const { draft, setDraft } = app;
-  const [planned, setPlanned] = useState<string[]>([]);
+  const { draft, setDraft, store } = app;
   const ready = draft.energy && draft.time && draft.loc && draft.state;
 
   return (
@@ -114,14 +112,14 @@ export function Checkin({ app }: { app: DareApp }) {
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 22 }}>
             {dests.map(([id, t]) => {
-              const val = id === "none" ? null : id;
-              const on = draft.dest === val;
+              // draft.dest === null significa SIN tocar → ningún botón marcado.
+              const on = draft.dest === id;
               return (
                 <button
                   key={id}
                   className={"pill" + (on ? " on" : "")}
                   style={{ fontSize: 12 }}
-                  onClick={() => setDraft({ ...draft, dest: val })}
+                  onClick={() => setDraft({ ...draft, dest: id })}
                 >
                   {t}
                 </button>
@@ -154,7 +152,8 @@ export function Checkin({ app }: { app: DareApp }) {
                 energy: draft.energy!,
                 time: draft.time!,
                 loc: draft.loc!,
-                dest: draft.dest,
+                // null (sin tocar) o "none" (Not now) → sin destino
+                dest: draft.dest && draft.dest !== "none" ? draft.dest : null,
                 state: draft.state!,
               })
             }
@@ -169,17 +168,14 @@ export function Checkin({ app }: { app: DareApp }) {
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {planOpts.map(([dest, label]) => {
-                const on = planned.includes(dest);
+                const on = store.plannedDares.some((p) => p.dest === dest);
                 return (
                   <button
                     key={dest}
                     className={"pill" + (on ? " on" : "")}
                     style={{ padding: "8px 14px", fontSize: 12, width: "auto" }}
-                    disabled={on}
-                    onClick={() => {
-                      app.planDare(dest, label.replace("Plan ", ""));
-                      setPlanned((p) => [...p, dest]);
-                    }}
+                    aria-pressed={on}
+                    onClick={() => app.togglePlanDare(dest, label.replace("Plan ", ""))}
                   >
                     {on ? "✓ " : ""}
                     {label}
@@ -188,7 +184,7 @@ export function Checkin({ app }: { app: DareApp }) {
               })}
             </div>
             <p style={{ fontSize: 11, color: C.faint, marginTop: 10 }}>
-              Planned Dares appear in your Days Ahead.
+              Tap to plan, tap again to remove. Planned Dares appear in Progress.
             </p>
           </div>
         </div>

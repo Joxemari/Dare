@@ -233,11 +233,20 @@ export interface ScheduledDate {
   journeyId: JourneyId;
 }
 
-/** localStorage — versión 3. Ver storage.ts (migración desde v2). */
+/** localStorage — versión 4. Ver storage.ts (migración desde v2/v3). */
 export interface DareStore {
-  version: 3;
+  version: 4;
   onboarded: boolean;
+  /** Journey "en foco" para la pantalla Journey y la lane de Today. */
   journeyId: JourneyId;
+  /**
+   * Journeys ACTIVOS (empezados explícitamente por el usuario). Un Journey
+   * solo arranca cuando se pulsa "Begin Journey": onboarding NO lo arranca.
+   * Se permiten varios a la vez (p. ej. The Ember + Iron Quiet).
+   */
+  activeJourneyIds: JourneyId[];
+  /** Fecha (YYYY-MM-DD) en que se empezó cada Journey. */
+  journeyStartedAt: Partial<Record<JourneyId, string>>;
   /** Nº de dares completados dentro de cada Journey (índice de día). */
   journeyProgress: Record<JourneyId, number>;
   /** Journeys terminados (sprint de 7 completado). */
@@ -256,8 +265,11 @@ export interface DareStore {
   proofLibrary: Array<{ date: string; dareId: string; text: string }>;
   /** Momentum (antes "flexible streak"). */
   momentum: { count: number; lastDate: string };
-  /** Traits desbloqueados (ids). */
+  /** Badges desbloqueados (ids). El campo persiste como `traits` por
+   *  compatibilidad con datos guardados; la UI los llama "Badges". */
   traits: string[];
+  /** Veces que se ha usado la versión de baja energía (para el badge Reset Artist). */
+  smallVersionUses: number;
   /** Identidades desbloqueadas (ids). */
   identities: string[];
   /** [categoría más reciente, segunda más reciente]. */

@@ -1,15 +1,18 @@
-import type { DareStore } from "../types";
+import type { DareStore, JourneyId } from "../types";
 
-const KEY = "dare:v3";
+const KEY = "dare:v4";
 /** Claves antiguas, si un build previo escribió alguna. */
+const KEY_V3 = "dare:v3";
 const KEY_V2 = "dare:v2";
 const KEY_V1 = "dare:v1";
 
 export function defaultStore(): DareStore {
   return {
-    version: 3,
+    version: 4,
     onboarded: false,
     journeyId: "ember",
+    activeJourneyIds: [],
+    journeyStartedAt: {},
     journeyProgress: { ember: 0, iron: 0, water: 0 },
     journeysCompleted: [],
     dreamRewards: {},
@@ -22,6 +25,7 @@ export function defaultStore(): DareStore {
     proofLibrary: [],
     momentum: { count: 0, lastDate: "" },
     traits: [],
+    smallVersionUses: 0,
     identities: [],
     lastCats: [],
     catCounts: {},
@@ -45,6 +49,11 @@ export function defaultStore(): DareStore {
  *   xp/streak/badges/rewardDraws/tarot → se descartan o remapean a
  *   proof/momentum/traits/treats/dailyCard. Se conserva lo transferible
  *   (progreso de journeys, check-ins, completados, feedback, catCounts).
+ *
+ * v3 → v4: modelo multi-journey. Se añade `activeJourneyIds` (journeys
+ *   ARRANCADOS): un store v3 nunca lo tuvo, así que se DERIVA de lo que ya
+ *   había — cualquier Journey con progreso > 0 o completado se considera
+ *   activo, de modo que un usuario existente conserva su Journey en curso.
  */
 function migrate(raw: unknown): DareStore {
   const base = defaultStore();
@@ -56,7 +65,7 @@ function migrate(raw: unknown): DareStore {
     ...base,
     onboarded: typeof o.onboarded === "boolean" ? o.onboarded : base.onboarded,
     journeyId: typeof o.journeyId === "string" ? (o.journeyId as DareStore["journeyId"]) : base.journeyId,
-    version: 3,
+    version: 4,
   };
 
   if (o.journeyProgress && typeof o.journeyProgress === "object") {
@@ -110,6 +119,23 @@ function migrate(raw: unknown): DareStore {
   if (Array.isArray(o.plannedDares)) merged.plannedDares = o.plannedDares as DareStore["plannedDares"];
   if (Array.isArray(o.dates)) merged.dates = o.dates as DareStore["dates"];
   if (o.pendingFeedback && typeof o.pendingFeedback === "object") merged.pendingFeedback = o.pendingFeedback as DareStore["pendingFeedback"];
+  if (typeof o.smallVersionUses === "number") merged.smallVersionUses = o.smallVersionUses;
+
+  // v4 — journeys activos. Si el store ya los traía (v4), se respetan;
+  // si no (v3 o anterior), se derivan del progreso para no perder el
+  // Journey en curso de un usuario existente.
+  if (Array.isArray(o.activeJourneyIds)) {
+    merged.activeJourneyIds = o.activeJourneyIds as JourneyId[];
+  } else {
+    const derived = new Set<JourneyId>(merged.journeysCompleted);
+    for (const id of Object.keys(merged.journeyProgress) as JourneyId[]) {
+      if ((merged.journeyProgress[id] ?? 0) > 0) derived.add(id);
+    }
+    merged.activeJourneyIds = [...derived];
+  }
+  if (o.journeyStartedAt && typeof o.journeyStartedAt === "object") {
+    merged.journeyStartedAt = o.journeyStartedAt as DareStore["journeyStartedAt"];
+  }
 
   return merged;
 }
@@ -119,8 +145,10 @@ export function load(): DareStore {
     const cur = localStorage.getItem(KEY);
     if (cur) {
       const parsed = JSON.parse(cur);
-      return parsed && parsed.version === 3 ? (parsed as DareStore) : migrate(parsed);
+      return parsed && parsed.version === 4 ? (parsed as DareStore) : migrate(parsed);
     }
+    const v3 = localStorage.getItem(KEY_V3);
+    if (v3) return migrate(JSON.parse(v3));
     const v2 = localStorage.getItem(KEY_V2);
     if (v2) return migrate(JSON.parse(v2));
     const v1 = localStorage.getItem(KEY_V1);
@@ -142,6 +170,7 @@ export function save(store: DareStore): void {
 export function clearStore(): void {
   try {
     localStorage.removeItem(KEY);
+    localStorage.removeItem(KEY_V3);
     localStorage.removeItem(KEY_V2);
     localStorage.removeItem(KEY_V1);
   } catch {

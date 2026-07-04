@@ -71,7 +71,7 @@ export function You({ app }: { app: DareApp }) {
 
           {/* stats grid */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 22 }}>
-            {([[done, "dares", C.green], [store.momentum.count, "momentum", C.coral], [store.traits.length, "traits", C.gold]] as const).map(
+            {([[done, "dares", C.green], [store.momentum.count, "momentum", C.coral], [store.traits.length, "badges", C.gold]] as const).map(
               ([v, k, col], i) => (
                 <div key={i} className="card" style={{ padding: "14px 8px", textAlign: "center" }}>
                   <p className="serif" style={{ fontSize: 28, color: col }}>

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { DARES } from "./dares";
 import { WILDCARDS } from "./wildcards";
-import { JOURNEYS, totalMilestones } from "./journeys";
+import { JOURNEYS, totalMilestones, chapterCompleted, unlockedChapterCount, currentChapter } from "./journeys";
 import { SCIENCE, findScience } from "./science";
 import { TRAITS } from "./traits";
 import { SYMBOLS } from "./symbols";
@@ -92,15 +92,44 @@ describe("integridad de los Journeys", () => {
   });
 });
 
-describe("Traits y Science", () => {
-  it("todos los Traits usan un símbolo válido y son únicos", () => {
+describe("desbloqueo de capítulos por completado", () => {
+  const ember = JOURNEYS.find((j) => j.id === "ember")!;
+  const allDone = (c: (typeof ember.chapters)[number]) =>
+    Object.fromEntries(c.milestones.map((m) => [m.id, true]));
+
+  it("solo el capítulo 1 está desbloqueado al empezar (sin milestones hechos)", () => {
+    expect(unlockedChapterCount(ember, {})).toBe(1);
+    expect(currentChapter(ember, {}).idx).toBe(0);
+  });
+
+  it("completar todos los milestones del capítulo I desbloquea el II de inmediato", () => {
+    const done = allDone(ember.chapters[0]);
+    expect(chapterCompleted(ember.chapters[0], done)).toBe(true);
+    expect(unlockedChapterCount(ember, done)).toBe(2);
+    expect(currentChapter(ember, done).idx).toBe(1);
+  });
+
+  it("completar dos capítulos seguidos desbloquea hasta el III sin cambio de día", () => {
+    const done = { ...allDone(ember.chapters[0]), ...allDone(ember.chapters[1]) };
+    expect(unlockedChapterCount(ember, done)).toBe(3);
+  });
+
+  it("un capítulo sin milestones no desbloquea a los siguientes (placeholder)", () => {
+    const water = JOURNEYS.find((j) => j.id === "water")!;
+    expect(unlockedChapterCount(water, {})).toBe(1);
+  });
+});
+
+describe("Badges y Science", () => {
+  it("todos los Badges usan un símbolo válido y son únicos", () => {
     const ids = new Set<string>();
     for (const t of TRAITS) {
       expect(SYMBOLS[t.sym], t.sym).toBeTruthy();
       expect(ids.has(t.id), t.id).toBe(false);
       ids.add(t.id);
     }
-    expect(TRAITS.length).toBeGreaterThanOrEqual(25);
+    // Badges = hitos, no premios: un set pequeño y difícil de conseguir.
+    expect(TRAITS.length).toBeGreaterThanOrEqual(10);
   });
 
   it("ninguna ficha de ciencia usa lenguaje prohibido", () => {
