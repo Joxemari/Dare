@@ -17,6 +17,8 @@ además de la operativa de desarrollo. No es solo una lista de comandos.
 - **Vitest** para los tests.
 - Fuentes autoalojadas con `@fontsource` (Cormorant Garamond + Space Grotesk); sin CDN de Google.
 - Persistencia en **`localStorage`**, esquema versionado (v3) con migración.
+- **PWA instalable** sin dependencias extra (manifest estático + service worker
+  a mano); offline y "añadir a inicio". Ver sección *PWA* más abajo.
 - Sin router: las pantallas son estado, no rutas.
 - Node **22**, gestor **npm** (hay `package-lock.json` → en CI se usa `npm ci`).
 
@@ -127,6 +129,34 @@ nombres van en **minúscula, una palabra, sin espacios** (la ruta de Pages
 distingue mayúsculas); `src/data/tarot.test.ts` verifica que los `id` cumplen esa
 forma. Añadir una carta = añadir su entrada en `tarot.ts` **y** su PNG en
 `public/arcana/` con el mismo `id`.
+
+### PWA (instalable + offline)
+
+DARE es una PWA instalable hecha **sin dependencias** (nada de `vite-plugin-pwa`):
+manifest estático, service worker a mano y unas etiquetas en `<head>`. Piezas:
+
+- **`public/manifest.webmanifest`** — `display: standalone`, tema `#111`, iconos.
+  Rutas **relativas** (`start_url`/`scope`/iconos), así resuelven contra `/Dare/`
+  sin hardcodear el base. Vite antepone `base` a las rutas `/…` de `index.html`,
+  pero NO al contenido del manifest (fichero estático) → por eso van relativas.
+- **`public/sw.js`** — estrategia elegida a propósito para iterar durante un test:
+  **network-first en navegación** (online sirve siempre el último deploy → los que
+  instalen NO se clavan en una versión vieja) y **cache-first en assets hasheados**
+  (inmutables por hash de contenido → rápido y offline tras la primera carga). El
+  `CACHE` lleva versión (`dare-v1`); al activar purga las viejas — **súbela si
+  cambias la estrategia o el shell**. El `BASE` se deriva del scope del SW, no del
+  literal `/Dare/`.
+- **`public/icons/`** — iconos derivados del glifo sparkle de `favicon.svg`
+  (`192`, `512`, `512-maskable`, `apple-touch-180`). Se generan con el Chromium de
+  Playwright; ver `public/icons/README.md`.
+- **Registro solo en producción** (`src/main.tsx`, guard `import.meta.env.PROD`),
+  para no cachear el dev server ni interferir con el e2e de Playwright.
+
+Por qué importa para el producto: en **iOS**, añadir a inicio corre en standalone y
+da **almacenamiento duradero**; sin instalar, Safari puede desalojar el
+`localStorage` a los ~7 días de inactividad y borrar el progreso del Journey.
+`src/pwa.test.ts` verifica que el manifest parsea, que cada icono existe en disco y
+que `index.html` enlaza manifest + apple-touch-icon.
 
 ### Datos persistidos (`localStorage`)
 
