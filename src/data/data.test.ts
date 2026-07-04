@@ -7,8 +7,11 @@ import { TRAITS } from "./traits";
 import { SYMBOLS } from "./symbols";
 import { CATS } from "./colors";
 import { CAT_ICO } from "./icons";
+import { validateDare } from "../lib/contentSchema";
 
 const ALL = [...DARES, ...WILDCARDS];
+const SCIENCE_IDS = SCIENCE.map((s) => s.id);
+const ALL_IDS = ALL.map((d) => d.id);
 
 /* Reglas duras del producto: ningún trabajo de suelo con manos apoyadas. */
 const BANNED = ["push-up", "push up", "plank", "burpee", "mountain climber"];
@@ -40,6 +43,14 @@ describe("integridad de los Dares", () => {
     for (const d of ALL) {
       expect(CATS[d.cat], d.cat).toBeTruthy();
       expect(CAT_ICO[d.cat], d.cat).toBeTruthy();
+    }
+  });
+
+  it("todo el corpus vivo pasa el validador de contenido (misma red que la generación)", () => {
+    for (const d of ALL) {
+      // ids existentes = todos menos él mismo, para no auto-colisionar.
+      const existingIds = ALL_IDS.filter((id) => id !== d.id);
+      expect(validateDare(d, { existingIds, scienceIds: SCIENCE_IDS }), d.id).toEqual([]);
     }
   });
 });
