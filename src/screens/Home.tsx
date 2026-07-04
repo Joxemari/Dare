@@ -7,6 +7,7 @@ import { Dots } from "../components/Dots";
 import { Effects } from "../components/Effects";
 import { Nav } from "../components/Nav";
 import { wrap, pad } from "../components/layout";
+import { cardRevealFeedback } from "../lib/feedback";
 import type { DareApp } from "../lib/useDare";
 
 export function Home({ app }: { app: DareApp }) {
@@ -69,7 +70,10 @@ export function Home({ app }: { app: DareApp }) {
                     key={c.id}
                     className="tcard"
                     style={{ aspectRatio: "5 / 8.5", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}
-                    onClick={() => app.pickCard(c.id)}
+                    onClick={() => {
+                      cardRevealFeedback();
+                      app.pickCard(c.id);
+                    }}
                     aria-label="Face-down daily card"
                   >
                     <div style={{ position: "absolute", inset: 6, border: `1px solid ${C.gold}33`, borderRadius: 9, pointerEvents: "none" }} />
@@ -87,7 +91,10 @@ export function Home({ app }: { app: DareApp }) {
             // revelado a pantalla completa.
             <button
               className="card flip"
-              onClick={() => app.setScreen("card")}
+              onClick={() => {
+                cardRevealFeedback();
+                app.setScreen("card");
+              }}
               aria-label={`${card.num} ${card.name} — view card`}
               style={{
                 margin: "8px 0 26px",
