@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { DARES } from "./dares";
 import { WILDCARDS } from "./wildcards";
-import { JOURNEYS, totalMilestones, chapterCompleted, unlockedChapterCount, currentChapter } from "./journeys";
+import { JOURNEYS, totalMilestones, chapterCompleted, unlockedChapterCount, currentChapter, SPRINT_DAYS } from "./journeys";
 import { SCIENCE, findScience } from "./science";
-import { TRAITS } from "./traits";
-import { SYMBOLS } from "./symbols";
+import { TRAITS, findTrait } from "./traits";
+import { SYMBOLS, JOURNEY_SYM } from "./symbols";
 import { CATS } from "./colors";
 import { CAT_ICO } from "./icons";
 import { validateDare } from "../lib/contentSchema";
@@ -79,16 +79,18 @@ describe("integridad de los Journeys", () => {
         for (const m of c.milestones) {
           expect(ids.has(m.id), `id duplicado ${m.id}`).toBe(false);
           ids.add(m.id);
-          if (m.t === "science") expect(findScience(m.scienceId), m.id).toBeTruthy();
+          // Un milestone de ciencia puede ser autocontenido (title+body) o
+          // enlazar la biblioteca; si trae scienceId, debe existir.
+          if (m.t === "science" && m.scienceId) expect(findScience(m.scienceId), m.id).toBeTruthy();
         }
       }
     }
   });
 
-  it("The Ember tiene milestones en las 4 chapters", () => {
-    const ember = JOURNEYS.find((j) => j.id === "ember")!;
-    expect(totalMilestones(ember)).toBeGreaterThanOrEqual(12);
-    for (const c of ember.chapters) expect(c.milestones.length).toBeGreaterThan(0);
+  it("First Flame (slot ember) tiene milestones en las 4 chapters", () => {
+    const ff = JOURNEYS.find((j) => j.id === "ember")!;
+    expect(totalMilestones(ff)).toBeGreaterThanOrEqual(12);
+    for (const c of ff.chapters) expect(c.milestones.length).toBeGreaterThan(0);
   });
 });
 
@@ -114,9 +116,86 @@ describe("desbloqueo de capítulos por completado", () => {
     expect(unlockedChapterCount(ember, done)).toBe(3);
   });
 
-  it("un capítulo sin milestones no desbloquea a los siguientes (placeholder)", () => {
-    const water = JOURNEYS.find((j) => j.id === "water")!;
-    expect(unlockedChapterCount(water, {})).toBe(1);
+  it("sin ningún milestone hecho, solo el capítulo 1 está desbloqueado en cualquier Journey", () => {
+    for (const j of JOURNEYS) expect(unlockedChapterCount(j, {}), j.id).toBe(1);
+  });
+});
+
+describe("Journey system — los 7 Journeys del set final", () => {
+  const EXPECTED_IDS = ["ember", "iron", "water", "clear", "current", "wild", "fire"];
+
+  it("están los 7 Journeys esperados", () => {
+    expect(JOURNEYS.map((j) => j.id).sort()).toEqual([...EXPECTED_IDS].sort());
+  });
+
+  it("cada Journey tiene 4 chapters y un plan de 7 días (sin placeholders)", () => {
+    for (const j of JOURNEYS) {
+      expect(j.chapters, j.id).toHaveLength(4);
+      expect(j.plan, j.id).toHaveLength(SPRINT_DAYS);
+      expect(j.plan.map((p) => p.day)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    }
+  });
+
+  it("cada Journey tiene un Badge final válido y su id existe como Badge (Trait)", () => {
+    for (const j of JOURNEYS) {
+      expect(j.identity.name && j.identity.line, `${j.id} badge copy`).toBeTruthy();
+      expect(findTrait(j.identity.id), `${j.id} badge → Trait ${j.identity.id}`).toBeTruthy();
+    }
+  });
+
+  it("el último chapter de cada Journey desbloquea el Badge (milestone type badge)", () => {
+    for (const j of JOURNEYS) {
+      const last = j.chapters[j.chapters.length - 1];
+      expect(last.milestones.some((m) => m.t === "badge"), `${j.id} sin badge unlock`).toBe(true);
+    }
+  });
+
+  it("cada Journey tiene símbolo primario, entrada en JOURNEY_SYM y color propio (distintos)", () => {
+    const colors = new Set<string>();
+    for (const j of JOURNEYS) {
+      expect(SYMBOLS[j.sym], `${j.id} sym`).toBeTruthy();
+      expect(JOURNEY_SYM[j.id], `${j.id} en JOURNEY_SYM`).toBeTruthy();
+      expect(j.color, `${j.id} color`).toBeTruthy();
+      colors.add(j.color);
+    }
+    expect(colors.size, "cada Journey un color diferente").toBe(JOURNEYS.length);
+  });
+
+  it("cada día del plan trae Trigger, Companion, Treat, Proof y ficha de ciencia", () => {
+    for (const j of JOURNEYS) {
+      for (const p of j.plan) {
+        const where = `${j.id} d${p.day}`;
+        expect(p.trigger, `${where} trigger`).toBeTruthy();
+        expect(p.companion, `${where} companion`).toBeTruthy();
+        expect(p.treat, `${where} treat`).toBeTruthy();
+        expect(p.proof, `${where} proof`).toBeTruthy();
+        expect(p.scienceTitle && p.scienceBody, `${where} science`).toBeTruthy();
+        expect(CATS[p.cat], `${where} cat`).toBeTruthy();
+      }
+    }
+  });
+
+  it("las variantes de dificultad, cuando existen, son texto no vacío", () => {
+    for (const j of JOURNEYS) {
+      for (const p of j.plan) {
+        for (const v of [p.soft, p.bold, p.dare]) {
+          if (v !== undefined) expect(typeof v === "string" && v.trim().length > 0, `${j.id} d${p.day}`).toBe(true);
+        }
+      }
+    }
+  });
+
+  it("las Dream Reward options son únicas y acaban en 'Create my own'", () => {
+    for (const j of JOURNEYS) {
+      const ids = j.dreamOptions.map((o) => o.id);
+      expect(new Set(ids).size, `${j.id} dream ids únicos`).toBe(ids.length);
+      const last = j.dreamOptions[j.dreamOptions.length - 1];
+      expect(last.custom, `${j.id} última opción custom`).toBe(true);
+    }
+  });
+
+  it("cada Journey trae completionLine (copy de cierre)", () => {
+    for (const j of JOURNEYS) expect(j.completionLine && j.completionLine.length > 0, j.id).toBeTruthy();
   });
 });
 

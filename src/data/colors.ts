@@ -13,7 +13,23 @@ export const C = {
   coral: "#FF6B6B",
   gold: "#FFC857",
   line: "#2A2A28",
+  // Acentos extra para dar a cada Journey su propio color (spec: cada
+  // Journey un color diferente). No son tokens de Tailwind; se usan inline.
+  teal: "#5FC9D6", // Steady Current — flujo
+  moss: "#8FB84E", // Wild Ground — naturaleza (verde distinto del de First Flame)
+  amber: "#E8894A", // Quiet Fire — brasa
 } as const;
+
+/** Color por Journey (spec: cada Journey un color propio). */
+export const JOURNEY_COLOR: Record<string, string> = {
+  ember: C.green, // First Flame — verde (arranque)
+  iron: C.coral, // Iron Quiet — rojo (fuerza)
+  water: C.purple, // Still Water — púrpura (calma)
+  clear: C.gold, // Clear Signal — dorado (claridad)
+  current: C.teal, // Steady Current — turquesa (corriente)
+  wild: C.moss, // Wild Ground — verde musgo (fuera)
+  fire: C.amber, // Quiet Fire — brasa (coraje)
+};
 
 export const CATS: Record<Cat, { color: string; label: string }> = {
   forest: { color: C.green, label: "Forest" },

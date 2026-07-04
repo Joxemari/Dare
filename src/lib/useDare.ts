@@ -72,6 +72,14 @@ function catFeedbackMap(s: DareStore): Partial<Record<Cat, number>> {
 
 /** Orden de importancia de los badges (para destacar solo uno en completion). */
 const BADGE_PRIORITY = [
+  // Badges finales de Journey (máxima prioridad al destacar en completion).
+  "first-mover",
+  "quiet-builder",
+  "regulator",
+  "clear-mind",
+  "returner",
+  "outwalker",
+  "forged",
   "proof-of-iron",
   "proof-of-fire",
   "quiet-power",

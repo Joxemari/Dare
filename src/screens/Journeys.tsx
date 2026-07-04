@@ -38,7 +38,8 @@ export function Journeys({ app }: { app: DareApp }) {
             else if (completed) status = "Completed";
             else if (active && p > 0) status = `In progress · ${remaining} ${remaining === 1 ? "day" : "days"} remaining`;
             else if (active) status = "Started";
-            else if (j.id === "iron") status = "Not started · Recommended after The Ember";
+            else if (j.id === "iron") status = "Not started · Recommended after First Flame";
+            else if (j.id === "fire") status = "Not started · Advanced — after First Flame or Iron Quiet";
             else status = "Not started";
 
             return (

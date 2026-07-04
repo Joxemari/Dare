@@ -57,6 +57,9 @@ export function MilestoneModal({
   else if (ms.t === "motivator") cta = "Save insight";
   else if (ms.t === "science") cta = "Got it";
   else if (ms.t === "goal") cta = "Mark complete";
+  else if (ms.t === "proof") cta = "Save proof";
+  else if (ms.t === "reflection") cta = "Save reflection";
+  else if (ms.t === "badge") cta = "Claim badge";
   else if (ms.action) cta = ms.action === "companionShelf" ? "Save Shelf" : ms.action === "bossPlaylist" ? "Save Boss Playlist" : "Done";
 
   if (ms.t === "science" && science) {

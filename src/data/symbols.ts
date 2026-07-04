@@ -34,9 +34,13 @@ export const sym = (k: SymbolKey): string => SYMBOLS[k] ?? SYMBOLS.spark;
 
 /** Símbolo primario por Journey. */
 export const JOURNEY_SYM: Record<string, SymbolKey> = {
-  ember: "spark",
-  iron: "strength",
-  water: "calm",
+  ember: "spark", // First Flame ✦
+  iron: "strength", // Iron Quiet △
+  water: "calm", // Still Water ☾
+  clear: "focus", // Clear Signal ◇
+  current: "momentum", // Steady Current ⌁
+  wild: "forest", // Wild Ground ↟
+  fire: "forge", // Quiet Fire ⟁
 };
 
 /** Símbolos de las secciones del detalle de un Dare. */
