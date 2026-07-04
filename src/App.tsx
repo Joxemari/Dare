@@ -23,7 +23,7 @@ export default function App() {
     case "dream":
       return <Dream app={app} />;
     case "card":
-      return app.card ? <Card app={app} /> : <Home app={app} />;
+      return <Card app={app} />;
     case "checkin":
       return <Checkin app={app} />;
     case "detail":

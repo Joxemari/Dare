@@ -766,6 +766,15 @@ export function currentChapter(j: Journey, done: Record<string, boolean>): Chapt
   return { ...j.chapters[idx], idx };
 }
 
+/** Una sola "próxima acción" de un Journey para la lista de Today: el primer
+ *  milestone sin completar del capítulo en curso; si no queda ninguno, la
+ *  promesa del Journey como cierre. */
+export function nextAction(j: Journey, done: Record<string, boolean>): string {
+  const ch = currentChapter(j, done);
+  const pending = ch.milestones.find((m) => !done[m.id]);
+  return pending?.title ?? j.promise;
+}
+
 /** Total de milestones de un Journey (para el % de completion). */
 export function totalMilestones(j: Journey): number {
   return j.chapters.reduce((n, c) => n + c.milestones.length, 0);

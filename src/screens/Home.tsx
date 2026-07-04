@@ -1,346 +1,88 @@
-import { C, LEVELS, CATS, colorOf } from "../data/colors";
-import { CAT_ICO } from "../data/icons";
-import { SYMBOLS } from "../data/symbols";
-import { SPRINT_DAYS } from "../data/journeys";
+import { C } from "../data/colors";
 import { Ico } from "../components/Ico";
-import { Dots } from "../components/Dots";
-import { Effects } from "../components/Effects";
 import { Briefing } from "../components/Briefing";
 import { Nav } from "../components/Nav";
+import { AtmosphereHero } from "../components/AtmosphereHero";
+import { TodayDareRevealCard } from "../components/TodayDareRevealCard";
+import { ActiveJourneyList } from "../components/ActiveJourneyList";
 import { wrap, pad } from "../components/layout";
-import { cardRevealFeedback } from "../lib/feedback";
 import type { DareApp } from "../lib/useDare";
 
+/* ============================================================
+   TODAY — un ritual diario mínimo, no un dashboard.
+   Header · atmósfera · lectura del día · un Dare oculto que se
+   revela de un toque · Journeys activos · navegación.
+   Sin proofs, sin métricas, sin calendario, sin greeting.
+   ============================================================ */
+
+/** Botón de icono minimalista para el header. */
+function IconButton({ name, label, onClick }: { name: string; label: string; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={label}
+      style={{
+        width: 38,
+        height: 38,
+        borderRadius: 12,
+        border: `1px solid ${C.line}`,
+        background: "transparent",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+        color: C.dim,
+      }}
+    >
+      <Ico name={name} size={18} sw={1.5} />
+    </button>
+  );
+}
+
 export function Home({ app }: { app: DareApp }) {
-  const now = new Date();
-  const dateStr = now
-    .toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })
-    .toUpperCase();
-  const greet = now.getHours() < 12 ? "Good morning." : now.getHours() < 19 ? "Good afternoon." : "Good evening.";
-  const { journey, chapter, currentDare, daresToday, card, cardOptions, dreamReward, daysDone, activeJourneys, isJourneyActive, briefing } = app;
-  const remaining = Math.max(0, SPRINT_DAYS - daysDone);
-  const noJourney = activeJourneys.length === 0;
-  const multiJourney = activeJourneys.length > 1;
+  const { briefing, journey } = app;
+  const revealed = !!app.currentDare && app.currentDare.revealed;
 
   return (
     <div className="dare-root">
       <div style={wrap}>
-        {/* hero glow */}
-        <div style={{ position: "relative" }}>
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              height: 260,
-              background: `radial-gradient(120% 100% at 50% 0%, ${journey.color}1A 0%, transparent 60%)`,
-              pointerEvents: "none",
-            }}
-          />
-          <div style={{ ...pad, position: "relative" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span className="lbl">{dateStr}</span>
-              <span style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                {daresToday > 1 && <span style={{ fontSize: 11, color: C.gold }}>{SYMBOLS.spark} {daresToday} today</span>}
-                <span style={{ color: journey.color, fontSize: 14 }}>{SYMBOLS[journey.sym]}</span>
-              </span>
-            </div>
-            <h1 className="serif" style={{ fontSize: 40, lineHeight: 1.12, margin: "22px 0 8px" }}>
-              {greet}
-              <br />
-              One dare today.
-            </h1>
-            {isJourneyActive ? (
-              <p className="lbl" style={{ color: journey.color, marginTop: 10 }}>
-                {journey.name} · Chapter {chapter.n} — {chapter.name}
-              </p>
-            ) : (
-              <p className="lbl" style={{ color: C.faint, marginTop: 10 }}>
-                No active Journey
-              </p>
-            )}
-            {isJourneyActive && dreamReward && (
-              <p style={{ fontSize: 12, color: C.gold, marginTop: 8 }}>
-                {SYMBOLS.dream} Dream Reward: {dreamReward} · {remaining} {remaining === 1 ? "Dare" : "Dares"} remaining
-              </p>
-            )}
+        <div style={{ ...pad, paddingBottom: 0 }}>
+          {/* Header: icono · TODAY · perfil */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
+            <IconButton name="card" label="Today's card" onClick={() => app.setScreen("card")} />
+            <span
+              className="lbl"
+              style={{ fontSize: 13, letterSpacing: "0.42em", color: C.text, paddingLeft: "0.42em" }}
+            >
+              TODAY
+            </span>
+            <IconButton name="person" label="Profile and settings" onClick={() => app.setScreen("you")} />
           </div>
-        </div>
 
-        <div style={{ ...pad, paddingTop: 0 }}>
-          {/* daily briefing (widget estilo Co-Star) */}
-          <Briefing briefing={briefing} accent={journey.color} />
+          {/* Atmósfera diaria (modular: símbolo/textos por props) */}
+          <AtmosphereHero />
 
-          {/* daily card */}
-          {!card ? (
-            <div style={{ margin: "8px 0 26px" }}>
-              <p className="lbl" style={{ marginBottom: 12 }}>
-                Draw your card for today
-              </p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-                {cardOptions.map((c, i) => (
-                  <button
-                    key={c.id}
-                    className="tcard"
-                    style={{ aspectRatio: "5 / 8.5", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}
-                    onClick={() => {
-                      cardRevealFeedback();
-                      app.pickCard(c.id);
-                    }}
-                    aria-label="Face-down daily card"
-                  >
-                    <div style={{ position: "absolute", inset: 6, border: `1px solid ${C.gold}33`, borderRadius: 9, pointerEvents: "none" }} />
-                    <div style={{ position: "absolute", inset: 11, border: `1px solid ${C.gold}18`, borderRadius: 6, pointerEvents: "none" }} />
-                    <span className="pulse" style={{ color: C.gold, fontSize: 18, opacity: 0.75, animationDelay: `${i * 0.4}s` }}>
-                      {SYMBOLS.spark}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            // Recap de la carta ya elegida: icono de carta + su mensaje (la
-            // imagen no se repite aquí, ya se vio grande). Tocarlo reabre el
-            // revelado a pantalla completa.
-            <button
-              className="card flip"
-              onClick={() => {
-                cardRevealFeedback();
-                app.setScreen("card");
-              }}
-              aria-label={`${card.num} ${card.name} — view card`}
-              style={{
-                margin: "8px 0 26px",
-                padding: 16,
-                borderColor: C.gold + "44",
-                display: "flex",
-                gap: 14,
-                alignItems: "center",
-                width: "100%",
-                cursor: "pointer",
-                fontFamily: "inherit",
-                textAlign: "left",
-                color: C.text,
-              }}
-            >
-              <span
-                style={{
-                  flexShrink: 0,
-                  width: 44,
-                  height: 44,
-                  borderRadius: 12,
-                  border: `1px solid ${C.gold}44`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Ico name="card" size={22} color={C.gold} sw={1.4} />
-              </span>
-              <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                <p className="lbl" style={{ color: C.gold, marginBottom: 5 }}>
-                  {card.num} · {card.name}
-                </p>
-                <p style={{ fontSize: 13.5, lineHeight: 1.55, color: C.text }}>{card.msg}</p>
-              </div>
-            </button>
-          )}
+          {/* Lectura del día (widget estilo Co-Star) — parte de la atmósfera */}
+          <div style={{ marginTop: 20 }}>
+            <Briefing briefing={briefing} accent={journey.color} />
+          </div>
 
-          {/* no active Journey — soft prompt (does not block the daily Dare) */}
-          {noJourney && !currentDare && (
-            <div className="card rise" style={{ padding: 20, marginBottom: 16, textAlign: "center", borderColor: journey.color + "44" }}>
-              <p className="serif" style={{ fontSize: 20, marginBottom: 4 }}>
-                Choose a Journey to begin.
-              </p>
-              <p style={{ color: C.dim, fontSize: 12.5, marginBottom: 14 }}>
-                A 7-day sprint toward real energy. You can still take a Dare today.
-              </p>
-              <button className="btn btn-line" onClick={() => app.setScreen("journeys")}>
-                Go to Journeys {SYMBOLS.spark}
+          {/* Un Dare oculto — revelado inline de un solo toque */}
+          <TodayDareRevealCard app={app} />
+
+          {/* Ajuste opcional y discreto: check-in de 30 s ("Get my Dare") */}
+          {!revealed && (
+            <div style={{ textAlign: "center", marginTop: 12 }}>
+              <button className="link" style={{ color: C.faint, fontSize: 12 }} onClick={() => app.setScreen("checkin")}>
+                Personalize · 30-sec check-in
               </button>
             </div>
           )}
 
-          {/* multiple active Journeys — choose your lane */}
-          {multiJourney && !currentDare && (
-            <div className="card rise" style={{ padding: 18, marginBottom: 16 }}>
-              <p className="lbl" style={{ marginBottom: 12 }}>
-                Choose your lane
-              </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {activeJourneys.map((j) => {
-                  const on = j.id === journey.id;
-                  return (
-                    <button
-                      key={j.id}
-                      className="pill"
-                      style={{
-                        padding: "10px 14px",
-                        fontSize: 13,
-                        textAlign: "left",
-                        borderColor: on ? j.color + "88" : C.line,
-                        color: on ? j.color : C.text,
-                      }}
-                      aria-pressed={on}
-                      onClick={() => app.setJourney(j.id)}
-                    >
-                      {SYMBOLS[j.sym]} &nbsp;{j.name}
-                      {on ? "  ·  focused" : ""}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+          {/* Journeys activos — próxima acción + Start (detalle en la pestaña Journey) */}
+          <ActiveJourneyList app={app} />
 
-          {/* before check-in */}
-          {!currentDare && (
-            <div className="card rise" style={{ padding: 26, textAlign: "center" }}>
-              <div className="pulse" style={{ fontSize: 22, color: journey.color, marginBottom: 12 }}>
-                {SYMBOLS.spark}
-              </div>
-              <p className="lbl" style={{ marginBottom: 6 }}>
-                Today's Dare
-              </p>
-              <p style={{ color: C.dim, fontSize: 13.5, marginBottom: 20 }}>
-                20 seconds. Then we choose for you.
-              </p>
-              <button className="btn btn-green" style={{ marginBottom: 10 }} onClick={() => app.setScreen("checkin")}>
-                Start check-in
-              </button>
-              <button className="btn btn-line" onClick={() => app.justDareMe()}>
-                Just dare me {SYMBOLS.spark}
-              </button>
-              <p style={{ fontSize: 11, color: C.faint, marginTop: 10 }}>The hard part is choosing. We do that for you.</p>
-            </div>
-          )}
-
-          {/* sealed — after check-in, before reveal */}
-          {currentDare && !currentDare.revealed && (
-            <button
-              className="card rise"
-              onClick={() => {
-                cardRevealFeedback();
-                app.revealDare();
-              }}
-              style={{
-                padding: 28,
-                textAlign: "center",
-                width: "100%",
-                cursor: "pointer",
-                fontFamily: "inherit",
-                color: C.text,
-                borderColor: currentDare.dare.wild ? C.gold + "66" : C.line,
-                boxShadow: `0 0 40px -18px ${colorOf(currentDare.dare)}`,
-              }}
-            >
-              <div className="pulse" style={{ fontSize: 26, color: colorOf(currentDare.dare), marginBottom: 12 }}>
-                {currentDare.dare.wild ? SYMBOLS.wildcard : SYMBOLS.spark}
-              </div>
-              <p className="lbl" style={{ marginBottom: 16, color: currentDare.dare.wild ? C.gold : C.dim }}>
-                {currentDare.dare.wild ? "Wildcard sealed" : "Today's Dare is sealed"}
-              </p>
-              <div style={{ display: "flex", justifyContent: "space-around", marginBottom: 16, fontSize: 11.5, color: C.dim }}>
-                <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
-                  <Dots n={LEVELS[currentDare.dare.level]} color={colorOf(currentDare.dare)} />
-                  <span className="lbl" style={{ fontSize: 8 }}>{currentDare.dare.level}</span>
-                </span>
-                <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
-                  <Ico name="headphones" size={16} color={C.dim} sw={1.4} />
-                  <span className="lbl" style={{ fontSize: 8 }}>Companion</span>
-                </span>
-                <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
-                  <span style={{ color: colorOf(currentDare.dare), fontSize: 15 }}>{SYMBOLS.momentum}</span>
-                  <span className="lbl" style={{ fontSize: 8 }}>{Object.keys(currentDare.dare.effects)[0] ?? "Energy"}</span>
-                </span>
-              </div>
-              <p style={{ fontSize: 14, color: currentDare.dare.wild ? C.gold : journey.color }}>Tap to reveal</p>
-            </button>
-          )}
-
-          {/* revealed — elegant dare card */}
-          {currentDare && currentDare.revealed && !currentDare.completed && (
-            <div className="card rise" style={{ padding: 22, borderColor: currentDare.dare.wild ? C.gold + "55" : C.line }}>
-              <div style={{ display: "flex", gap: 14, alignItems: "center", marginBottom: 14 }}>
-                <div
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 99,
-                    border: `1px solid ${colorOf(currentDare.dare)}`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    boxShadow: `0 0 24px -8px ${colorOf(currentDare.dare)}`,
-                    flexShrink: 0,
-                  }}
-                >
-                  <Ico name={CAT_ICO[currentDare.dare.cat]} size={22} color={colorOf(currentDare.dare)} sw={1.4} />
-                </div>
-                <div>
-                  <p className="lbl" style={{ color: colorOf(currentDare.dare), marginBottom: 3 }}>
-                    {currentDare.dare.wild ? "Wildcard" : "Today's dare"}
-                  </p>
-                  <p className="serif" style={{ fontSize: 22 }}>
-                    {currentDare.dare.title}
-                  </p>
-                  <p style={{ fontSize: 12.5, color: C.dim, marginTop: 2 }}>
-                    {currentDare.dare.min} min · {CATS[currentDare.dare.cat].label}
-                  </p>
-                </div>
-              </div>
-              <p className="serif" style={{ fontStyle: "italic", fontSize: 15, color: C.dim, marginBottom: 12 }}>
-                "{currentDare.dare.proof}"
-              </p>
-              <div style={{ marginBottom: 16 }}>
-                <Effects effects={currentDare.dare.effects} />
-              </div>
-              <button className="btn btn-green" onClick={() => app.startDare()}>
-                Start dare
-              </button>
-              <div style={{ textAlign: "center", marginTop: 12 }}>
-                <button className="link" onClick={() => app.setScreen("detail")}>
-                  View Dare
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* completed */}
-          {currentDare && currentDare.completed && (
-            <div className="card rise" style={{ padding: 26, textAlign: "center" }}>
-              <div style={{ color: journey.color, fontSize: 22, marginBottom: 10 }}>✓</div>
-              <p className="serif" style={{ fontSize: 22, marginBottom: 4 }}>
-                Done for today.
-              </p>
-              <p style={{ color: C.dim, fontSize: 13, marginBottom: 18 }}>
-                {currentDare.dare.title} · Proof collected
-              </p>
-              <button className="btn btn-line" onClick={() => app.oneMore()}>
-                One more dare {SYMBOLS.spark}
-              </button>
-            </div>
-          )}
-
-          {app.showPendingFb && (
-            <div className="card rise" style={{ padding: 22, marginTop: 16, borderColor: C.gold + "44" }}>
-              <p className="lbl" style={{ color: C.gold, marginBottom: 6 }}>
-                30 minutes later
-              </p>
-              <p style={{ fontSize: 14.5, marginBottom: 14 }}>More energy than before?</p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                {([["Much more", 2], ["A little more", 1], ["Same", 0], ["Less", -1]] as const).map(([t, v]) => (
-                  <button key={t} className="pill" onClick={() => app.giveFeedback(v)}>
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          {app.fbNote && (
-            <p className="rise" style={{ fontSize: 12.5, color: C.dim, marginTop: 14, textAlign: "center" }}>
-              Noted. This shapes tomorrow's dare. {SYMBOLS.spark}
-            </p>
-          )}
+          <div style={{ height: 8 }} />
         </div>
         <Nav tab="home" go={app.setScreen} />
       </div>
