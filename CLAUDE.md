@@ -153,7 +153,7 @@ Principios:
 ## Documentación y decisiones
 
 - Documenta las decisiones raras **en el propio código** (comentario), no solo en
-  la PR. Ejemplos ya presentes: `base: '/dare/'` en `vite.config.ts`, la
+  la PR. Ejemplos ya presentes: `base: '/Dare/'` en `vite.config.ts`, la
   migración en `storage.ts`, por qué `vitest.config.ts` está separado de
   `vite.config.ts`.
 - Este `CLAUDE.md` describe la **arquitectura**, no solo comandos.
@@ -189,5 +189,7 @@ tendrá), documenta en su momento:
   *Require status checks to pass* y marcar el check **"Tests y build"**. Hasta
   entonces la CI informa, pero no bloquea el merge en rojo.
 - **`.github/workflows/deploy.yml`** — en cada push a `main`, build y publicación
-  en **GitHub Pages** (<https://joxemari.github.io/dare/>). `vite.config.ts` fija
-  `base: '/dare/'` para que los assets resuelvan bajo `/dare/`.
+  en **GitHub Pages** (<https://joxemari.github.io/Dare/>). `vite.config.ts` fija
+  `base: '/Dare/'` para que los assets resuelvan bajo `/Dare/` (debe coincidir
+  EXACTAMENTE con el nombre del repo `Dare`: la ruta de Pages distingue mayúsculas;
+  un rename a `dare` no es posible porque GitHub trata ambos nombres como iguales).

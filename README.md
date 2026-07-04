@@ -31,15 +31,16 @@ npm run preview    # serve the production build locally
 ## Deploy — GitHub Pages
 
 Every push to `main` triggers `.github/workflows/deploy.yml`, which builds and
-publishes to <https://joxemari.github.io/dare/>.
+publishes to <https://joxemari.github.io/Dare/>.
 
 Two one-time settings on GitHub (the workflow can't do these for you):
 
 1. The repository must be **public** (Pages is free only for public repos on the free plan).
 2. **Settings → Pages → Source: GitHub Actions.**
 
-`vite.config.ts` sets `base: '/dare/'` so the built assets resolve under the
-`/dare/` path — without it they 404 on Pages.
+`vite.config.ts` sets `base: '/Dare/'` so the built assets resolve under the
+`/Dare/` path — without it they 404 on Pages. The base must match the repository
+name (`Dare`) exactly: the Pages path is case-sensitive.
 
 ## Project structure
 
