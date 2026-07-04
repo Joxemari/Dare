@@ -96,6 +96,12 @@ export const ICONS: Record<string, ReactNode> = {
     </>
   ),
   check: <path d="M5 12.5 L10 17.5 L19 7" />,
+  card: (
+    <>
+      <rect x="7" y="3.5" width="10" height="17" rx="2" />
+      <path d="M12 8 Q12.4 11.6 15 12 Q12.4 12.4 12 16 Q11.6 12.4 9 12 Q11.6 11.6 12 8 Z" />
+    </>
+  ),
 };
 
 export const CAT_ICO: Record<Cat, string> = {

@@ -114,7 +114,7 @@ export function You({ app }: { app: DareApp }) {
           {/* today's card */}
           {card && (
             <div className="card" style={{ padding: "14px 18px", marginBottom: 14, borderColor: C.gold + "33", display: "flex", gap: 12, alignItems: "center" }}>
-              <TarotArt id={card.id} size={26} />
+              <TarotArt id={card.id} width={34} radius={6} />
               <p style={{ fontSize: 12.5, color: C.dim }}>
                 <span style={{ color: C.gold }}>
                   {card.num} · {card.name}
