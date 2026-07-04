@@ -214,7 +214,10 @@ export function Home({ app }: { app: DareApp }) {
           {currentDare && !currentDare.revealed && (
             <button
               className="card rise"
-              onClick={() => app.revealDare()}
+              onClick={() => {
+                cardRevealFeedback();
+                app.revealDare();
+              }}
               style={{
                 padding: 28,
                 textAlign: "center",
