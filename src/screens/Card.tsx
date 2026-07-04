@@ -1,5 +1,6 @@
 import { C } from "../data/colors";
 import { TarotArt } from "../components/TarotArt";
+import { ShareCardButton } from "../components/ShareCardButton";
 import type { DareApp } from "../lib/useDare";
 
 /** Revelado de la carta del día a pantalla completa. Se llega desde Home al
@@ -40,6 +41,12 @@ export function Card({ app }: { app: DareApp }) {
           ⇒ ~81vh de alto, dejando sitio al hint sin recortar en pantallas bajas. */}
       <div className="flip" style={{ width: "min(94vw, 54vh)" }}>
         <TarotArt id={card.id} width="100%" radius={18} alt={`${card.num} · ${card.name}`} />
+      </div>
+
+      {/* Compartir: para el tap del contenedor (que navega a Home) para que
+          pulsar Share no salga de la pantalla. */}
+      <div onClick={(e) => e.stopPropagation()}>
+        <ShareCardButton card={card} />
       </div>
 
       <p className="lbl pulse" style={{ color: C.dim }}>
