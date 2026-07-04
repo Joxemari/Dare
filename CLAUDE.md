@@ -26,13 +26,23 @@ además de la operativa de desarrollo. No es solo una lista de comandos.
 npm install         # instalar dependencias (usa package-lock.json)
 npm run dev         # servidor de desarrollo (Vite). Viewport de referencia: 390px (móvil)
 
-npm test            # tests una vez (vitest run) — lo que corre la CI
+npm test            # tests unitarios una vez (vitest run) — lo que corre la CI
 npm run test:watch  # tests en modo watch durante el desarrollo
+npm run test:e2e    # smoke E2E (Playwright) — NO forma parte de `npm test`/CI
 npm run typecheck   # tsc -b --noEmit (chequeo de tipos sin emitir)
 
 npm run build       # tsc -b && vite build  → genera dist/
 npm run preview     # sirve el build de producción en local
 ```
+
+> **E2E (Playwright).** `e2e/core-loop.spec.ts` recorre el loop real en un
+> navegador (onboarding → dream → check-in → reveal → timer → completion →
+> journey/milestones → tabs) y falla ante cualquier error de página. Es
+> **opt-in**: necesita navegador (`npx playwright install chromium`) y arranca el
+> dev server, por eso NO está en `npm test` ni en el check "Tests y build". Corre
+> en PRs en un workflow aparte (`.github/workflows/e2e.yml`). En entornos con un
+> Chromium ya provisto, apúntalo con `PLAYWRIGHT_CHROMIUM=/ruta/chrome`. El
+> `tsc -b` del build no compila `e2e/` (el `tsconfig.app.json` solo incluye `src`).
 
 ---
 
