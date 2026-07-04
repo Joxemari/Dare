@@ -1,4 +1,4 @@
-import type { Cat, Dare, Level } from "../types";
+import type { Cat, Dare, Effect, Level } from "../types";
 
 /** Palette — mirror of the design tokens in index.css. */
 export const C = {
@@ -18,15 +18,28 @@ export const C = {
 export const CATS: Record<Cat, { color: string; label: string }> = {
   forest: { color: C.green, label: "Forest" },
   walk: { color: C.green, label: "Walk" },
-  dumbbells: { color: C.coral, label: "Dumbbells" },
+  dumbbells: { color: C.coral, label: "Strength" },
   fitboxing: { color: C.coral, label: "Fitboxing" },
   pool: { color: C.purple, label: "Pool" },
   padel: { color: C.gold, label: "Padel" },
+  tabata: { color: C.coral, label: "Tabata" },
+  carry: { color: C.coral, label: "Carry" },
   recovery: { color: C.purple, label: "Recovery" },
   focus: { color: C.gold, label: "Focus" },
   small: { color: C.green, label: "Small Dare" },
 };
 
 export const LEVELS: Record<Level, number> = { Easy: 1, Medium: 2, Strong: 3 };
+
+/** Color por efecto esperado (feeling-based, no neuroquímica). */
+export const EFFECT_COLOR: Record<Effect, string> = {
+  Energy: C.green,
+  Focus: C.gold,
+  Mood: C.gold,
+  Calm: C.purple,
+  Strength: C.coral,
+  Confidence: C.coral,
+  Recovery: C.purple,
+};
 
 export const colorOf = (d: Dare): string => (d.wild ? C.gold : CATS[d.cat].color);

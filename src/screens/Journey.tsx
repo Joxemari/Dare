@@ -1,20 +1,32 @@
 import { useState } from "react";
-import { C, CATS } from "../data/colors";
-import { CAT_ICO } from "../data/icons";
-import { EMBER_MARKS, EV_T, CH_ICO, CH_SIZE } from "../data/journeys";
+import { C } from "../data/colors";
+import { SYMBOLS } from "../data/symbols";
+import { MS_T, SPRINT_DAYS, totalMilestones } from "../data/journeys";
 import { Ico } from "../components/Ico";
 import { Nav } from "../components/Nav";
+import { MilestoneModal } from "../components/MilestoneModal";
 import { wrap, pad } from "../components/layout";
-import type { Cat } from "../types";
+import type { Milestone } from "../types";
 import type { DareApp } from "../lib/useDare";
 
 export function Journey({ app }: { app: DareApp }) {
-  const [openCh, setOpenCh] = useState<number | null>(1);
-  const { journey, jd, chapter, currentDare } = app;
-  const isEmber = journey.id === "ember";
-  const hints: Cat[] = journey.bias.length ? journey.bias : ["forest", "walk", "dumbbells", "recovery", "pool", "focus"];
-  const mDone = isEmber ? EMBER_MARKS.flat().filter((m) => m.done).length : 0;
-  const mTot = isEmber ? EMBER_MARKS.flat().length : 0;
+  const { journey, daysDone, chapter, store } = app;
+  const [openCh, setOpenCh] = useState<number | null>(chapter.idx);
+  const [modal, setModal] = useState<Milestone | null>(null);
+  const isPlaceholder = journey.plan.length === 0;
+
+  const allMs = journey.chapters.flatMap((c) => c.milestones);
+  const mDone = allMs.filter((m) => store.milestones[m.id]).length;
+  const mTot = totalMilestones(journey);
+  const currentDay = Math.min(SPRINT_DAYS, daysDone + 1);
+
+  const now = new Date();
+  const dayLabel = (i: number) => {
+    if (i === daysDone) return "Today";
+    if (i === daysDone + 1) return "Tomorrow";
+    const dt = new Date(now.getTime() + (i - daysDone) * 86400000);
+    return dt.toLocaleDateString("en-GB", { weekday: "short" });
+  };
 
   return (
     <div className="dare-root">
@@ -27,19 +39,19 @@ export function Journey({ app }: { app: DareApp }) {
             </button>
           </div>
           <h2 className="serif" style={{ fontSize: 34, marginBottom: 2, color: journey.color }}>
-            {journey.sym} {journey.name}
+            {SYMBOLS[journey.sym]} {journey.name}
           </h2>
           <p style={{ color: C.dim, fontSize: 13.5, marginBottom: 14 }}>{journey.tag}</p>
 
-          {/* marks band — Fabulous's 53% · 16/30 */}
-          {isEmber && (
+          {/* completion band */}
+          {!isPlaceholder && (
             <div
               className="card"
               style={{ padding: "14px 18px", marginBottom: 22, borderColor: journey.color + "44", display: "flex", justifyContent: "space-around", textAlign: "center" }}
             >
               <div>
                 <p className="serif" style={{ fontSize: 26, color: journey.color }}>
-                  {Math.round((mDone / mTot) * 100)}%
+                  {mTot ? Math.round((mDone / mTot) * 100) : 0}%
                 </p>
                 <p className="lbl" style={{ fontSize: 8.5 }}>
                   completion
@@ -51,7 +63,7 @@ export function Journey({ app }: { app: DareApp }) {
                   {mDone}/{mTot}
                 </p>
                 <p className="lbl" style={{ fontSize: 8.5 }}>
-                  marks achieved
+                  milestones completed
                 </p>
               </div>
             </div>
@@ -61,11 +73,17 @@ export function Journey({ app }: { app: DareApp }) {
           <p className="lbl" style={{ marginBottom: 12 }}>
             The days ahead
           </p>
-          <div className="hscroll" style={{ marginBottom: 8 }}>
-            {Array.from({ length: 7 }, (_, i) => {
-              const isToday = i === 0;
-              const isWild = i === 3;
-              const milestone = !isToday && (jd + i) % CH_SIZE === 0 && chapter.idx < 3;
+          <div className="hscroll" style={{ marginBottom: 10 }}>
+            {journey.plan.map((p, i) => {
+              const isDone = i < daysDone;
+              const isToday = i === daysDone;
+              const isDream = !!p.dream;
+              const isChapter = !!p.chapter;
+              const gold = isDream || isChapter;
+              const border = isToday ? journey.color : isDone ? C.green : gold ? C.gold + "77" : C.line;
+              const fg = isToday ? journey.color : isDone ? C.green : gold ? C.gold : C.dim;
+              const glyph = isDone ? "✓" : isToday ? SYMBOLS.spark : isDream ? SYMBOLS.dream : isChapter ? SYMBOLS.dream : SYMBOLS.cycle;
+              const label = isDone ? "Done" : isToday ? "Today" : isDream ? "Dream" : isChapter ? "Chapter" : "Sealed";
               return (
                 <div key={i} style={{ minWidth: 64, textAlign: "center" }}>
                   <div
@@ -74,46 +92,52 @@ export function Journey({ app }: { app: DareApp }) {
                       height: 52,
                       margin: "0 auto 6px",
                       borderRadius: 99,
-                      border: `1px solid ${isToday ? journey.color : isWild ? C.gold + "77" : C.line}`,
+                      border: `1px solid ${border}`,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       fontSize: 17,
-                      color: isToday ? journey.color : isWild ? C.gold : C.dim,
-                      opacity: isToday ? 1 : 0.75,
-                      boxShadow: isToday ? `0 0 22px -8px ${journey.color}` : isWild ? `0 0 18px -8px ${C.gold}` : "none",
+                      color: fg,
+                      opacity: isToday || isDone ? 1 : 0.75,
+                      boxShadow: isToday ? `0 0 22px -8px ${journey.color}` : gold && !isDone ? `0 0 18px -8px ${C.gold}` : "none",
                     }}
                   >
-                    {isToday ? (
-                      currentDare && currentDare.completed ? (
-                        <Ico name="check" size={18} color={journey.color} />
-                      ) : (
-                        "✦"
-                      )
-                    ) : isWild ? (
-                      "?"
-                    ) : (
-                      <Ico name={CAT_ICO[hints[i % hints.length]]} size={19} color={C.dim} sw={1.3} />
-                    )}
+                    {glyph}
                   </div>
-                  <p style={{ fontSize: 10, color: isToday ? C.text : C.faint }}>{isToday ? "Today" : `+${i}`}</p>
-                  {milestone && <p style={{ fontSize: 9, color: C.gold }}>chapter ✦</p>}
+                  <p style={{ fontSize: 10, color: isToday ? C.text : C.faint }}>{dayLabel(i)}</p>
+                  <p className="lbl" style={{ fontSize: 7.5, marginTop: 2, color: fg }}>
+                    {label}
+                  </p>
                 </div>
               );
             })}
           </div>
-          <p style={{ fontSize: 12.5, color: C.dim, marginBottom: 26 }}>
-            Tomorrow leans {CATS[hints[1 % hints.length]].label.toLowerCase()}. The rest stays sealed until its day.
+          <p style={{ fontSize: 12.5, color: C.dim, marginBottom: 18 }}>
+            Day {currentDay} of {SPRINT_DAYS} — {journey.plan[Math.min(SPRINT_DAYS - 1, daysDone)]?.title}. The rest stays sealed until its day.
           </p>
 
-          {/* milestone path — chapters unlock in order */}
+          {/* planned dares + dates (explican el color) */}
+          {(store.plannedDares.length > 0 || store.dates.length > 0) && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 22 }}>
+              {store.plannedDares.map((pd) => (
+                <span key={pd.id} className="pill" style={{ padding: "6px 12px", fontSize: 11, width: "auto", borderColor: C.purple + "77", color: C.purple }}>
+                  {SYMBOLS.focus} Planned · {pd.label}
+                </span>
+              ))}
+              {store.dates.map((d, i) => (
+                <span key={i} className="pill" style={{ padding: "6px 12px", fontSize: 11, width: "auto", borderColor: C.gold + "77", color: C.gold }}>
+                  {SYMBOLS.treat} Date · {d.when}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* milestone path — capítulos en orden */}
           {journey.chapters.map((c, i) => {
-            const from = i * CH_SIZE;
-            const to = (i + 1) * CH_SIZE;
-            const state = i < 3 && jd >= to ? "done" : jd >= from ? "now" : "locked";
-            const marks = isEmber ? EMBER_MARKS[i] : null;
-            const chDone = marks ? marks.filter((m) => m.done).length : 0;
-            const open = openCh === i && state !== "locked" && marks;
+            const state = currentDay > c.days[1] ? "done" : currentDay >= c.days[0] ? "now" : "locked";
+            const marks = c.milestones;
+            const chDone = marks.filter((m) => store.milestones[m.id]).length;
+            const open = openCh === i && state !== "locked" && marks.length > 0;
             const nodeCol = state === "done" ? C.green : state === "now" ? journey.color : C.faint;
             return (
               <div key={c.n}>
@@ -125,7 +149,7 @@ export function Journey({ app }: { app: DareApp }) {
                   </div>
                 )}
                 <button
-                  onClick={() => marks && state !== "locked" && setOpenCh(open ? null : i)}
+                  onClick={() => marks.length && state !== "locked" && setOpenCh(open ? null : i)}
                   style={{
                     display: "flex",
                     gap: 16,
@@ -133,7 +157,7 @@ export function Journey({ app }: { app: DareApp }) {
                     width: "100%",
                     background: "none",
                     border: "none",
-                    cursor: marks && state !== "locked" ? "pointer" : "default",
+                    cursor: marks.length && state !== "locked" ? "pointer" : "default",
                     fontFamily: "inherit",
                     color: C.text,
                     textAlign: "left",
@@ -150,11 +174,13 @@ export function Journey({ app }: { app: DareApp }) {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
+                        fontSize: 24,
+                        color: nodeCol,
                         opacity: state === "locked" ? 0.45 : 1,
                         boxShadow: state === "now" ? `0 0 26px -8px ${journey.color}` : "none",
                       }}
                     >
-                      <Ico name={CH_ICO[i]} size={24} color={nodeCol} sw={1.4} />
+                      {SYMBOLS[c.sym]}
                     </div>
                     {state === "done" && (
                       <div
@@ -183,42 +209,59 @@ export function Journey({ app }: { app: DareApp }) {
                       {c.name}
                     </p>
                     <p style={{ fontSize: 12, color: C.dim, marginTop: 2 }}>
-                      {state === "locked" ? "Not yet unlocked" : marks ? `${chDone}/${marks.length} marks achieved` : c.goal}
+                      {state === "locked" ? "Not yet unlocked" : marks.length ? `${chDone}/${marks.length} milestones completed` : c.goal}
                     </p>
                   </div>
-                  {marks && state !== "locked" && <span style={{ color: C.faint, fontSize: 13 }}>{open ? "▾" : "▸"}</span>}
+                  {marks.length > 0 && state !== "locked" && <span style={{ color: C.faint, fontSize: 13 }}>{open ? "▾" : "▸"}</span>}
                 </button>
 
-                {open && marks && (
+                {open && (
                   <div className="rise" style={{ margin: "12px 0 4px 76px" }}>
-                    {marks.map((m, k) => (
-                      <div
-                        key={k}
-                        className="card"
-                        style={{ padding: "12px 14px", marginBottom: 8, display: "flex", gap: 12, alignItems: "center", borderColor: m.done ? C.line : journey.color + "44" }}
-                      >
-                        <Ico name={EV_T[m.t].ico} size={16} color={m.done ? C.dim : journey.color} sw={1.4} />
-                        <div style={{ flex: 1 }}>
-                          <p className="lbl" style={{ fontSize: 8, marginBottom: 2 }}>
-                            {EV_T[m.t].label} · {k + 1}/{marks.length}
-                          </p>
-                          <p style={{ fontSize: 13, lineHeight: 1.35 }}>{m.title}</p>
-                        </div>
-                        {m.done ? (
-                          <Ico name="check" size={14} color={C.green} sw={2} />
-                        ) : (
-                          <span style={{ fontSize: 12, color: C.coral }}>Start</span>
-                        )}
-                      </div>
-                    ))}
+                    {marks.map((m, k) => {
+                      const isDone = !!store.milestones[m.id];
+                      return (
+                        <button
+                          key={m.id}
+                          onClick={() => setModal(m)}
+                          className="card"
+                          style={{
+                            padding: "12px 14px",
+                            marginBottom: 8,
+                            display: "flex",
+                            gap: 12,
+                            alignItems: "center",
+                            width: "100%",
+                            textAlign: "left",
+                            fontFamily: "inherit",
+                            color: C.text,
+                            cursor: "pointer",
+                            borderColor: isDone ? C.line : journey.color + "44",
+                          }}
+                        >
+                          <Ico name={MS_T[m.t].ico} size={16} color={isDone ? C.dim : journey.color} sw={1.4} />
+                          <div style={{ flex: 1 }}>
+                            <p className="lbl" style={{ fontSize: 8, marginBottom: 2 }}>
+                              {MS_T[m.t].label} · {k + 1}/{marks.length}
+                            </p>
+                            <p style={{ fontSize: 13, lineHeight: 1.35 }}>{m.title}</p>
+                          </div>
+                          {isDone ? (
+                            <Ico name="check" size={14} color={C.green} sw={2} />
+                          ) : (
+                            <span style={{ fontSize: 12, color: C.coral }}>Start</span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
             );
           })}
-          {!isEmber && (
+
+          {isPlaceholder && (
             <p style={{ fontSize: 12, color: C.faint, marginTop: 16 }}>
-              The marks for this journey are still being written. Dares count all the same.
+              This journey is coming soon. Dares still count all the same.
             </p>
           )}
           <p style={{ fontSize: 12.5, color: C.faint, textAlign: "center", marginTop: 22 }}>
@@ -227,6 +270,8 @@ export function Journey({ app }: { app: DareApp }) {
         </div>
         <Nav tab="journey" go={app.setScreen} />
       </div>
+
+      {modal && <MilestoneModal app={app} ms={modal} color={journey.color} onClose={() => setModal(null)} />}
     </div>
   );
 }

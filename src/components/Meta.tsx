@@ -3,13 +3,13 @@ import { CAT_ICO } from "../data/icons";
 import { Ico } from "./Ico";
 import type { Dare } from "../types";
 
-/** Place / During / After strip on the dare detail. */
+/** Trigger / Companion / Treat strip on the dare detail. */
 export function Meta({ dare }: { dare: Dare }) {
   const cat = CATS[dare.cat];
   const rows: [string, string, string][] = [
     [CAT_ICO[dare.cat], "Place", cat.label],
-    ["headphones", "During", dare.reward.length > 14 ? dare.reward.slice(0, 13) + "…" : dare.reward],
-    ["spark", "After", "Reward draw"],
+    ["headphones", "Companion", dare.companion.length > 14 ? dare.companion.slice(0, 13) + "…" : dare.companion],
+    ["spark", "After", "Treat draw"],
   ];
   return (
     <div

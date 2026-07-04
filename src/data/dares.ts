@@ -1,75 +1,165 @@
 import type { Dare } from "../types";
 
+/* ============================================================
+   DARES — datos de dominio, sin lógica.
+   Cada Dare lleva su Trigger (antes), Companion (durante),
+   Proof (statement que se colecciona al completar) y sus
+   Expected Effects (sensaciones, no neuroquímica).
+   Regla dura: NUNCA trabajo de suelo con manos apoyadas
+   (nada de push-ups, planks, burpees, mountain climbers).
+   ============================================================ */
 export const DARES: Dare[] = [
-  // SMALL (3 min)
-  { id: "out-the-door", title: "Out the Door", cat: "small", min: 3, xp: 10, level: "Easy", energy: [1, 10], locs: ["home", "outside", "forest"], reward: "Fresh air",
+  // ---------------- SMALL (3 min) ----------------
+  { id: "out-the-door", title: "Out the Door", cat: "small", min: 3, level: "Easy", energy: [1, 10], locs: ["home", "outside", "forest"],
+    trigger: "Just shoes.", companion: "One song.", proof: "Started before feeling ready.",
+    effects: { Energy: 1, Mood: 1 }, scienceId: "tiny-actions",
     steps: ["Put on shoes", "Step outside", "Walk for 3 minutes", "Come back if you want"] },
-  { id: "one-song", title: "One Song Standing", cat: "small", min: 3, xp: 10, level: "Easy", energy: [1, 10], locs: ["home"], reward: "One great song",
+  { id: "one-song", title: "One Song Standing", cat: "small", min: 3, level: "Easy", energy: [1, 10], locs: ["home"],
+    trigger: "Only one song.", companion: "One song you love.", proof: "Did something while tired.",
+    effects: { Energy: 1, Mood: 1 }, scienceId: "tiny-actions",
     steps: ["Play one song you love", "Stand up", "Move, sway or shadowbox until it ends", "That was it"] },
-  { id: "water-window", title: "Water & Window", cat: "small", min: 3, xp: 10, level: "Easy", energy: [1, 10], locs: ["home"], reward: "A clear head",
-    steps: ["Drink a glass of water", "Open a window", "20 slow bodyweight squats", "Done"] },
+  { id: "water-window", title: "Water & Window", cat: "small", min: 3, level: "Easy", energy: [1, 10], locs: ["home"],
+    trigger: "Three minutes count.", companion: "Daylight.", proof: "Did something even when energy was low.",
+    effects: { Energy: 1, Calm: 1 }, scienceId: "low-energy",
+    steps: ["Drink a glass of water", "Open a window", "20 slow standing squats", "Done"] },
 
-  // FOREST
-  { id: "operation-forest", title: "Operation Forest", cat: "forest", min: 18, xp: 35, level: "Easy", energy: [4, 7], locs: ["forest", "outside"], reward: "Your current podcast",
-    steps: ["Put on shoes", "Start your favorite podcast", "Walk to the pines", "Every time a segment ends: 10 squats", "Walk back and mark complete"] },
-  { id: "pine-reset", title: "Pine Reset", cat: "forest", min: 12, xp: 25, level: "Easy", energy: [1, 5], locs: ["forest", "outside"], reward: "Silence", states: ["stressed", "tired", "blocked"],
+  // ---------------- FOREST ----------------
+  { id: "operation-forest", title: "Operation Forest", cat: "forest", min: 18, level: "Easy", energy: [4, 7], locs: ["forest", "outside"],
+    trigger: "Your podcast is waiting.", companion: "Your current podcast.", proof: "Used nature as medicine.",
+    effects: { Calm: 3, Mood: 2, Energy: 1 }, scienceId: "nature",
+    steps: ["Put on shoes", "Start your favourite podcast", "Walk to the pines", "Every time a segment ends: 10 squats", "Walk back and mark complete"] },
+  { id: "pine-reset", title: "Pine Reset", cat: "forest", min: 12, level: "Easy", energy: [1, 5], locs: ["forest", "outside"], states: ["stressed", "tired", "blocked"],
+    trigger: "Don't decide. Step outside.", companion: "Forest silence.", proof: "Chose calm over spiraling.",
+    effects: { Calm: 3, Mood: 2 }, scienceId: "nature",
     steps: ["Leave the phone in your pocket", "Walk slowly into the pines", "Breathe in 4, out 6", "Notice three sounds", "Turn back whenever you want"] },
-  { id: "forest-intervals", title: "Forest Intervals", cat: "forest", min: 25, xp: 50, level: "Strong", energy: [7, 10], locs: ["forest", "outside"], reward: "Your loudest playlist",
+  { id: "forest-intervals", title: "Forest Intervals", cat: "forest", min: 25, level: "Strong", energy: [7, 10], locs: ["forest", "outside"],
+    trigger: "Start first. Feel better second.", companion: "Your loudest playlist.", proof: "Did the small hard thing.",
+    effects: { Energy: 3, Strength: 2, Mood: 2 }, scienceId: "walking-outdoors",
     steps: ["Warm up: 5 min easy walk", "Brisk pace to the pines", "5 × 30-second hill strides, walk back down", "Easy walk home"] },
-  { id: "dawn-pines", title: "Dawn Pines", cat: "forest", min: 20, xp: 40, level: "Medium", energy: [4, 8], locs: ["forest", "outside"], reward: "Coffee after",
+  { id: "dawn-pines", title: "Dawn Pines", cat: "forest", min: 20, level: "Medium", energy: [4, 8], locs: ["forest", "outside"],
+    trigger: "Don't decide. Step outside.", companion: "Coffee after.", proof: "Left the house when staying still was easier.",
+    effects: { Calm: 2, Energy: 2, Mood: 2 }, scienceId: "daylight",
     steps: ["Shoes on before you think about it", "Walk to the forest at an easy pace", "One loop among the trees", "Coffee is waiting when you're back"] },
 
-  // WALK
-  { id: "podcast-mile", title: "Podcast Mile", cat: "walk", min: 20, xp: 35, level: "Easy", energy: [3, 7], locs: ["outside", "forest"], reward: "Your current podcast",
+  // ---------------- WALK ----------------
+  { id: "podcast-mile", title: "Podcast Mile", cat: "walk", min: 15, level: "Easy", energy: [3, 7], locs: ["outside", "forest"],
+    trigger: "Your podcast is waiting.", companion: "Podcast.", proof: "Moved before negotiating.",
+    effects: { Energy: 2, Mood: 2 }, scienceId: "walking-outdoors",
     steps: ["Pick one episode", "Press play only once you're walking", "Walk until the segment ends", "Head home"] },
-  { id: "album-side-a", title: "Album Side A", cat: "walk", min: 25, xp: 40, level: "Medium", energy: [4, 8], locs: ["outside", "forest"], reward: "The full album, walking",
+  { id: "leave-door", title: "Leave the Door", cat: "walk", min: 15, level: "Easy", energy: [3, 8], locs: ["outside", "forest"],
+    trigger: "No workout. Just the door.", companion: "Playlist.", proof: "Left the house when staying still was easier.",
+    effects: { Energy: 2, Mood: 2, Calm: 1 }, scienceId: "walking-outdoors",
+    steps: ["Playlist ready before you sit back down", "Out the door — park, street, city, anywhere", "Walk one loop, no route to plan", "Home when the playlist says so"] },
+  { id: "album-side-a", title: "Album Side A", cat: "walk", min: 25, level: "Medium", energy: [4, 8], locs: ["outside", "forest"],
+    trigger: "Only one album.", companion: "One album, walking.", proof: "Repeated without needing it to be perfect.",
+    effects: { Energy: 2, Mood: 2 }, scienceId: "music-effort",
     steps: ["Choose an album, start at track one", "Walk the whole side A", "No skipping songs", "Turn around at the halfway track"] },
-  { id: "errand-run", title: "The Real Errand", cat: "walk", min: 10, xp: 20, level: "Easy", energy: [2, 7], locs: ["outside"], reward: "One thing off your list",
+  { id: "cafe-walk", title: "Café Walk", cat: "walk", min: 20, level: "Easy", energy: [3, 8], locs: ["outside", "forest"],
+    trigger: "Coffee walk.", companion: "Coffee at the far end.", proof: "Moved before negotiating.",
+    effects: { Energy: 2, Mood: 2, Calm: 1 }, scienceId: "walking-outdoors",
+    steps: ["Pick a café a walk away", "Walk there — no car", "Order the good coffee", "Walk part of the way back"] },
+  { id: "errand-run", title: "The Real Errand", cat: "walk", min: 10, level: "Easy", energy: [2, 7], locs: ["outside"],
+    trigger: "Start first. Feel better second.", companion: "One podcast segment.", proof: "Moved before negotiating.",
+    effects: { Energy: 2, Focus: 1 }, scienceId: "behavioral-activation",
     steps: ["Pick one real errand within walking distance", "Walk there — no car", "Do the thing", "Walk back. Two wins."] },
-  { id: "night-walk", title: "Night Walk", cat: "walk", min: 15, xp: 30, level: "Easy", energy: [2, 6], locs: ["outside"], reward: "Quiet streets", states: ["stressed", "tired"],
+  { id: "night-walk", title: "Night Walk", cat: "walk", min: 15, level: "Easy", energy: [2, 6], locs: ["outside"], states: ["stressed", "tired"],
+    trigger: "Low energy still counts.", companion: "Quiet streets.", proof: "Chose calm over spiraling.",
+    effects: { Calm: 2, Mood: 1 }, scienceId: "walking-outdoors",
     steps: ["Coat on, headphones optional", "Walk around the block, slow", "Let the day settle", "Come home lighter"] },
 
-  // DUMBBELLS (standing / seated — never hands on the floor)
-  { id: "netflix-iron", title: "Netflix & Iron", cat: "dumbbells", min: 20, xp: 45, level: "Medium", energy: [5, 9], locs: ["home"], reward: "Next episode of your series",
+  // ---------------- DUMBBELLS (de pie / sentado — nunca manos en el suelo) ----------------
+  { id: "iron-first-weight", title: "First Weight", cat: "dumbbells", min: 12, level: "Medium", energy: [4, 9], locs: ["home"],
+    trigger: "No gym. Just two weights.", companion: "Netflix / favourite series.", proof: "Chose strength without drama.",
+    effects: { Strength: 3, Confidence: 3, Energy: 2, Mood: 2 }, scienceId: "strength-training",
+    steps: ["Press play on your show", "Goblet squat × 10", "Dumbbell row × 10 each side", "Shoulder press × 10", "30-second farmer hold", "Two rounds. That was strength."] },
+  { id: "netflix-iron", title: "Netflix & Iron", cat: "dumbbells", min: 20, level: "Medium", energy: [5, 9], locs: ["home"],
+    trigger: "No gym. Just two weights.", companion: "Next episode of your series.", proof: "Built strength in small sets.",
+    effects: { Strength: 3, Confidence: 2, Energy: 2 }, scienceId: "dumbbells",
     steps: ["Press play on your show", "Every 5 minutes: 10 goblet squats", "Then 10 curls, 10 shoulder presses", "Repeat until the episode ends", "You trained. It barely noticed."] },
-  { id: "standing-five", title: "The Standing Five", cat: "dumbbells", min: 12, xp: 30, level: "Medium", energy: [4, 8], locs: ["home"], reward: "Your loudest playlist",
+  { id: "standing-five", title: "The Standing Five", cat: "dumbbells", min: 12, level: "Medium", energy: [4, 8], locs: ["home"],
+    trigger: "No gym. Just two weights.", companion: "Your loudest playlist.", proof: "Built strength in small sets.",
+    effects: { Strength: 2, Confidence: 2, Energy: 2 }, scienceId: "dumbbells",
     steps: ["Two rounds of five moves, 10 reps each:", "Goblet squat", "Curl", "Shoulder press", "Bent-over row", "30-second farmer hold"] },
-  { id: "heavy-carry", title: "Heavy Carry", cat: "dumbbells", min: 8, xp: 20, level: "Easy", energy: [3, 7], locs: ["home"], reward: "Done in 8 minutes",
-    steps: ["Grab both dumbbells", "Walk laps around the house or up the stairs", "Rest when grip fails", "Repeat until the timer ends"] },
-  { id: "coffee-lifts", title: "Coffee Lifts", cat: "dumbbells", min: 10, xp: 25, level: "Easy", energy: [3, 7], locs: ["home"], reward: "Coffee after",
+  { id: "coffee-lifts", title: "Coffee Lifts", cat: "dumbbells", min: 10, level: "Easy", energy: [3, 7], locs: ["home"],
+    trigger: "Start first. Feel better second.", companion: "Coffee after.", proof: "Chose strength without drama.",
+    effects: { Strength: 2, Energy: 1 }, scienceId: "dumbbells",
     steps: ["Start the coffee", "While it brews: squats, curls, presses", "3 easy sets, nothing heroic", "Drink the coffee you earned"] },
 
-  // FITBOXING
-  { id: "round-one", title: "Round One", cat: "fitboxing", min: 30, xp: 60, level: "Strong", energy: [7, 10], locs: ["gym"], reward: "The best shower of the week",
+  // ---------------- CARRY (fuerza funcional, sin suelo) ----------------
+  { id: "carry-strength", title: "Carry Strength", cat: "carry", min: 14, level: "Medium", energy: [4, 9], locs: ["home"],
+    trigger: "Pick things up. Carry them.", companion: "Short podcast.", proof: "Built strength in small sets.",
+    effects: { Strength: 3, Confidence: 2, Energy: 2 }, scienceId: "carries",
+    steps: ["Grab both dumbbells", "Farmer carry: walk laps or up the stairs", "10 goblet squats", "10 shoulder presses", "Rest when grip fails, repeat 3 rounds"] },
+  { id: "heavy-carry", title: "Heavy Carry", cat: "carry", min: 8, level: "Easy", energy: [3, 7], locs: ["home"],
+    trigger: "Eight minutes. No negotiation.", companion: "One track on repeat.", proof: "Built strength in small sets.",
+    effects: { Strength: 2, Confidence: 1 }, scienceId: "carries",
+    steps: ["Grab both dumbbells", "Walk laps around the house or up the stairs", "Rest when grip fails", "Repeat until the timer ends"] },
+
+  // ---------------- TABATA (de pie — sin burpees, planks ni push-ups) ----------------
+  { id: "micro-tabata", title: "Micro Tabata", cat: "tabata", min: 8, level: "Medium", energy: [5, 10], locs: ["home"],
+    trigger: "Eight minutes. No negotiation.", companion: "Boss playlist.", proof: "Did intensity without overthinking.",
+    effects: { Energy: 3, Mood: 2, Strength: 2, Focus: 2 }, scienceId: "tabata",
+    steps: ["20 seconds on / 10 seconds off", "Round 1 — squats", "Round 2 — reverse lunges", "Round 3 — shadowboxing", "Round 4 — fast feet", "Eight minutes, done before your brain argues"] },
+  { id: "dumbbell-tabata", title: "Dumbbell Tabata", cat: "tabata", min: 8, level: "Medium", energy: [5, 10], locs: ["home"],
+    trigger: "Eight minutes. No negotiation.", companion: "Boss playlist.", proof: "Did intensity without overthinking.",
+    effects: { Energy: 3, Strength: 2, Mood: 2 }, scienceId: "tabata",
+    steps: ["20 seconds on / 10 seconds off, weights in hand", "Curls", "Shoulder press", "Goblet squat", "Repeat the circuit until 8 minutes end"] },
+
+  // ---------------- FITBOXING ----------------
+  { id: "round-one", title: "Round One", cat: "fitboxing", min: 30, level: "Strong", energy: [7, 10], locs: ["gym"],
+    trigger: "Hit resistance back.", companion: "Class energy.", proof: "Turned stress into movement.",
+    effects: { Energy: 3, Mood: 3, Confidence: 2 }, scienceId: "fitboxing",
     steps: ["The gym is downstairs. That's the whole trick.", "Wrap up, glove up", "Take the class — just follow along", "Hit the bag like it owes you money"] },
-  { id: "shadow-rounds", title: "Shadow Rounds", cat: "fitboxing", min: 10, xp: 25, level: "Medium", energy: [5, 8], locs: ["home"], reward: "Loud music",
+  { id: "shadow-rounds", title: "Shadow Rounds", cat: "fitboxing", min: 12, level: "Medium", energy: [5, 8], locs: ["home"],
+    trigger: "Hit resistance back.", companion: "Loud playlist.", proof: "Turned stress into movement.",
+    effects: { Energy: 3, Mood: 3, Confidence: 1 }, scienceId: "fitboxing",
     steps: ["Music up", "3 rounds × 2 minutes of shadowboxing", "1 minute rest between rounds", "Light feet, loose shoulders"] },
 
-  // POOL
-  { id: "twenty-lengths", title: "Twenty Lengths", cat: "pool", min: 30, xp: 55, level: "Strong", energy: [6, 10], locs: ["pool"], reward: "Pool time",
+  // ---------------- POOL ----------------
+  { id: "twenty-lengths", title: "Twenty Lengths", cat: "pool", min: 30, level: "Strong", energy: [6, 10], locs: ["pool"],
+    trigger: "Let water do half the work.", companion: "Pool time.", proof: "Used water to reset my body.",
+    effects: { Calm: 3, Recovery: 3, Energy: 1 }, scienceId: "swimming",
     steps: ["Pack the bag before you can argue", "Swim 20 lengths, any style, any pace", "Rest at the wall whenever", "Float for the last two minutes"] },
-  { id: "water-reset", title: "Water Reset", cat: "pool", min: 20, xp: 35, level: "Easy", energy: [3, 6], locs: ["pool"], reward: "Weightlessness", states: ["stressed", "tired"],
+  { id: "water-reset", title: "Water Reset", cat: "pool", min: 20, level: "Easy", energy: [3, 8], locs: ["pool"], states: ["stressed", "tired"],
+    trigger: "Let water do half the work.", companion: "Calm playlist or silence.", proof: "Used water to reset my body.",
+    effects: { Calm: 3, Recovery: 3, Mood: 2 }, scienceId: "swimming",
     steps: ["Easy swim, no counting", "Slow breaststroke, long exhales", "Finish floating on your back", "Water does the rest"] },
 
-  // PADEL
-  { id: "book-the-court", title: "Book the Court", cat: "padel", min: 30, xp: 60, level: "Strong", energy: [7, 10], locs: ["padel"], reward: "It's a game, not a workout",
+  // ---------------- PADEL ----------------
+  { id: "book-the-court", title: "Book the Court", cat: "padel", min: 30, level: "Strong", energy: [7, 10], locs: ["padel"],
+    trigger: "It's a game, not a workout.", companion: "A friend.", proof: "Made time for herself.",
+    effects: { Energy: 2, Mood: 3, Confidence: 1 }, scienceId: "padel",
     steps: ["Text a friend now — before the dare cools down", "Book the court", "Play. Just play.", "Winner buys nothing. It's not about that."] },
-  { id: "wall-rally", title: "Wall Rally", cat: "padel", min: 15, xp: 30, level: "Medium", energy: [5, 8], locs: ["padel", "outside"], reward: "Your loudest playlist",
+  { id: "wall-rally", title: "Wall Rally", cat: "padel", min: 15, level: "Medium", energy: [5, 8], locs: ["padel", "outside"],
+    trigger: "It's a game, not a workout.", companion: "Your loudest playlist.", proof: "Did something without making it a workout.",
+    effects: { Energy: 2, Mood: 2, Focus: 1 }, scienceId: "padel",
     steps: ["Racket and one ball", "Rally against the wall", "Count your longest streak", "Beat it once, then stop"] },
 
-  // RECOVERY (no hand-supported positions)
-  { id: "floor-breath", title: "Floor & Breath", cat: "recovery", min: 10, xp: 20, level: "Easy", energy: [1, 4], locs: ["home"], reward: "Stillness", states: ["blocked", "tired", "stressed"],
+  // ---------------- RECOVERY (sin posiciones con manos en el suelo) ----------------
+  { id: "floor-breath", title: "Floor & Breath", cat: "recovery", min: 10, level: "Easy", energy: [1, 4], locs: ["home"], states: ["blocked", "tired", "stressed"],
+    trigger: "Recovery is still training.", companion: "Gentle playlist.", proof: "Recovered without stopping.",
+    effects: { Calm: 3, Recovery: 3 }, scienceId: "breath-recovery",
     steps: ["Lie on the mat, knees bent", "Box breathing: 4 in, 4 hold, 4 out, 4 hold", "Gentle knee-to-chest, one side at a time", "Legs up the wall for 3 minutes"] },
-  { id: "shoulders-undone", title: "Shoulders, Undone", cat: "recovery", min: 8, xp: 15, level: "Easy", energy: [1, 5], locs: ["home", "outside"], reward: "Less noise in the body",
+  { id: "shoulders-undone", title: "Shoulders, Undone", cat: "recovery", min: 8, level: "Easy", energy: [1, 5], locs: ["home", "outside"],
+    trigger: "Recovery is still training.", companion: "Audiobook.", proof: "Adapted instead of forcing.",
+    effects: { Calm: 2, Recovery: 2 }, scienceId: "breath-recovery",
     steps: ["Stand tall", "Slow neck circles, both ways", "Shoulder rolls, big and slow", "Reach up, then let everything drop. Twice."] },
-  { id: "hot-cold", title: "Hot / Cold Finish", cat: "recovery", min: 5, xp: 15, level: "Easy", energy: [1, 8], locs: ["home"], reward: "Instant reboot",
+  { id: "hot-cold", title: "Hot / Cold Finish", cat: "recovery", min: 5, level: "Easy", energy: [1, 8], locs: ["home"],
+    trigger: "Recovery is still training.", companion: "Skincare ritual after.", proof: "Recovered without stopping.",
+    effects: { Recovery: 2, Energy: 1 }, scienceId: "breath-recovery",
     steps: ["Normal shower", "Last 30 seconds: as cold as you can stand", "Breathe through it", "Step out new"] },
 
-  // FOCUS
-  { id: "the-unblock", title: "The Unblock", cat: "focus", min: 10, xp: 20, level: "Easy", energy: [1, 6], locs: ["home", "outside"], reward: "Free time after", states: ["blocked", "stressed"],
+  // ---------------- FOCUS ----------------
+  { id: "the-unblock", title: "The Unblock", cat: "focus", min: 10, level: "Easy", energy: [1, 6], locs: ["home", "outside"], states: ["blocked", "stressed"],
+    trigger: "Start first. Feel better second.", companion: "Free time after.", proof: "Moved through resistance.",
+    effects: { Focus: 3, Calm: 1 }, scienceId: "behavioral-activation",
     steps: ["Walk outside for 3 minutes — no phone", "Come back", "Write the single next tiny step of the stuck thing", "Do only that step"] },
-  { id: "sunlight-first", title: "Sunlight First", cat: "focus", min: 5, xp: 15, level: "Easy", energy: [1, 7], locs: ["outside", "home"], reward: "A real morning",
+  { id: "sunlight-first", title: "Sunlight First", cat: "focus", min: 5, level: "Easy", energy: [1, 7], locs: ["outside", "home"],
+    trigger: "Start first. Feel better second.", companion: "A real morning.", proof: "Began before the day took over.",
+    effects: { Energy: 2, Focus: 2, Mood: 1 }, scienceId: "daylight",
     steps: ["Go outside within an hour of waking", "Face the light, eyes soft", "Two minutes, no phone", "Now the day can start"] },
-  { id: "clear-desk", title: "Clear Desk, Clear Mind", cat: "focus", min: 10, xp: 20, level: "Easy", energy: [2, 6], locs: ["home"], reward: "One playlist", states: ["blocked"],
+  { id: "clear-desk", title: "Clear Desk, Clear Mind", cat: "focus", min: 10, level: "Easy", energy: [2, 6], locs: ["home"], states: ["blocked"],
+    trigger: "Only one playlist.", companion: "One playlist.", proof: "Protected my attention.",
+    effects: { Focus: 3, Calm: 1 }, scienceId: "brain-movement",
     steps: ["One playlist, press play", "Clear the desk until it ends", "Everything has a place or the bin", "Sit down at a clean surface"] },
 ];

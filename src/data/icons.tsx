@@ -105,6 +105,8 @@ export const CAT_ICO: Record<Cat, string> = {
   fitboxing: "bag",
   pool: "waves",
   padel: "racket",
+  tabata: "bolt",
+  carry: "dumbbell",
   recovery: "moon",
   focus: "eye",
   small: "spark",

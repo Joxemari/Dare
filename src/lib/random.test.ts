@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { sample, rollDraw } from "./random";
+import { sample, rollTreat } from "./random";
 
 describe("sample", () => {
   it("devuelve n elementos distintos, todos del array original", () => {
@@ -22,15 +22,19 @@ describe("sample", () => {
   });
 });
 
-describe("rollDraw", () => {
-  it("devuelve siempre una recompensa con forma válida", () => {
+describe("rollTreat", () => {
+  it("devuelve siempre un treat con forma válida y sin 'double XP'", () => {
     // La tirada usa Math.random; comprobamos invariantes en muchas tiradas.
     for (let i = 0; i < 500; i++) {
-      const draw = rollDraw();
+      const draw = rollTreat();
       expect(["common", "rare", "golden"]).toContain(draw.tier);
       expect(typeof draw.text).toBe("string");
       expect(draw.text.length).toBeGreaterThan(0);
-      expect(typeof draw.x2).toBe("boolean");
+      // el treat no debe volver a mencionar XP en ningún caso
+      expect(draw.text.toLowerCase()).not.toContain("xp");
+      if (draw.special !== undefined) {
+        expect(["golden", "date", "dreamBoost", "choose"]).toContain(draw.special);
+      }
     }
   });
 });

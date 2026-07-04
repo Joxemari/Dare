@@ -1,5 +1,6 @@
 import { useDare } from "./lib/useDare";
 import { Onboarding } from "./screens/Onboarding";
+import { Dream } from "./screens/Dream";
 import { Reentry } from "./screens/Reentry";
 import { Home } from "./screens/Home";
 import { Checkin } from "./screens/Checkin";
@@ -18,6 +19,8 @@ export default function App() {
   if (app.away) return <Reentry app={app} />;
 
   switch (app.screen) {
+    case "dream":
+      return <Dream app={app} />;
     case "checkin":
       return <Checkin app={app} />;
     case "detail":
