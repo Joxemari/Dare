@@ -151,9 +151,15 @@ conservan (no romper datos guardados): **First Flame ✦** (slot `ember`),
 `dare`/`real` (◆ recomendada), `bold` (⟁ más dura), más `trigger`, `companion`,
 `treat`, `proof` y una ficha corta `scienceTitle`/`scienceBody` ("Science Behind
 Today's Dare"). La ciencia usa lenguaje cuidadoso ("may support", "is associated
-with", "research suggests"); sin claims médicos. Pendiente (UI, próxima fase):
-selector Soft/Real/Bold en el detalle del día y usar "Day N" (no Today/Tomorrow)
-dentro de la pantalla Journey.
+with", "research suggests"); sin claims médicos. El helper puro `dayVariants(p)`
+(orden ◌→◆→⟁, "real" cae a `dare`) alimenta la UI.
+
+**Briefing de día** (`DayModal`): en la pantalla Journey, tocar un día hecho o el
+actual abre su plan — selector ◌/◆/⟁ (efímero, por defecto Real), Trigger,
+Companion, Treat, Proof y la ficha de ciencia. Los días futuros siguen sellados
+(no accionables). El timeline usa "Day N" (no Today/Tomorrow). Pendiente: persistir
+la variante elegida por día (necesitaría subir la versión del store) y llevar la
+ficha de ciencia del día a Today.
 
 **Arranque explícito y multi-journey.** Ningún Journey arranca solo: el
 onboarding lleva a Today sin activar nada. Un Journey se empieza pulsando

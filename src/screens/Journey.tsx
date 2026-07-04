@@ -5,6 +5,7 @@ import { MS_T, SPRINT_DAYS, totalMilestones, chapterState } from "../data/journe
 import { Ico } from "../components/Ico";
 import { Nav } from "../components/Nav";
 import { MilestoneModal } from "../components/MilestoneModal";
+import { DayModal } from "../components/DayModal";
 import { wrap, pad } from "../components/layout";
 import type { Milestone } from "../types";
 import type { DareApp } from "../lib/useDare";
@@ -13,6 +14,7 @@ export function Journey({ app }: { app: DareApp }) {
   const { journey, daysDone, chapter, store, isJourneyActive } = app;
   const [openCh, setOpenCh] = useState<number | null>(chapter.idx);
   const [modal, setModal] = useState<Milestone | null>(null);
+  const [dayOpen, setDayOpen] = useState<number | null>(null);
   const isPlaceholder = journey.plan.length === 0;
   const dreamReward = store.dreamRewards[journey.id];
 
@@ -99,8 +101,22 @@ export function Journey({ app }: { app: DareApp }) {
               const fg = isToday ? journey.color : isDone ? C.green : gold ? C.gold : C.dim;
               const glyph = isDone ? "✓" : isToday ? SYMBOLS.spark : isDream ? SYMBOLS.dream : isChapter ? SYMBOLS.dream : SYMBOLS.cycle;
               const label = isDone ? "Done" : isToday ? "Current" : isDream ? "Dream" : isChapter ? "Chapter" : "Locked";
+              const tappable = i <= daysDone; // solo días hechos o el actual (los futuros siguen sellados)
               return (
-                <div key={i} style={{ minWidth: 64, textAlign: "center" }}>
+                <button
+                  key={i}
+                  onClick={() => tappable && setDayOpen(i)}
+                  disabled={!tappable}
+                  style={{
+                    minWidth: 64,
+                    textAlign: "center",
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    fontFamily: "inherit",
+                    cursor: tappable ? "pointer" : "default",
+                  }}
+                >
                   <div
                     style={{
                       width: 52,
@@ -123,12 +139,12 @@ export function Journey({ app }: { app: DareApp }) {
                   <p className="lbl" style={{ fontSize: 7.5, marginTop: 2, color: fg }}>
                     {label}
                   </p>
-                </div>
+                </button>
               );
             })}
           </div>
           <p style={{ fontSize: 12.5, color: C.dim, marginBottom: 18 }}>
-            Day {currentDay} of {SPRINT_DAYS} — {journey.plan[Math.min(SPRINT_DAYS - 1, daysDone)]?.title}. Finish a chapter to unlock the next.
+            Day {currentDay} of {SPRINT_DAYS} — {journey.plan[Math.min(SPRINT_DAYS - 1, daysDone)]?.title}. Tap a day for its plan; finish a chapter to unlock the next.
           </p>
 
           {/* planned dares + dates (explican el color) */}
@@ -291,6 +307,16 @@ export function Journey({ app }: { app: DareApp }) {
       </div>
 
       {modal && <MilestoneModal app={app} ms={modal} color={journey.color} onClose={() => setModal(null)} />}
+      {dayOpen !== null && journey.plan[dayOpen] && (
+        <DayModal
+          app={app}
+          journey={journey}
+          day={journey.plan[dayOpen]}
+          dayIndex={dayOpen}
+          isCurrent={dayOpen === daysDone}
+          onClose={() => setDayOpen(null)}
+        />
+      )}
     </div>
   );
 }

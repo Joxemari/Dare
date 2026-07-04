@@ -1,4 +1,5 @@
-import type { Chapter, Journey, MilestoneType } from "../types";
+import type { Chapter, DayPlan, Journey, MilestoneType } from "../types";
+import type { SymbolKey } from "./symbols";
 import { JOURNEY_COLOR } from "./colors";
 
 /* ============================================================
@@ -769,4 +770,35 @@ export function currentChapter(j: Journey, done: Record<string, boolean>): Chapt
 /** Total de milestones de un Journey (para el % de completion). */
 export function totalMilestones(j: Journey): number {
   return j.chapters.reduce((n, c) => n + c.milestones.length, 0);
+}
+
+/* ---- Variantes de dificultad de un día (spec: ◌ Soft / ◆ Real / ⟁ Bold) ---- */
+export type VariantKey = "soft" | "real" | "bold";
+export interface DayVariant {
+  key: VariantKey;
+  label: string;
+  sym: SymbolKey;
+  text: string;
+}
+
+/** Símbolo por variante (design tokens de `symbols.ts`). */
+export const VARIANT_SYM: Record<VariantKey, SymbolKey> = { soft: "soft", real: "strong", bold: "forge" };
+
+/**
+ * Variantes disponibles de un día, en orden Soft → Real → Bold. Función PURA.
+ * "Real" cae al texto principal del día (`dare`). Un día sin contenido rico
+ * (planes antiguos) devuelve []. La UI ofrece "Real" por defecto.
+ */
+export function dayVariants(p: DayPlan): DayVariant[] {
+  const out: DayVariant[] = [];
+  if (p.soft) out.push({ key: "soft", label: "Soft", sym: VARIANT_SYM.soft, text: p.soft });
+  if (p.dare) out.push({ key: "real", label: "Real", sym: VARIANT_SYM.real, text: p.dare });
+  if (p.bold) out.push({ key: "bold", label: "Bold", sym: VARIANT_SYM.bold, text: p.bold });
+  return out;
+}
+
+/** Variante recomendada por defecto: Real si existe, si no la primera disponible. */
+export function defaultVariant(p: DayPlan): VariantKey | null {
+  const vs = dayVariants(p);
+  return vs.find((v) => v.key === "real")?.key ?? vs[0]?.key ?? null;
 }
