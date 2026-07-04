@@ -1,7 +1,8 @@
 name: CI
 
 # Corre en cada PR y en cada push a main. Pensado para marcarse como
-# required status check sobre main (Settings → Branches → Branch protection).
+# required status check sobre main (Settings → Branches → Branch protection):
+# el check a marcar como requerido se llama "Tests y build" (el name del job).
 on:
   pull_request:
   push:
@@ -9,7 +10,9 @@ on:
 
 jobs:
   check:
+    name: Tests y build
     runs-on: ubuntu-latest
+    timeout-minutes: 10 # red de seguridad ante un cuelgue; el build real tarda ~1 min
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

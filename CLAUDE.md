@@ -77,6 +77,11 @@ Por qué así:
   (onboarding, journey y progreso, check-ins, dares del día, XP, racha, badges,
   historial de recompensas y feedback). Lo *derivable* (p. ej. el scoring de un
   dare) se recalcula, no se guarda.
+- **Guarda referencias, no copias.** Persiste **identificadores** (p. ej. el `id`
+  del dare o de la carta) y re-resuelve el resto contra la fuente viva (`src/data`
+  vía `lookup.ts`) al leer. Así, cambiar el contenido de un dato no rompe los
+  datos antiguos guardados. Copiar el objeto entero dentro del store obliga a
+  migrar en cuanto cambie su forma.
 - **Versionado de la forma + migración:** el store lleva `version` (hoy `2`) bajo
   la clave `dare:v2`. `storage.ts` migra cualquier forma antigua/desconocida a v2
   mergeando sobre `defaultStore()` (ver `migrate()`), de modo que un campo que un
@@ -94,17 +99,25 @@ Por qué así:
   PR dedicado. **Nunca** reutilizar ni añadir commits a una PR ya
   mergeada/cerrada: si hay que retomar algo, es un cambio nuevo → **rama nueva
   desde el último `main`**.
-- **PRs pequeñas y de un solo tema.** Si tocas dos asuntos independientes,
-  sepáralos en dos PRs o avísalo explícitamente en el cuerpo.
-- **Commits claros y descriptivos.** Textos y vocabulario de dominio en español.
+- **PRs pequeñas y de un solo tema.** Una PR = una cosa. Si tocas dos asuntos
+  independientes, sepáralos en dos PRs o avísalo explícitamente en el cuerpo.
+  Enfocadas = review más fácil y **revert limpio** si algo sale mal.
+- **Commits claros y descriptivos.** Los commits, las PRs y el vocabulario de
+  dominio van **en español**. La **UI de Dare está en inglés**: los strings de
+  interfaz que añadas van en inglés y consistentes con los existentes.
 
 ## Testing y "check verde"
 
 - La **lógica de negocio vive en módulos puros y sin efectos secundarios**
   (`src/lib`, salvo la frontera `storage.ts`/`useDare.ts`) y **esos módulos se
-  testean**; los **componentes de UI son presentacionales**.
+  testean**; los **componentes de UI son presentacionales**. "Lógica" aquí es
+  todo lo que transforma o decide: transformaciones de estado, validación,
+  serialización/migración, scoring y cálculos.
+- **Mantén puras las funciones testeadas** — sin efectos secundarios. Los tests
+  dependen de ello; si una función necesita I/O, mueve el I/O a la frontera
+  (`storage.ts`/`useDare.ts`) y deja pura la parte que decide.
 - **Tests colocados junto al código** (`*.test.ts`, ver `src/lib/*.test.ts`).
-  **Todo cambio de lógica lleva su test.**
+  **Todo cambio de lógica lleva su test**, y se menciona en la PR.
 - **Antes de abrir la PR, en local:** dejar en verde
   ```bash
   npm test          # + npm run typecheck si tocaste tipos
@@ -171,7 +184,10 @@ tendrá), documenta en su momento:
 
 - **`.github/workflows/ci.yml`** — corre `npm ci`, `npm test` y `npm run build` en
   cada **pull request** y en cada **push a `main`**. Es la base para marcarlo como
-  *required status check* sobre `main`.
+  *required status check* sobre `main`. **Acción manual pendiente** (no la hace el
+  workflow): en `Settings → Branches → Branch protection` sobre `main`, activar
+  *Require status checks to pass* y marcar el check **"Tests y build"**. Hasta
+  entonces la CI informa, pero no bloquea el merge en rojo.
 - **`.github/workflows/deploy.yml`** — en cada push a `main`, build y publicación
   en **GitHub Pages** (<https://joxemari.github.io/dare/>). `vite.config.ts` fija
   `base: '/dare/'` para que los assets resuelvan bajo `/dare/`.
