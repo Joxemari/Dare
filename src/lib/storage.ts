@@ -36,24 +36,27 @@ export function defaultStore(): DareStore {
     plannedDares: [],
     dates: [],
     pendingFeedback: null,
+    notifications: { enabled: false, hour: 9, minute: 0, lastShown: "" },
   };
 }
 
 /**
- * Migra una forma desconocida/antigua hasta v3. Defensiva: mergea sobre
+ * Migra una forma desconocida/antigua hasta v4. Defensiva: mergea sobre
  * los defaults, de modo que cualquier campo que el build viejo nunca
  * escribió reciba un valor razonable. Idempotente: aplicada a un store ya
- * v3 lo deja igual.
+ * v4 lo deja igual.
  *
  * v2 → v3: renombra el vocabulario del prototipo al del producto —
  *   xp/streak/badges/rewardDraws/tarot → se descartan o remapean a
  *   proof/momentum/traits/treats/dailyCard. Se conserva lo transferible
  *   (progreso de journeys, check-ins, completados, feedback, catCounts).
  *
- * v3 → v4: modelo multi-journey. Se añade `activeJourneyIds` (journeys
- *   ARRANCADOS): un store v3 nunca lo tuvo, así que se DERIVA de lo que ya
- *   había — cualquier Journey con progreso > 0 o completado se considera
- *   activo, de modo que un usuario existente conserva su Journey en curso.
+ * v3 → v4: modelo multi-journey + recordatorio diario. Se añade
+ *   `activeJourneyIds` (journeys ARRANCADOS): un store v3 nunca lo tuvo, así
+ *   que se DERIVA de lo que ya había — cualquier Journey con progreso > 0 o
+ *   completado se considera activo, de modo que un usuario existente conserva
+ *   su Journey en curso. También se añade `notifications`, que un store v3 no
+ *   escribió nunca → recibe el default al mergear sobre `defaultStore()`.
  */
 function migrate(raw: unknown): DareStore {
   const base = defaultStore();
@@ -135,6 +138,13 @@ function migrate(raw: unknown): DareStore {
   }
   if (o.journeyStartedAt && typeof o.journeyStartedAt === "object") {
     merged.journeyStartedAt = o.journeyStartedAt as DareStore["journeyStartedAt"];
+  }
+
+  // v4: preferencias de notificación. Se mergean sobre el default para que un
+  // store v3 (que nunca escribió el campo) reciba valores por defecto, y para
+  // que un v4 parcial complete los campos que falten (idempotencia).
+  if (o.notifications && typeof o.notifications === "object" && !Array.isArray(o.notifications)) {
+    merged.notifications = { ...base.notifications, ...(o.notifications as object) };
   }
 
   return merged;
