@@ -1,0 +1,21 @@
+name: CI
+
+# Corre en cada PR y en cada push a main. Pensado para marcarse como
+# required status check sobre main (Settings → Branches → Branch protection).
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
