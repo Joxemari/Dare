@@ -75,13 +75,15 @@ src/
                                   de contenido generativo.
                  generationInput.ts  buildGenerationInput(): resume el store en
                                   la señal de feedback que alimenta la generación
+                 share.ts         capa social: texto/payload PUROS para compartir
+                                  la Daily Card vía Web Share API (ver más abajo)
                Frontera con efectos (I/O), aisladas a propósito:
                  storage.ts    load/save/migrate sobre localStorage (v3)
                  useDare.ts    hook de React: estado de la app + orquestación
                  feedback.ts   vibración (navigator.vibrate) + sonido sintetizado
                                (Web Audio, sin assets). Impuro; no se testea.
   components/  Presentacionales: Ico, TarotArt, Dots, Nav, Meta, Effects,
-               MilestoneModal, layout.
+               MilestoneModal, ShareCardButton, layout.
   screens/     Pantallas (Onboarding, Dream, Reentry, Home, Checkin, Detail,
                Timer, Complete, Journey, Journeys, Progress, You). Consumen
                el hook.
@@ -150,6 +152,27 @@ forma. Los WebP están redimensionados a **800px de ancho, calidad 82** (se
 muestran a 54–88px); ver `public/arcana/README.md` para regenerarlos desde PNG
 con `sharp`. Añadir una carta = añadir su entrada en `tarot.ts` **y** su WebP en
 `public/arcana/` con el mismo `id`.
+
+### Capa social — compartir la Daily Card
+
+Primera pieza social de DARE, **sin backend**: la pantalla `Card` (revelado de la
+Daily Card a pantalla completa) ofrece **"Share card"**. Reparto según la regla
+del repo (lógica pura vs. efectos en la frontera):
+
+- **`src/lib/share.ts`** — PURO y testeado (`share.test.ts`): `buildCardShareText`
+  y `buildCardShareData` construyen el texto/payload. Sin efectos.
+- **`src/components/ShareCardButton.tsx`** — frontera con el DOM: compone la carta
+  en `<canvas>` (PNG 1080×1350) reutilizando el WebP de `public/arcana/`, la
+  entrega a la **Web Share API** (WhatsApp, IG Stories…) y **cae a copiar al
+  portapapeles** si no hay `navigator.share`. Efecto DOM → no se testea en `node`,
+  como `TarotArt`. Defensivo: si el canvas o el share fallan, degrada a texto.
+- **`src/screens/Card.tsx`** monta el botón; su contenedor hace `stopPropagation`
+  para que pulsar Share no dispare el "tap to continue" de la pantalla.
+
+El feed de amigos (BeReal / How We Feel) queda **diferido**: exige backend +
+identidad. El diseño completo y el modelo de datos a preparar están en
+`docs/social-layer.md` (principio de producto: *presencia, no ranking* — no
+romper el tono anti-gamificación).
 
 ### PWA (instalable + offline)
 
