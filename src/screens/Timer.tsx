@@ -21,7 +21,7 @@ export function Timer({ app }: { app: DareApp }) {
             On the move.
           </p>
           <p style={{ color: C.dim, fontSize: 13, marginBottom: 30 }}>
-            {d.title} · reward active: {d.reward}
+            {d.title} · companion: {d.companion}
           </p>
           <div style={{ position: "relative", width: 220, height: 220, margin: "0 auto 30px" }}>
             <svg width="220" height="220" style={{ transform: "rotate(-90deg)" }}>

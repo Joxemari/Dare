@@ -1,5 +1,8 @@
 import { C, CATS } from "../data/colors";
 import { CAT_ICO } from "../data/icons";
+import { SYMBOLS } from "../data/symbols";
+import { findTrait } from "../data/traits";
+import { SPRINT_DAYS } from "../data/journeys";
 import { Ico } from "../components/Ico";
 import { TarotArt } from "../components/TarotArt";
 import { Nav } from "../components/Nav";
@@ -8,10 +11,10 @@ import type { Cat } from "../types";
 import type { DareApp } from "../lib/useDare";
 
 export function You({ app }: { app: DareApp }) {
-  const { store, level, journey, chapter, jd, card, catFeedback } = app;
-  const xp = store.xp;
+  const { store, journey, chapter, daysDone, card, catFeedback, proofCount, currentIdentity } = app;
+  const identity = findTrait(currentIdentity);
   const done = store.completed.length;
-  const lvlFrac = (xp % 200) / 200;
+  const frac = daysDone / SPRINT_DAYS;
   const RY = 34;
   const CY = 2 * Math.PI * RY;
   const catList = (Object.entries(store.catCounts) as [Cat, number][]).sort((a, b) => b[1] - a[1]);
@@ -28,7 +31,7 @@ export function You({ app }: { app: DareApp }) {
             You
           </p>
 
-          {/* identity + level ring */}
+          {/* identity ring */}
           <div style={{ display: "flex", gap: 18, alignItems: "center", marginBottom: 22 }}>
             <div style={{ position: "relative", width: 84, height: 84, flexShrink: 0 }}>
               <svg width="84" height="84" style={{ transform: "rotate(-90deg)" }}>
@@ -38,19 +41,19 @@ export function You({ app }: { app: DareApp }) {
                   cy="42"
                   r={RY}
                   fill="none"
-                  stroke={C.gold}
+                  stroke={journey.color}
                   strokeWidth="3"
                   strokeLinecap="round"
                   strokeDasharray={CY}
-                  strokeDashoffset={CY * (1 - lvlFrac)}
+                  strokeDashoffset={CY * (1 - frac)}
                 />
               </svg>
               <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                <span className="serif" style={{ fontSize: 26, lineHeight: 1 }}>
-                  {level}
+                <span className="serif" style={{ fontSize: 26, lineHeight: 1, color: journey.color }}>
+                  {identity ? SYMBOLS[identity.sym] : SYMBOLS.spark}
                 </span>
                 <span className="lbl" style={{ fontSize: 7.5 }}>
-                  Level
+                  Identity
                 </span>
               </div>
             </div>
@@ -61,14 +64,14 @@ export function You({ app }: { app: DareApp }) {
                 moves daily.
               </h2>
               <p style={{ fontSize: 12, color: C.dim, marginTop: 6 }}>
-                {xp.toLocaleString()} XP · {200 - (xp % 200)} to level {level + 1}
+                Identity: {identity?.name ?? "Starter"} · {proofCount} {proofCount === 1 ? "proof" : "proofs"}
               </p>
             </div>
           </div>
 
           {/* stats grid */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 22 }}>
-            {([[done, "dares", C.green], [store.streak.count, "day streak", C.coral], [store.badges.length, "badges", C.gold]] as const).map(
+            {([[done, "dares", C.green], [store.momentum.count, "momentum", C.coral], [store.traits.length, "traits", C.gold]] as const).map(
               ([v, k, col], i) => (
                 <div key={i} className="card" style={{ padding: "14px 8px", textAlign: "center" }}>
                   <p className="serif" style={{ fontSize: 28, color: col }}>
@@ -127,10 +130,10 @@ export function You({ app }: { app: DareApp }) {
               Current journey
             </p>
             <p className="serif" style={{ fontSize: 20, color: journey.color }}>
-              {journey.sym} {journey.name}
+              {SYMBOLS[journey.sym]} {journey.name}
             </p>
             <p style={{ fontSize: 12.5, color: C.dim, marginTop: 3 }}>
-              Chapter {chapter.n} — {chapter.name} · {jd} dares in
+              Chapter {chapter.n} — {chapter.name} · {daysDone} / {SPRINT_DAYS} days
             </p>
           </div>
 
@@ -149,7 +152,7 @@ export function You({ app }: { app: DareApp }) {
               className="link"
               style={{ color: C.coral }}
               onClick={() => {
-                if (confirm("Reset all data? This clears your XP, streak, badges and journeys.")) app.resetAll();
+                if (confirm("Reset all data? This clears your proof, momentum, traits and journeys.")) app.resetAll();
               }}
             >
               Reset all data

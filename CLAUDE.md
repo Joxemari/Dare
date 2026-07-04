@@ -16,7 +16,7 @@ además de la operativa de desarrollo. No es solo una lista de comandos.
 - **Tailwind CSS v4** vía `@tailwindcss/vite`; los tokens viven en `src/index.css`.
 - **Vitest** para los tests.
 - Fuentes autoalojadas con `@fontsource` (Cormorant Garamond + Space Grotesk); sin CDN de Google.
-- Persistencia en **`localStorage`**, esquema versionado (v2) con migración.
+- Persistencia en **`localStorage`**, esquema versionado (v3) con migración.
 - Sin router: las pantallas son estado, no rutas.
 - Node **22**, gestor **npm** (hay `package-lock.json` → en CI se usa `npm ci`).
 
@@ -45,21 +45,55 @@ concentran en la frontera (hook + `storage`), no repartidos por las pantallas.
 ```
 src/
   data/        Datos de dominio (constantes, sin lógica): dares, wildcards,
-               journeys, tarot, draws, badges, icons, colors.
+               journeys (planes de 7 días + milestones tipados), tarot,
+               symbols (mapa central de glifos), science (biblioteca),
+               traits (identidad, antes badges), rewards (treats/dates/dream,
+               antes draws), icons, colors.
   lib/         Lógica. La mayoría son funciones PURAS y deterministas:
-                 generator.ts  motor de selección del dare (scoring, no if/else)
-                 prng.ts       PRNG con semilla (mulberry32), reproducible
-                 random.ts     sample() y rollDraw() (usan Math.random)
-                 date.ts       helpers de fecha local (todayStr, daysBetween)
-                 lookup.ts     búsquedas sobre los datos (findDare, findCard)
+                 generator.ts     selección del dare (scoring, no if/else),
+                                  con contexto+destino del check-in
+                 achievements.ts  earnedTraits() — qué traits gana un dare
+                 prng.ts          PRNG con semilla (mulberry32), reproducible
+                 random.ts        sample() y rollTreat() (usan Math.random)
+                 date.ts          helpers de fecha local (todayStr, daysBetween)
+                 lookup.ts        búsquedas sobre los datos (findDare, findCard)
                Frontera con efectos (I/O), aisladas a propósito:
-                 storage.ts    load/save/migrate sobre localStorage (v2)
+                 storage.ts    load/save/migrate sobre localStorage (v3)
                  useDare.ts    hook de React: estado de la app + orquestación
-  components/  Presentacionales: Ico, TarotArt, Dots, Nav, Meta, layout.
-  screens/     Pantallas (Onboarding, Reentry, Home, Checkin, Detail, Timer,
-               Complete, Journey, Journeys, Progress, You). Consumen el hook.
+  components/  Presentacionales: Ico, TarotArt, Dots, Nav, Meta, Effects,
+               MilestoneModal, layout.
+  screens/     Pantallas (Onboarding, Dream, Reentry, Home, Checkin, Detail,
+               Timer, Complete, Journey, Journeys, Progress, You). Consumen
+               el hook.
   App.tsx      "Router" por estado: decide qué pantalla mostrar.
 ```
+
+### Vocabulario del producto (UI en inglés)
+
+DARE no es un tracker de fitness: es un *Chief Energy Officer*. El vocabulario de
+producto NO usa gamificación clásica. Traducciones fijas (interno → UI):
+**Proof** (no XP) · **Identity** (no Levels) · **Traits** (no Badges) ·
+**Treat Draw** (no Reward Draw) · **Companion** (recompensa durante el dare) ·
+**Milestones** (no Marks) · **Momentum** (no flexible streak). No mostrar XP,
+niveles, "streak failed", calorías ni "burn". El sistema de recompensas está
+separado a propósito: *Trigger* (antes) · *Companion* (durante) · *Treat*
+(después) · *Date* (semanal) · *Dream Reward* (al terminar el Journey).
+
+### Símbolos (`src/data/symbols.ts`)
+
+Mapa único `SYMBOLS` (design tokens tipográficos). **Nunca** usar un glifo suelto
+en la UI: siempre por su clave. Cada Journey tiene un símbolo primario, cada
+Chapter uno secundario, cada sección del detalle y cada Trait usan claves del
+mapa. Nunca mostrar dorado/oro sin explicarlo con etiqueta (Days Ahead usa
+símbolo + label, nunca color a secas).
+
+### Journeys — sprints de 7 días
+
+Cada Journey es un sprint de 7 días con un `plan` (día 1..7) y 4 chapters, cada
+chapter con `days:[from,to]` y `milestones` tipados (letter/goal/action/
+motivator/science) de **id estable**. The Ember e Iron Quiet están completos;
+Still Water es placeholder (sin `plan`). Los milestones son accionables (modal
+`MilestoneModal`): cada tipo tiene su CTA real y persiste en `store.milestones`.
 
 Por qué así:
 
@@ -74,20 +108,24 @@ Por qué así:
 ### Datos persistidos (`localStorage`)
 
 - **Qué se guarda vs. qué se recalcula:** se persiste el *estado* del usuario
-  (onboarding, journey y progreso, check-ins, dares del día, XP, racha, badges,
-  historial de recompensas y feedback). Lo *derivable* (p. ej. el scoring de un
-  dare) se recalcula, no se guarda.
+  (onboarding, journey y progreso, journeys completados, dream rewards,
+  check-ins, dares del día, daily card, proof library, momentum, traits,
+  identidades, milestones, companion shelf, boss playlist, planned dares, dates,
+  historial de treats y feedback). Lo *derivable* (p. ej. el scoring de un dare,
+  el nº de proofs, la identidad actual) se recalcula, no se guarda.
 - **Guarda referencias, no copias.** Persiste **identificadores** (p. ej. el `id`
   del dare o de la carta) y re-resuelve el resto contra la fuente viva (`src/data`
   vía `lookup.ts`) al leer. Así, cambiar el contenido de un dato no rompe los
   datos antiguos guardados. Copiar el objeto entero dentro del store obliga a
   migrar en cuanto cambie su forma.
-- **Versionado de la forma + migración:** el store lleva `version` (hoy `2`) bajo
-  la clave `dare:v2`. `storage.ts` migra cualquier forma antigua/desconocida a v2
+- **Versionado de la forma + migración:** el store lleva `version` (hoy `3`) bajo
+  la clave `dare:v3`. `storage.ts` migra cualquier forma antigua/desconocida a v3
   mergeando sobre `defaultStore()` (ver `migrate()`), de modo que un campo que un
-  build viejo nunca escribió recibe un valor por defecto. La migración es
-  **idempotente**: aplicarla a un store ya v2 lo deja igual. Si cambia la forma,
-  **hay que subir la versión y ampliar la migración en la misma PR.**
+  build viejo nunca escribió recibe un valor por defecto. v2→v3 renombra el
+  vocabulario del prototipo al de producto (streak→momentum, rewardDraws→treats,
+  tarot→dailyCard) y **descarta** `xp`/`badges` v2 (no mapean 1:1). La migración
+  es **idempotente**: aplicarla a un store ya v3 lo deja igual. Si cambia la
+  forma, **hay que subir la versión y ampliar la migración en la misma PR.**
 - **Defensivo ante datos corruptos:** si el JSON no parsea, se arranca limpio con
   `defaultStore()` en vez de romper.
 

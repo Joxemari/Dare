@@ -1,6 +1,11 @@
 /* ============================================================
-   DARE — shared types. Derived from the stable prototype data.
+   DARE — tipos compartidos. Modelo de dominio del producto.
+   Vocabulario del producto (ver CLAUDE.md / spec):
+     Proof (no XP) · Identity (no Levels) · Traits (no Badges)
+     Treat Draw (no Reward Draw) · Companion (no in-dare reward)
+     Milestones (no Marks) · Momentum (no Flexible streak)
    ============================================================ */
+import type { SymbolKey } from "./data/symbols";
 
 export type Cat =
   | "forest"
@@ -9,13 +14,22 @@ export type Cat =
   | "fitboxing"
   | "pool"
   | "padel"
+  | "tabata"
+  | "carry"
   | "recovery"
   | "focus"
   | "small";
 
 export type Level = "Easy" | "Medium" | "Strong";
 
+/** Dónde puede ejecutarse un Dare (locations físicas reales). */
 export type Loc = "home" | "outside" | "forest" | "pool" | "gym" | "padel";
+
+/** Contexto actual del usuario en el check-in (dónde está AHORA). */
+export type CurrentLoc = "home" | "city" | "park" | "office" | "travelling";
+
+/** Destino al que DARE puede empujar al usuario ahora mismo. */
+export type Dest = "forest" | "pool" | "gym" | "padel" | "cafe";
 
 export type MentalState = "blocked" | "tired" | "normal" | "active" | "stressed";
 
@@ -23,27 +37,51 @@ export type JourneyId = "ember" | "iron" | "water";
 
 export type Tier = "common" | "rare" | "golden";
 
+/** Efectos esperados — categorías de sensación, no neuroquímica. */
+export type Effect =
+  | "Energy"
+  | "Focus"
+  | "Mood"
+  | "Calm"
+  | "Strength"
+  | "Confidence"
+  | "Recovery";
+
+/** Intensidad de un efecto: 1 (+), 2 (++), 3 (+++). */
+export type EffectMap = Partial<Record<Effect, 1 | 2 | 3>>;
+
 export interface Dare {
   id: string;
   title: string;
   cat: Cat;
   min: number;
-  xp: number;
   level: Level;
   energy: [number, number];
   locs: Loc[];
-  reward: string;
+  /** Companion: qué acompaña la acción para hacerla disfrutable. */
+  companion: string;
+  /** Trigger: la frase que ayuda a empezar. */
+  trigger: string;
+  /** Proof statement en primera persona, se colecciona al completar. */
+  proof: string;
+  /** Efectos esperados (sensaciones), para el detalle. */
+  effects: EffectMap;
   steps: string[];
-  /** Restricts the dare to certain mental states when scoring. */
+  /** id de una ficha de la biblioteca de ciencia. */
+  scienceId?: string;
+  /** Restringe el dare a ciertos estados mentales al puntuar. */
   states?: MentalState[];
-  /** Wildcards live in a separate pool and are revealed in gold. */
+  /** Los wildcards viven en un pool aparte y se revelan en dorado. */
   wild?: boolean;
 }
 
 export interface Checkin {
   energy: number;
   time: number;
-  loc: Loc;
+  /** Dónde está el usuario ahora. */
+  loc: CurrentLoc;
+  /** A dónde acepta que DARE le mande (o null = "Not now"). */
+  dest: Dest | null;
   state: MentalState;
 }
 
@@ -54,44 +92,109 @@ export interface TarotCard {
   msg: string;
 }
 
-export interface Journey {
-  id: JourneyId;
-  name: string;
-  sym: string;
-  color: string;
-  tag: string;
-  bias: Cat[];
-  chapters: Chapter[];
+/* ------------------------- MILESTONES -------------------------
+   Eventos tipados por capítulo (estilo Fabulous). Cada milestone
+   tiene una acción real (fix del bug de "Start no hace nada"):
+   letter/motivator/science abren una lectura; action abre un
+   formulario; goal enruta a un Dare/flujo. */
+export type MilestoneType = "letter" | "goal" | "action" | "motivator" | "science";
+
+export type ActionKind = "companionShelf" | "bossPlaylist" | "text";
+
+export interface Milestone {
+  /** id estable, p. ej. "ember-1-letter". Persistencia de completado. */
+  id: string;
+  t: MilestoneType;
+  title: string;
+  /** Cuerpo largo para letter/science/motivator (modal de lectura). */
+  body?: string;
+  /** Para type "action": qué formulario abrir. */
+  action?: ActionKind;
+  /** Para type "science": id en la biblioteca de ciencia. */
+  scienceId?: string;
+  /** Para type "goal": pista de a dónde lleva (check-in, feedback…). */
+  goalHint?: string;
 }
 
 export interface Chapter {
   n: string;
   name: string;
+  sym: SymbolKey;
   goal: string;
+  /** Rango de días del sprint que cubre este capítulo (inclusive). */
+  days: [number, number];
+  milestones: Milestone[];
 }
 
-export type MarkType = "letter" | "goal" | "action" | "motivator";
-
-export interface Mark {
-  t: MarkType;
+/** Un día del sprint de 7 días. */
+export interface DayPlan {
+  day: number; // 1..7
   title: string;
-  done: boolean;
+  cat: Cat;
+  /** id de dare concreto, si el día fija uno; si no, se genera por cat. */
+  dareId?: string;
+  chapter?: boolean; // "Chapter Moment"
+  dream?: boolean; // día de desbloqueo del Dream Reward
 }
 
-export interface Badge {
+export interface DreamRewardOption {
   id: string;
-  ico: string;
+  emoji: string;
+  label: string;
+  /** true en la opción "Create my own". */
+  custom?: boolean;
+}
+
+export interface Journey {
+  id: JourneyId;
   name: string;
+  sym: SymbolKey;
+  color: string;
+  tag: string;
+  problem: string;
+  promise: string;
+  lesson: string;
+  /** Categorías hacia las que el Journey inclina el generador. */
+  bias: Cat[];
+  /** Identidad que se desbloquea al terminar. */
+  identity: { id: string; name: string; line: string };
+  dreamPrompt: string;
+  dreamOptions: DreamRewardOption[];
+  chapters: Chapter[];
+  /** Plan diario del sprint (7 días). Vacío = placeholder. */
+  plan: DayPlan[];
+}
+
+/** Identidad / Trait desbloqueable. */
+export interface Trait {
+  id: string;
+  sym: SymbolKey;
+  name: string;
+  /** Statement de identidad en tercera persona. */
+  line: string;
+  /** Cómo se desbloquea (texto legible). */
   how: string;
 }
 
-export interface RewardDraw {
-  tier: Tier;
+/** Ficha de la biblioteca de ciencia. */
+export interface Science {
+  id: string;
+  category: string;
+  title: string;
   text: string;
-  x2: boolean;
+  evidence: "Strong" | "Moderate" | "Emerging";
+  effects: EffectMap;
+  longTerm?: string;
 }
 
-/** A dare surfaced for a given day. `why` is the generated explanation. */
+export interface TreatDraw {
+  tier: Tier;
+  text: string;
+  /** Efecto especial de un treat dorado (no XP doble). */
+  special?: "golden" | "date" | "dreamBoost" | "choose";
+}
+
+/** Un Dare surgido para un día. `why` es la explicación generada. */
 export interface TodaysDare {
   dareId: string;
   date: string;
@@ -102,25 +205,71 @@ export interface TodaysDare {
   completedAt: number | null;
 }
 
-/** localStorage schema — version 2 (see DARE-project-instructions.md §6). */
+/** Companion Shelf — one-time action de The Ember. */
+export interface CompanionShelf {
+  podcast: string;
+  series: string;
+  playlist: string;
+  album: string;
+}
+
+/** Boss Playlist — one-time action de Iron Quiet. */
+export interface BossPlaylist {
+  name: string;
+  platform: string;
+  firstSong: string;
+}
+
+export interface PlannedDare {
+  id: string;
+  dest: Dest;
+  label: string;
+  date?: string;
+}
+
+export interface ScheduledDate {
+  when: string; // "saturday" | "sunday" | "later" | fecha
+  idea?: string;
+  journeyId: JourneyId;
+}
+
+/** localStorage — versión 3. Ver storage.ts (migración desde v2). */
 export interface DareStore {
-  version: 2;
+  version: 3;
   onboarded: boolean;
   journeyId: JourneyId;
+  /** Nº de dares completados dentro de cada Journey (índice de día). */
   journeyProgress: Record<JourneyId, number>;
+  /** Journeys terminados (sprint de 7 completado). */
+  journeysCompleted: JourneyId[];
+  /** Dream Reward elegido por Journey (id de opción o texto propio). */
+  dreamRewards: Partial<Record<JourneyId, string>>;
   checkins: Array<Checkin & { date: string }>;
   lastCheckin: Checkin | null;
   todaysDares: TodaysDare[];
-  tarot: { date: string; options: string[]; cardId: string | null } | null;
-  rewardDraws: Array<{ date: string; tier: Tier; text: string }>;
-  completed: Array<{ dareId: string; date: string; xp: number }>;
-  xp: number;
-  streak: { count: number; lastDate: string };
-  badges: string[];
-  /** [most recent category, second most recent]. */
+  /** Daily Card (tarot) del día. */
+  dailyCard: { date: string; options: string[]; cardId: string | null } | null;
+  /** Historial de Treat Draws. */
+  treats: Array<{ date: string; tier: Tier; text: string }>;
+  completed: Array<{ dareId: string; date: string }>;
+  /** Proof Library — statements coleccionados, en orden cronológico. */
+  proofLibrary: Array<{ date: string; dareId: string; text: string }>;
+  /** Momentum (antes "flexible streak"). */
+  momentum: { count: number; lastDate: string };
+  /** Traits desbloqueados (ids). */
+  traits: string[];
+  /** Identidades desbloqueadas (ids). */
+  identities: string[];
+  /** [categoría más reciente, segunda más reciente]. */
   lastCats: Cat[];
   catCounts: Partial<Record<Cat, number>>;
   energyFeedback: Array<{ date: string; cat: Cat; delta: number }>;
-  /** Deferred "+30 min" feedback prompt; shown on the next opening ≥30 min later. */
+  /** Milestones completados por id. */
+  milestones: Record<string, boolean>;
+  companionShelf: CompanionShelf | null;
+  bossPlaylist: BossPlaylist | null;
+  plannedDares: PlannedDare[];
+  dates: ScheduledDate[];
+  /** Feedback diferido "+30 min"; se muestra en la próxima apertura. */
   pendingFeedback: { dareId: string; cat: Cat; at: number } | null;
 }

@@ -1,15 +1,24 @@
+import { useState } from "react";
 import { C } from "../data/colors";
+import { SYMBOLS } from "../data/symbols";
 import { wrap, pad } from "../components/layout";
-import type { Loc, MentalState } from "../types";
+import type { CurrentLoc, Dest, MentalState } from "../types";
 import type { DareApp } from "../lib/useDare";
 
-const locs: [Loc, string][] = [
+const locs: [CurrentLoc, string][] = [
   ["home", "Home"],
-  ["outside", "Outside"],
+  ["city", "City / street"],
+  ["park", "Park / outside"],
+  ["office", "Office"],
+  ["travelling", "Travelling"],
+];
+const dests: [Dest | "none", string][] = [
+  ["none", "Not now"],
   ["forest", "Forest"],
   ["pool", "Pool"],
-  ["gym", "Gym"],
+  ["gym", "Gym / Fitboxing"],
   ["padel", "Padel"],
+  ["cafe", "Café walk"],
 ];
 const states: [MentalState, string][] = [
   ["blocked", "Blocked"],
@@ -18,9 +27,17 @@ const states: [MentalState, string][] = [
   ["active", "Active"],
   ["stressed", "Stressed"],
 ];
+const planOpts: [Dest, string][] = [
+  ["forest", "Plan forest"],
+  ["pool", "Plan pool"],
+  ["padel", "Plan padel"],
+  ["gym", "Plan Fitboxing"],
+  ["cafe", "Plan café walk"],
+];
 
 export function Checkin({ app }: { app: DareApp }) {
   const { draft, setDraft } = app;
+  const [planned, setPlanned] = useState<string[]>([]);
   const ready = draft.energy && draft.time && draft.loc && draft.state;
 
   return (
@@ -43,7 +60,7 @@ export function Checkin({ app }: { app: DareApp }) {
             style={{ marginBottom: 26, fontSize: 13.5, padding: 12 }}
             onClick={() => app.justDareMe()}
           >
-            Just dare me — skip the questions ✦
+            Just dare me — skip the questions {SYMBOLS.spark}
           </button>
 
           <p className="lbl" style={{ marginBottom: 10 }}>
@@ -78,9 +95,9 @@ export function Checkin({ app }: { app: DareApp }) {
           </div>
 
           <p className="lbl" style={{ marginBottom: 10 }}>
-            Where are you?
+            Where are you right now?
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 22 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8, marginBottom: 22 }}>
             {locs.map(([id, t]) => (
               <button
                 key={id}
@@ -93,9 +110,29 @@ export function Checkin({ app }: { app: DareApp }) {
           </div>
 
           <p className="lbl" style={{ marginBottom: 10 }}>
+            Can DARE send you somewhere?
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 22 }}>
+            {dests.map(([id, t]) => {
+              const val = id === "none" ? null : id;
+              const on = draft.dest === val;
+              return (
+                <button
+                  key={id}
+                  className={"pill" + (on ? " on" : "")}
+                  style={{ fontSize: 12 }}
+                  onClick={() => setDraft({ ...draft, dest: val })}
+                >
+                  {t}
+                </button>
+              );
+            })}
+          </div>
+
+          <p className="lbl" style={{ marginBottom: 10 }}>
             Mental state
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 34 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 26 }}>
             {states.map(([id, t]) => (
               <button
                 key={id}
@@ -117,15 +154,43 @@ export function Checkin({ app }: { app: DareApp }) {
                 energy: draft.energy!,
                 time: draft.time!,
                 loc: draft.loc!,
+                dest: draft.dest,
                 state: draft.state!,
               })
             }
           >
             Get my dare
           </button>
-          <p className="pulse" style={{ textAlign: "center", color: C.green, marginTop: 22 }}>
-            ✦
-          </p>
+
+          {/* planning — no time now? plan it instead */}
+          <div className="card" style={{ padding: 16, margin: "22px 0 0", background: C.card2 }}>
+            <p className="lbl" style={{ marginBottom: 10 }}>
+              {SYMBOLS.focus} Plan a Dare this week
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {planOpts.map(([dest, label]) => {
+                const on = planned.includes(dest);
+                return (
+                  <button
+                    key={dest}
+                    className={"pill" + (on ? " on" : "")}
+                    style={{ padding: "8px 14px", fontSize: 12, width: "auto" }}
+                    disabled={on}
+                    onClick={() => {
+                      app.planDare(dest, label.replace("Plan ", ""));
+                      setPlanned((p) => [...p, dest]);
+                    }}
+                  >
+                    {on ? "✓ " : ""}
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            <p style={{ fontSize: 11, color: C.faint, marginTop: 10 }}>
+              Planned Dares appear in your Days Ahead.
+            </p>
+          </div>
         </div>
       </div>
     </div>

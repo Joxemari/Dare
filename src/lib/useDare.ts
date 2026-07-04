@@ -1,25 +1,30 @@
 import { useEffect, useState } from "react";
 import type {
+  BossPlaylist,
   Cat,
   Checkin,
+  CompanionShelf,
   Dare,
   DareStore,
+  Dest,
   JourneyId,
-  RewardDraw,
   TarotCard,
+  TreatDraw,
 } from "../types";
 import { DARES } from "../data/dares";
 import { TAROT } from "../data/tarot";
-import { BADGES } from "../data/badges";
-import { JOURNEYS, CH_SIZE, chapterOf } from "../data/journeys";
+import { TRAITS } from "../data/traits";
+import { JOURNEYS, journeyById, chapterOf, SPRINT_DAYS } from "../data/journeys";
 import { generateDare } from "./generator";
-import { rollDraw, sample } from "./random";
+import { rollTreat, sample } from "./random";
 import { findDare, findCard } from "./lookup";
+import { earnedTraits } from "./achievements";
 import { load, save, defaultStore, clearStore } from "./storage";
 import { todayStr, daysBetween } from "./date";
 
 export type Screen =
   | "onboarding"
+  | "dream"
   | "home"
   | "checkin"
   | "detail"
@@ -30,26 +35,27 @@ export type Screen =
   | "progress"
   | "you";
 
-/** Partial check-in being filled on the check-in screen. */
+/** Check-in parcial que se rellena en la pantalla de check-in. */
 export type DraftCheckin = {
   energy: number | null;
   time: number | null;
   loc: Checkin["loc"] | null;
+  dest: Dest | null;
   state: Checkin["state"] | null;
 };
 
-const emptyDraft: DraftCheckin = { energy: null, time: null, loc: null, state: null };
-const FB_DELAY = 30 * 60 * 1000; // 30 minutes
+const emptyDraft: DraftCheckin = { energy: null, time: null, loc: null, dest: null, state: null };
+const FB_DELAY = 30 * 60 * 1000; // 30 minutos
 
-/** Silent daily rollover: archive yesterday's dares, refresh the tarot draw. */
+/** Rollover diario silencioso: archiva los dares de ayer, refresca la Daily Card. */
 function rollover(s: DareStore): DareStore {
   const t = todayStr();
   const todaysDares = s.todaysDares.filter((e) => e.date === t);
-  const tarot =
-    s.tarot && s.tarot.date === t
-      ? s.tarot
+  const dailyCard =
+    s.dailyCard && s.dailyCard.date === t
+      ? s.dailyCard
       : { date: t, options: sample(TAROT, 3).map((c) => c.id), cardId: null };
-  return { ...s, todaysDares, tarot };
+  return { ...s, todaysDares, dailyCard };
 }
 
 function catFeedbackMap(s: DareStore): Partial<Record<Cat, number>> {
@@ -64,46 +70,54 @@ export function useDare() {
   const [away, setAway] = useState<boolean>(
     () =>
       store.onboarded &&
-      !!store.streak.lastDate &&
-      daysBetween(store.streak.lastDate, todayStr()) > 1,
+      !!store.momentum.lastDate &&
+      daysBetween(store.momentum.lastDate, todayStr()) > 1,
   );
 
-  // transient (not persisted)
+  // transitorio (no persistido)
   const [obIdx, setObIdx] = useState(0);
   const [draft, setDraft] = useState<DraftCheckin>(emptyDraft);
-  const [draw, setDraw] = useState<RewardDraw | null>(null);
-  const [drawFlipped, setDrawFlipped] = useState(false);
-  const [lastGain, setLastGain] = useState(0);
-  const [newBadges, setNewBadges] = useState<string[]>([]);
+  const [treat, setTreat] = useState<TreatDraw | null>(null);
+  const [treatFlipped, setTreatFlipped] = useState(false);
+  const [lastProof, setLastProof] = useState<string>("");
+  const [newTraits, setNewTraits] = useState<string[]>([]);
+  const [justCompletedJourney, setJustCompletedJourney] = useState<JourneyId | null>(null);
   const [fbNote, setFbNote] = useState(false);
   const [secs, setSecs] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [usedSmall, setUsedSmall] = useState(false);
 
   useEffect(() => {
     save(store);
   }, [store]);
 
-  // timer countdown
+  // cuenta atrás del timer
   useEffect(() => {
     if (screen === "timer" && !paused && secs > 0) {
       const id = setTimeout(() => setSecs((s) => s - 1), 1000);
       return () => clearTimeout(id);
     }
   }, [screen, paused, secs]);
-  // auto-finish when the clock runs out
+  // auto-finaliza cuando el reloj llega a 0
   useEffect(() => {
     if (screen === "timer" && secs === 0 && currentEntry && currentEntry.completedAt === null)
       finishDare();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [secs, screen]);
 
-  // ---- derived selectors ----
-  const journey = JOURNEYS.find((j) => j.id === store.journeyId)!;
-  const jd = store.journeyProgress[store.journeyId];
-  const chapter = chapterOf(journey, jd);
-  const level = Math.floor(store.xp / 200) + 1;
+  // ---- selectores derivados ----
+  const journey = journeyById(store.journeyId);
+  const daysDone = store.journeyProgress[store.journeyId];
+  const chapter = chapterOf(journey, daysDone);
   const catFeedback = catFeedbackMap(store);
   const today = todayStr();
+  const proofCount = store.proofLibrary.length;
+  const dreamReward = store.dreamRewards[store.journeyId] ?? null;
+  /** Identidad actual: la última desbloqueada, o la que persigue el journey. */
+  const currentIdentity =
+    store.identities.length > 0
+      ? store.identities[store.identities.length - 1]
+      : journey.identity.id;
 
   const todaysToday = store.todaysDares.filter((e) => e.date === today);
   const currentEntry = todaysToday.length ? todaysToday[todaysToday.length - 1] : null;
@@ -122,17 +136,17 @@ export function useDare() {
     : null;
 
   const daresToday = todaysToday.filter((e) => e.completedAt !== null).length;
-  const cardOptions: TarotCard[] = (store.tarot?.options ?? [])
+  const cardOptions: TarotCard[] = (store.dailyCard?.options ?? [])
     .map((id) => findCard(id))
     .filter((c): c is TarotCard => !!c);
-  const card = findCard(store.tarot?.cardId);
+  const card = findCard(store.dailyCard?.cardId);
   const showPendingFb =
     !!store.pendingFeedback && Date.now() - store.pendingFeedback.at >= FB_DELAY;
 
-  // ---- mutators ----
+  // ---- mutadores ----
   const patch = (p: Partial<DareStore>) => setStore((s) => ({ ...s, ...p }));
 
-  /** Replace the last-of-today entry (mutating one field), immutably. */
+  /** Reemplaza la última entrada de hoy (mutando un campo), inmutablemente. */
   function patchCurrentEntry(fields: Partial<DareStore["todaysDares"][number]>) {
     setStore((s) => {
       const arr = [...s.todaysDares];
@@ -149,10 +163,11 @@ export function useDare() {
     });
   }
 
-  // ---- actions ----
+  // ---- acciones ----
   function completeOnboarding() {
     patch({ onboarded: true });
-    setScreen("home");
+    // Si no hay Dream Reward para The Ember, ir al setup; si no, a Today.
+    setScreen(store.dreamRewards[store.journeyId] ? "home" : "dream");
   }
 
   function replayOnboarding() {
@@ -160,12 +175,22 @@ export function useDare() {
     setScreen("onboarding");
   }
 
+  function setDreamReward(id: string) {
+    setStore((s) => ({ ...s, dreamRewards: { ...s.dreamRewards, [s.journeyId]: id } }));
+  }
+
+  function confirmDreamReward(id: string) {
+    setDreamReward(id);
+    setScreen("home");
+  }
+
   function pickCard(cardId: string) {
-    setStore((s) => (s.tarot ? { ...s, tarot: { ...s.tarot, cardId } } : s));
+    setStore((s) => (s.dailyCard ? { ...s, dailyCard: { ...s.dailyCard, cardId } } : s));
   }
 
   function runCheckin(ci: Checkin) {
     const { dare, why } = generateDare(ci, store.lastCats, catFeedback, journey);
+    setUsedSmall(false);
     setStore((s) => ({
       ...s,
       lastCheckin: ci,
@@ -208,6 +233,7 @@ export function useDare() {
   function swapToSmall() {
     const smalls = DARES.filter((d) => d.cat === "small");
     const dare = smalls[Math.floor(Math.random() * smalls.length)];
+    setUsedSmall(true);
     patchCurrentEntry({
       dareId: dare.id,
       wild: false,
@@ -222,32 +248,52 @@ export function useDare() {
   function finishDare() {
     if (!currentDare || currentDare.completed) return;
     const d: Dare = currentDare.dare;
-    const roll = rollDraw();
-    const gain = d.xp * (roll.x2 ? 2 : 1);
+    const roll = rollTreat();
     const counts = { ...store.catCounts, [d.cat]: (store.catCounts[d.cat] || 0) + 1 };
     const completedBefore = todaysToday.filter((e) => e.completedAt !== null).length;
     const isFirstToday = completedBefore === 0;
     const nToday = completedBefore + 1;
     const h = new Date().getHours();
-    const newStreakCount = isFirstToday ? store.streak.count + 1 : store.streak.count;
+    const restartedAfterGap =
+      !!store.momentum.lastDate && daysBetween(store.momentum.lastDate, today) > 1;
+    const newMomentum = isFirstToday ? store.momentum.count + 1 : store.momentum.count;
+    const totalCompleted = store.completed.length + 1;
 
-    const earned: string[] = [];
-    const has = (id: string) => store.badges.includes(id) || earned.includes(id);
-    if (!has("showed-up")) earned.push("showed-up");
-    if (d.cat === "small" && !has("small-dare")) earned.push("small-dare");
-    if (store.lastCheckin && store.lastCheckin.energy <= 3 && !has("no-excuses")) earned.push("no-excuses");
-    if ((counts.forest || 0) >= 3 && !has("forest-explorer")) earned.push("forest-explorer");
-    if ((d.cat === "dumbbells" || d.cat === "fitboxing") && !has("strength")) earned.push("strength");
-    if ((counts.recovery || 0) + (counts.focus || 0) >= 3 && !has("clear-mind")) earned.push("clear-mind");
-    if (d.wild && !has("wildcard")) earned.push("wildcard");
-    if (d.cat === "pool" && !has("water-soul")) earned.push("water-soul");
-    if (nToday >= 2 && !has("twice")) earned.push("twice");
-    if (h >= 21 && !has("night")) earned.push("night");
-    if (newStreakCount >= 7 && !has("week")) earned.push("week");
-    if ((jd + 1) % CH_SIZE === 0 && chapter.idx < 3 && !has("chapter")) earned.push("chapter");
+    // ¿cierra el sprint del Journey? (día 7 completado)
+    const newDaysDone = daysDone + 1;
+    const finishesJourney =
+      newDaysDone >= SPRINT_DAYS && !store.journeysCompleted.includes(store.journeyId);
+
+    // traits ganados por este dare (función pura)
+    const have = (id: string) => store.traits.includes(id);
+    const earned = earnedTraits({
+      dare: d,
+      ci: store.lastCheckin,
+      counts,
+      totalCompleted,
+      nToday,
+      hour: h,
+      momentum: newMomentum,
+      usedSmallVersion: usedSmall,
+      restartedAfterGap,
+      prevCat: store.lastCats[0],
+      have,
+    });
+
+    // traits e identidad de fin de Journey
+    const newIdentities: string[] = [];
+    if (finishesJourney) {
+      const jTrait = store.journeyId === "ember" ? "proof-of-fire" : store.journeyId === "iron" ? "proof-of-iron" : null;
+      if (jTrait && !have(jTrait) && !earned.includes(jTrait)) earned.push(jTrait);
+      if (store.journeyId === "iron" && !have("quiet-power") && !earned.includes("quiet-power")) earned.push("quiet-power");
+      const identId = journey.identity.id;
+      if (!store.identities.includes(identId)) newIdentities.push(identId);
+      // la identidad también existe como trait coleccionable
+      if (!have(identId) && !earned.includes(identId)) earned.push(identId);
+    }
 
     setStore((s) => {
-      // stamp completion on the active entry
+      // sella la completion en la entrada activa
       const arr = [...s.todaysDares];
       for (let i = arr.length - 1; i >= 0; i--) {
         if (arr[i].date === today && arr[i].completedAt === null) {
@@ -259,21 +305,24 @@ export function useDare() {
         ...s,
         todaysDares: arr,
         catCounts: counts,
-        xp: s.xp + gain,
-        completed: [...s.completed, { dareId: d.id, date: today, xp: gain }],
-        journeyProgress: { ...s.journeyProgress, [s.journeyId]: jd + 1 },
-        streak: { count: newStreakCount, lastDate: today },
+        completed: [...s.completed, { dareId: d.id, date: today }],
+        proofLibrary: [...s.proofLibrary, { date: today, dareId: d.id, text: d.proof }],
+        journeyProgress: { ...s.journeyProgress, [s.journeyId]: newDaysDone },
+        journeysCompleted: finishesJourney ? [...s.journeysCompleted, s.journeyId] : s.journeysCompleted,
+        momentum: { count: newMomentum, lastDate: today },
         lastCats: [d.cat, s.lastCats[0]].filter(Boolean).slice(0, 2) as Cat[],
-        badges: [...s.badges, ...earned],
-        rewardDraws: [...s.rewardDraws, { date: today, tier: roll.tier, text: roll.text }],
+        traits: [...s.traits, ...earned],
+        identities: [...s.identities, ...newIdentities],
+        treats: [...s.treats, { date: today, tier: roll.tier, text: roll.text }],
         pendingFeedback: { dareId: d.id, cat: d.cat, at: Date.now() },
       };
     });
 
-    setDraw(roll);
-    setDrawFlipped(false);
-    setLastGain(gain);
-    setNewBadges(earned);
+    setTreat(roll);
+    setTreatFlipped(false);
+    setLastProof(d.proof);
+    setNewTraits(earned);
+    setJustCompletedJourney(finishesJourney ? store.journeyId : null);
     setFbNote(false);
     setScreen("complete");
   }
@@ -290,8 +339,8 @@ export function useDare() {
   }
 
   function oneMore() {
-    setDraw(null);
-    setDrawFlipped(false);
+    setTreat(null);
+    setTreatFlipped(false);
     setFbNote(false);
     setDraft(emptyDraft);
     setScreen("checkin");
@@ -327,11 +376,13 @@ export function useDare() {
     clearStore();
     setStore(rollover(defaultStore()));
     setDraft(emptyDraft);
-    setDraw(null);
-    setDrawFlipped(false);
-    setLastGain(0);
-    setNewBadges([]);
+    setTreat(null);
+    setTreatFlipped(false);
+    setLastProof("");
+    setNewTraits([]);
+    setJustCompletedJourney(null);
     setFbNote(false);
+    setUsedSmall(false);
     setAway(false);
     setObIdx(0);
     setScreen("onboarding");
@@ -341,9 +392,53 @@ export function useDare() {
     patch({ journeyId: id });
   }
 
+  /** Selecciona un journey desde el picker; si no tiene Dream Reward, va al setup. */
+  function chooseJourney(id: JourneyId) {
+    patch({ journeyId: id });
+    setScreen(store.dreamRewards[id] ? "journey" : "dream");
+  }
+
+  // ---- milestones ----
+  function completeMilestone(id: string) {
+    setStore((s) => ({ ...s, milestones: { ...s.milestones, [id]: true } }));
+  }
+
+  function saveCompanionShelf(shelf: CompanionShelf, milestoneId?: string) {
+    setStore((s) => ({
+      ...s,
+      companionShelf: shelf,
+      milestones: milestoneId ? { ...s.milestones, [milestoneId]: true } : s.milestones,
+    }));
+  }
+
+  function saveBossPlaylist(pl: BossPlaylist, milestoneId?: string) {
+    setStore((s) => ({
+      ...s,
+      bossPlaylist: pl,
+      milestones: milestoneId ? { ...s.milestones, [milestoneId]: true } : s.milestones,
+    }));
+  }
+
+  // ---- planning + dates ----
+  function planDare(dest: Dest, label: string) {
+    setStore((s) => ({
+      ...s,
+      plannedDares: [...s.plannedDares, { id: `${dest}-${s.plannedDares.length}`, dest, label }],
+    }));
+  }
+
+  function scheduleDate(when: string, idea?: string) {
+    setStore((s) => ({
+      ...s,
+      dates: [...s.dates, { when, idea, journeyId: s.journeyId }],
+      // "Self-Investor" se desbloquea al reservar una Date
+      traits: s.traits.includes("self-investor") ? s.traits : [...s.traits, "self-investor"],
+    }));
+  }
+
   return {
     store,
-    // navigation
+    // navegación
     screen,
     setScreen,
     away,
@@ -353,33 +448,39 @@ export function useDare() {
     // check-in draft
     draft,
     setDraft,
-    // derived
+    // derivados
     journey,
-    jd,
+    daysDone,
     chapter,
-    level,
     catFeedback,
     currentDare,
     daresToday,
     cardOptions,
     card,
+    proofCount,
+    dreamReward,
+    currentIdentity,
     showPendingFb,
-    // timer + reward transient
+    // timer + treat transitorio
     secs,
     setSecs,
     paused,
     setPaused,
-    draw,
-    drawFlipped,
-    setDrawFlipped,
-    lastGain,
-    newBadges,
+    treat,
+    treatFlipped,
+    setTreatFlipped,
+    lastProof,
+    newTraits,
+    justCompletedJourney,
     fbNote,
-    // constants passed through for convenience
-    badgeDefs: BADGES,
-    // actions
+    // constantes útiles
+    traitDefs: TRAITS,
+    journeys: JOURNEYS,
+    // acciones
     completeOnboarding,
     replayOnboarding,
+    setDreamReward,
+    confirmDreamReward,
     pickCard,
     runCheckin,
     justDareMe,
@@ -393,6 +494,12 @@ export function useDare() {
     doComeback,
     resetAll,
     setJourney,
+    chooseJourney,
+    completeMilestone,
+    saveCompanionShelf,
+    saveBossPlaylist,
+    planDare,
+    scheduleDate,
   };
 }
 
