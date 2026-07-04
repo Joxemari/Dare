@@ -26,6 +26,7 @@ export type Screen =
   | "onboarding"
   | "dream"
   | "home"
+  | "card"
   | "checkin"
   | "detail"
   | "timer"
@@ -186,6 +187,9 @@ export function useDare() {
 
   function pickCard(cardId: string) {
     setStore((s) => (s.dailyCard ? { ...s, dailyCard: { ...s.dailyCard, cardId } } : s));
+    // Al elegir carta se revela a pantalla completa (screen "card"); desde el
+    // recap de Home se puede reabrir con setScreen("card").
+    setScreen("card");
   }
 
   function runCheckin(ci: Checkin) {

@@ -83,37 +83,34 @@ export function Home({ app }: { app: DareApp }) {
               </div>
             </div>
           ) : (
-            <div
+            // Recap de la carta ya elegida: miniatura a sangre (la imagen ya
+            // trae marco/número/nombre) + mensaje. Tocarla reabre el revelado.
+            <button
               className="card flip"
-              style={{ margin: "8px 0 26px", padding: 16, borderColor: C.gold + "44", display: "flex", gap: 16, alignItems: "stretch" }}
+              onClick={() => app.setScreen("card")}
+              aria-label={`${card.num} ${card.name} — view card`}
+              style={{
+                margin: "8px 0 26px",
+                padding: 14,
+                borderColor: C.gold + "44",
+                display: "flex",
+                gap: 14,
+                alignItems: "center",
+                width: "100%",
+                cursor: "pointer",
+                fontFamily: "inherit",
+                textAlign: "left",
+                color: C.text,
+              }}
             >
-              <div
-                style={{
-                  flexShrink: 0,
-                  width: 88,
-                  border: `1px solid ${C.gold}55`,
-                  borderRadius: 10,
-                  background: "linear-gradient(170deg,#1E1E1B,#161614)",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "8px 4px",
-                }}
-              >
-                <span style={{ fontSize: 9, letterSpacing: "0.18em", color: C.gold }}>{card.num}</span>
-                <TarotArt id={card.id} size={54} />
-                <span className="lbl" style={{ fontSize: 7.5, color: C.gold, textAlign: "center", letterSpacing: "0.14em" }}>
-                  {card.name.toUpperCase()}
-                </span>
-              </div>
+              <TarotArt id={card.id} width={64} radius={8} />
               <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
                 <p className="lbl" style={{ color: C.gold, marginBottom: 5 }}>
                   {card.num} · {card.name}
                 </p>
                 <p style={{ fontSize: 13.5, lineHeight: 1.55, color: C.text }}>{card.msg}</p>
               </div>
-            </div>
+            </button>
           )}
 
           {/* before check-in */}

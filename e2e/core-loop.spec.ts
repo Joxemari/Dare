@@ -36,8 +36,10 @@ test("recorre el loop diario completo sin errores de página", async ({ page }) 
   // el Dream Reward elegido aparece en Today
   await expect(page.getByText(/Dream Reward: Painting class/)).toBeVisible();
 
-  // draw daily card
+  // draw daily card → se revela a pantalla completa → tap para continuar
   await page.locator('button[aria-label="Face-down daily card"]').first().click();
+  await expect(page.getByText("Tap to continue")).toBeVisible();
+  await page.getByText("Tap to continue").click();
 
   // check-in
   await page.getByRole("button", { name: "Start check-in" }).click();
