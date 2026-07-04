@@ -48,11 +48,31 @@ export function allowedLocs(ci: Checkin): Loc[] {
   return ci.dest ? [destToDareLoc(ci.dest)] : currentToDareLocs(ci.loc);
 }
 
+/**
+ * IDs de Dares vistos recientemente, más reciente primero y sin duplicados.
+ * `history` va en orden cronológico (lo más nuevo al final): `completed` y
+ * `todaysDares` del store encajan tal cual. Alimenta la penalización por
+ * repetición del generador — la magia del "reveal" depende de no repetir.
+ */
+export function recentDareIds(history: { dareId: string }[], n = 5): string[] {
+  const ids: string[] = [];
+  const seen = new Set<string>();
+  for (let i = history.length - 1; i >= 0 && ids.length < n; i--) {
+    const id = history[i].dareId;
+    if (!seen.has(id)) {
+      seen.add(id);
+      ids.push(id);
+    }
+  }
+  return ids;
+}
+
 export function generateDare(
   ci: Checkin,
   lastCats: Cat[],
   catFeedback: Partial<Record<Cat, number>>,
   journey: Journey,
+  recentIds: string[] = [],
 ): { dare: Dare; why: string } {
   const locs = allowedLocs(ci);
   const at = (d: Dare) => d.locs.some((l) => locs.includes(l));
@@ -61,7 +81,10 @@ export function generateDare(
   if (ci.time >= 10 && ci.energy >= 3 && Math.random() < 0.18) {
     const wpool = WILDCARDS.filter((w) => w.min <= ci.time + 2 && at(w));
     if (wpool.length) {
-      const dare = wpool[Math.floor(Math.random() * wpool.length)];
+      // no repitas el último wildcard si hay alternativas
+      const fresh = wpool.filter((w) => !recentIds.includes(w.id));
+      const from = fresh.length ? fresh : wpool;
+      const dare = from[Math.floor(Math.random() * from.length)];
       return {
         dare,
         why: "Wildcard. The usual rules rest today — this one is for the part of you that gets bored.",
@@ -99,6 +122,9 @@ export function generateDare(
     if (ci.dest === "forest" && d.cat === "forest") s += 20;
     if (lastCats[0] === d.cat) s -= 18;
     if (lastCats[0] === d.cat && lastCats[1] === d.cat) s -= 40;
+    // penaliza repetir un Dare concreto reciente (graduado: más reciente, más penalización)
+    const recentIdx = recentIds.indexOf(d.id);
+    if (recentIdx >= 0) s -= Math.max(6, 26 - recentIdx * 5);
     s += (catFeedback[d.cat] || 0) * 6;
     s += Math.random() * 6;
     return { d, s };

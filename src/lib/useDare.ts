@@ -15,7 +15,7 @@ import { DARES } from "../data/dares";
 import { TAROT } from "../data/tarot";
 import { TRAITS } from "../data/traits";
 import { JOURNEYS, journeyById, chapterOf, SPRINT_DAYS } from "../data/journeys";
-import { generateDare } from "./generator";
+import { generateDare, recentDareIds } from "./generator";
 import { rollTreat, sample } from "./random";
 import { findDare, findCard } from "./lookup";
 import { earnedTraits } from "./achievements";
@@ -189,7 +189,9 @@ export function useDare() {
   }
 
   function runCheckin(ci: Checkin) {
-    const { dare, why } = generateDare(ci, store.lastCats, catFeedback, journey);
+    // evita repetir Dares recién vistos (completados + los de hoy, aún sin cerrar)
+    const recentIds = recentDareIds([...store.completed, ...store.todaysDares]);
+    const { dare, why } = generateDare(ci, store.lastCats, catFeedback, journey, recentIds);
     setUsedSmall(false);
     setStore((s) => ({
       ...s,
