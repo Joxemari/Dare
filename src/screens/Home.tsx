@@ -5,9 +5,9 @@ import { SPRINT_DAYS } from "../data/journeys";
 import { Ico } from "../components/Ico";
 import { Dots } from "../components/Dots";
 import { Effects } from "../components/Effects";
-import { TarotArt } from "../components/TarotArt";
 import { Nav } from "../components/Nav";
 import { wrap, pad } from "../components/layout";
+import { cardRevealFeedback } from "../lib/feedback";
 import type { DareApp } from "../lib/useDare";
 
 export function Home({ app }: { app: DareApp }) {
@@ -78,7 +78,10 @@ export function Home({ app }: { app: DareApp }) {
                     key={c.id}
                     className="tcard"
                     style={{ aspectRatio: "5 / 8.5", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}
-                    onClick={() => app.pickCard(c.id)}
+                    onClick={() => {
+                      cardRevealFeedback();
+                      app.pickCard(c.id);
+                    }}
                     aria-label="Face-down daily card"
                   >
                     <div style={{ position: "absolute", inset: 6, border: `1px solid ${C.gold}33`, borderRadius: 9, pointerEvents: "none" }} />
@@ -91,37 +94,51 @@ export function Home({ app }: { app: DareApp }) {
               </div>
             </div>
           ) : (
-            <div
+            // Recap de la carta ya elegida: icono de carta + su mensaje (la
+            // imagen no se repite aquí, ya se vio grande). Tocarlo reabre el
+            // revelado a pantalla completa.
+            <button
               className="card flip"
-              style={{ margin: "8px 0 26px", padding: 16, borderColor: C.gold + "44", display: "flex", gap: 16, alignItems: "stretch" }}
+              onClick={() => {
+                cardRevealFeedback();
+                app.setScreen("card");
+              }}
+              aria-label={`${card.num} ${card.name} — view card`}
+              style={{
+                margin: "8px 0 26px",
+                padding: 16,
+                borderColor: C.gold + "44",
+                display: "flex",
+                gap: 14,
+                alignItems: "center",
+                width: "100%",
+                cursor: "pointer",
+                fontFamily: "inherit",
+                textAlign: "left",
+                color: C.text,
+              }}
             >
-              <div
+              <span
                 style={{
                   flexShrink: 0,
-                  width: 88,
-                  border: `1px solid ${C.gold}55`,
-                  borderRadius: 10,
-                  background: "linear-gradient(170deg,#1E1E1B,#161614)",
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  border: `1px solid ${C.gold}44`,
                   display: "flex",
-                  flexDirection: "column",
                   alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "8px 4px",
+                  justifyContent: "center",
                 }}
               >
-                <span style={{ fontSize: 9, letterSpacing: "0.18em", color: C.gold }}>{card.num}</span>
-                <TarotArt id={card.id} size={54} />
-                <span className="lbl" style={{ fontSize: 7.5, color: C.gold, textAlign: "center", letterSpacing: "0.14em" }}>
-                  {card.name.toUpperCase()}
-                </span>
-              </div>
+                <Ico name="card" size={22} color={C.gold} sw={1.4} />
+              </span>
               <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
                 <p className="lbl" style={{ color: C.gold, marginBottom: 5 }}>
                   {card.num} · {card.name}
                 </p>
                 <p style={{ fontSize: 13.5, lineHeight: 1.55, color: C.text }}>{card.msg}</p>
               </div>
-            </div>
+            </button>
           )}
 
           {/* no active Journey — soft prompt (does not block the daily Dare) */}

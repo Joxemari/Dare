@@ -1,32 +1,46 @@
 import { useState } from "react";
 import { C } from "../data/colors";
 
-/** Arte de una carta, servido como PNG estático desde `public/arcana/{id}.png`
+/** Arte de una carta, servido como WebP estático desde `public/arcana/{id}.webp`
     (ver CLAUDE.md — un fichero por carta, nombrado igual que su `id`).
-    La URL respeta el `base: '/Dare/'` vía `import.meta.env.BASE_URL`. Si el PNG
-    falta (carta aún no subida o id desconocido), cae a una marca ✦ para no
-    romper el layout — mismo espíritu defensivo que la migración de `storage.ts`. */
-export function TarotArt({ id, size = 64 }: { id: string; size?: number }) {
+    La URL respeta el `base: '/Dare/'` vía `import.meta.env.BASE_URL`.
+
+    La imagen YA es una carta completa (marco, número, nombre y arte dibujados),
+    así que se pinta a sangre: ocupa todo el `width` y conserva su proporción
+    2:3 — nada de marcos ni etiquetas auxiliares alrededor. `width` acepta px
+    (miniaturas) o cadena CSS como "100%"/"72%" (contenedor responsive).
+
+    Si el WebP falta (carta aún no subida o id desconocido), cae a una marca ✦
+    con la misma proporción, para no romper el layout. */
+export function TarotArt({
+  id,
+  width = 64,
+  radius = 8,
+  alt = "",
+}: {
+  id: string;
+  width?: number | string;
+  radius?: number;
+  alt?: string;
+}) {
   // Guardamos el id que falló (no un booleano) para que un cambio de carta
   // reintente cargar la nueva sin arrastrar el error de la anterior.
   const [failedId, setFailedId] = useState<string | null>(null);
-  const h = Math.round(size * 1.35);
 
   if (failedId === id) {
     return (
       <div
         aria-hidden="true"
         style={{
-          width: size,
-          height: h,
+          width,
+          aspectRatio: "2 / 3",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           border: `1px solid ${C.gold}33`,
-          borderRadius: 6,
+          borderRadius: radius,
           color: C.gold,
           opacity: 0.5,
-          fontSize: size * 0.4,
         }}
       >
         ✦
@@ -36,13 +50,11 @@ export function TarotArt({ id, size = 64 }: { id: string; size?: number }) {
 
   return (
     <img
-      src={`${import.meta.env.BASE_URL}arcana/${id}.png`}
-      alt=""
-      aria-hidden="true"
-      width={size}
-      height={h}
+      src={`${import.meta.env.BASE_URL}arcana/${id}.webp`}
+      alt={alt}
+      aria-hidden={alt ? undefined : true}
       onError={() => setFailedId(id)}
-      style={{ objectFit: "contain", display: "block" }}
+      style={{ width, height: "auto", display: "block", borderRadius: radius }}
     />
   );
 }

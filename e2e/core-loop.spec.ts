@@ -36,8 +36,10 @@ test("recorre el loop diario completo sin errores de página", async ({ page }) 
   await expect(page.getByText("Choose a Journey to begin.")).toBeVisible();
   await expect(page.getByText("No active Journey")).toBeVisible();
 
-  // draw daily card
+  // draw daily card → se revela a pantalla completa → tap para continuar
   await page.locator('button[aria-label="Face-down daily card"]').first().click();
+  await expect(page.getByText("Tap to continue")).toBeVisible();
+  await page.getByText("Tap to continue").click();
 
   // check-in — ningún botón viene preseleccionado
   await page.getByRole("button", { name: "Start check-in" }).click();

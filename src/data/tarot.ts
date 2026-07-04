@@ -1,7 +1,7 @@
 import type { TarotCard } from "../types";
 
 /* Major Arcana — los 22. Voice: Co-Star — blunt, dry, applicable.
-   El `id` es también el nombre del PNG en `public/arcana/{id}.png` (ver
+   El `id` es también el nombre del WebP en `public/arcana/{id}.webp` (ver
    CLAUDE.md): minúscula, una sola palabra, sin espacios. */
 export const TAROT: TarotCard[] = [
   { id: "fool", num: "0", name: "The Fool", msg: "You don't need a plan to take a first step. Overpreparing is a form of hiding. Start before you feel ready — readiness is a byproduct, not a prerequisite." },

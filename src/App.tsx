@@ -3,6 +3,7 @@ import { Onboarding } from "./screens/Onboarding";
 import { Dream } from "./screens/Dream";
 import { Reentry } from "./screens/Reentry";
 import { Home } from "./screens/Home";
+import { Card } from "./screens/Card";
 import { Checkin } from "./screens/Checkin";
 import { Detail } from "./screens/Detail";
 import { Timer } from "./screens/Timer";
@@ -21,6 +22,8 @@ export default function App() {
   switch (app.screen) {
     case "dream":
       return <Dream app={app} />;
+    case "card":
+      return app.card ? <Card app={app} /> : <Home app={app} />;
     case "checkin":
       return <Checkin app={app} />;
     case "detail":
