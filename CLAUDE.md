@@ -136,15 +136,17 @@ Por qué así:
 
 ### Arte de las cartas (arcanos mayores)
 
-Las **22 cartas del tarot** se sirven como **PNG estático** desde
+Las **22 cartas del tarot** se sirven como **WebP estático** desde
 `public/arcana/`, un fichero por carta nombrado **exactamente igual que su `id`**
-en `src/data/tarot.ts` (p. ej. `fool.png`, `priestess.png`, `wheel.png`). El
+en `src/data/tarot.ts` (p. ej. `fool.webp`, `priestess.webp`, `wheel.webp`). El
 componente `TarotArt` resuelve la URL como
-`` `${import.meta.env.BASE_URL}arcana/${id}.png` `` (respeta el `base: '/Dare/'`)
+`` `${import.meta.env.BASE_URL}arcana/${id}.webp` `` (respeta el `base: '/Dare/'`)
 y **cae a una marca ✦** si el fichero falta, para no romper el layout. Los
 nombres van en **minúscula, una palabra, sin espacios** (la ruta de Pages
 distingue mayúsculas); `src/data/tarot.test.ts` verifica que los `id` cumplen esa
-forma. Añadir una carta = añadir su entrada en `tarot.ts` **y** su PNG en
+forma. Los WebP están redimensionados a **800px de ancho, calidad 82** (se
+muestran a 54–88px); ver `public/arcana/README.md` para regenerarlos desde PNG
+con `sharp`. Añadir una carta = añadir su entrada en `tarot.ts` **y** su WebP en
 `public/arcana/` con el mismo `id`.
 
 ### PWA (instalable + offline)
