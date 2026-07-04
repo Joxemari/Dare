@@ -90,12 +90,30 @@ src/
                  notify.ts     recordatorio local: permiso + showNotification vía
                                service worker. Impuro; no se testea.
   components/  Presentacionales: Ico, TarotArt, Dots, Nav, Meta, Effects,
-               MilestoneModal, ShareCardButton, Briefing, layout.
-  screens/     Pantallas (Onboarding, Dream, Reentry, Home, Checkin, Detail,
-               Timer, Complete, Journey, Journeys, Progress, You). Consumen
-               el hook.
+               MilestoneModal, ShareCardButton, Briefing, layout; y los de
+               Today: AtmosphereHero, TodayDareRevealCard, ActiveJourneyList.
+  screens/     Pantallas (Onboarding, Dream, Reentry, Home, Card, Checkin,
+               Detail, Timer, Complete, Journey, Journeys, Progress, You).
+               Consumen el hook.
   App.tsx      "Router" por estado: decide qué pantalla mostrar.
 ```
+
+### Today — ritual diario mínimo (no dashboard)
+
+La pestaña Today (`screens/Home.tsx`) es deliberadamente MÍNIMA: header
+(icono carta · TODAY · perfil), un `AtmosphereHero` (atmósfera diaria: símbolo
+de línea + textos, modular por props para variar por estado/journey), un
+`TodayDareRevealCard` (un Dare oculto que se **revela inline de un toque**, sin
+navegar; estados cerrado/revelado/completado), y `ActiveJourneyList` (filas
+compactas: símbolo + próxima acción + Start, que abre la pestaña Journey). Bajo
+el hero se mantiene el widget `Briefing` (la "lectura del día" estilo Co-Star,
+parte de la atmósfera diaria). NO muestra proofs, métricas ni calendario — eso
+vive en Progress. El **ritual de
+la carta del día** (tarot) se movió FUERA de Today: vive en la pantalla `Card`
+(elegir 1 de 3 → revelado a pantalla completa), accesible desde el icono
+izquierdo del header. `revealTodayDare`/`anotherDare` en el hook generan el
+Dare y lo revelan sin salir de Today; el check-in completo ("Get my Dare")
+sigue accesible desde un link discreto y abre el Detail.
 
 ### Contenido generativo (pipeline de PRs, no runtime)
 

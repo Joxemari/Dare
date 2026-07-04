@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { DARES } from "./dares";
 import { WILDCARDS } from "./wildcards";
-import { JOURNEYS, totalMilestones, chapterCompleted, unlockedChapterCount, currentChapter, SPRINT_DAYS } from "./journeys";
+import { JOURNEYS, totalMilestones, chapterCompleted, unlockedChapterCount, currentChapter, nextAction, SPRINT_DAYS } from "./journeys";
 import { SCIENCE, findScience } from "./science";
 import { TRAITS, findTrait } from "./traits";
 import { SYMBOLS, JOURNEY_SYM } from "./symbols";
@@ -119,6 +119,19 @@ describe("desbloqueo de capítulos por completado", () => {
   it("sin ningún milestone hecho, solo el capítulo 1 está desbloqueado en cualquier Journey", () => {
     for (const j of JOURNEYS) expect(unlockedChapterCount(j, {}), j.id).toBe(1);
   });
+
+  it("nextAction devuelve el primer milestone pendiente del capítulo en curso", () => {
+    const ember = JOURNEYS.find((j) => j.id === "ember")!;
+    expect(nextAction(ember, {})).toBe(ember.chapters[0].milestones[0].title);
+    const done = { [ember.chapters[0].milestones[0].id]: true };
+    expect(nextAction(ember, done)).toBe(ember.chapters[0].milestones[1].title);
+  });
+
+  it("nextAction cae a la promesa del Journey si no hay pendientes", () => {
+    const ember = JOURNEYS.find((j) => j.id === "ember")!;
+    const allDoneMap = Object.fromEntries(ember.chapters.flatMap((c) => c.milestones).map((m) => [m.id, true]));
+    expect(nextAction(ember, allDoneMap)).toBe(ember.promise);
+  });
 });
 
 describe("Journey system — los 7 Journeys del set final", () => {
@@ -196,6 +209,21 @@ describe("Journey system — los 7 Journeys del set final", () => {
 
   it("cada Journey trae completionLine (copy de cierre)", () => {
     for (const j of JOURNEYS) expect(j.completionLine && j.completionLine.length > 0, j.id).toBeTruthy();
+  });
+
+  it("nextAction devuelve el primer milestone pendiente del capítulo en curso", () => {
+    const ember = JOURNEYS.find((j) => j.id === "ember")!;
+    // sin nada hecho → primer milestone del capítulo I
+    expect(nextAction(ember, {})).toBe(ember.chapters[0].milestones[0].title);
+    // hecho el primero → pasa al segundo
+    const done = { [ember.chapters[0].milestones[0].id]: true };
+    expect(nextAction(ember, done)).toBe(ember.chapters[0].milestones[1].title);
+  });
+
+  it("nextAction cae a la promesa del Journey si no hay pendientes", () => {
+    const ember = JOURNEYS.find((j) => j.id === "ember")!;
+    const allDoneMap = Object.fromEntries(ember.chapters.flatMap((c) => c.milestones).map((m) => [m.id, true]));
+    expect(nextAction(ember, allDoneMap)).toBe(ember.promise);
   });
 });
 

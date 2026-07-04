@@ -328,8 +328,12 @@ export function useDare() {
     setScreen("card");
   }
 
-  /** Genera un Dare desde un check-in y lo abre en Detail (sin tap-to-reveal). */
-  function generateInto(ci: Checkin, opts: { persistCheckin: boolean }) {
+  /**
+   * Genera un Dare desde un check-in. `navigate: "detail"` lo abre en la
+   * pantalla de Detalle (flujo "Get my Dare"); `navigate: "home"` lo revela
+   * inline en Today (ritual de un toque, sin cambiar de pantalla).
+   */
+  function generateInto(ci: Checkin, opts: { persistCheckin: boolean; navigate: "detail" | "home" }) {
     const recentIds = recentDareIds([...store.completed, ...store.todaysDares]);
     const { dare, why } = generateDare(ci, store.lastCats, catFeedback, journey, recentIds);
     setUsedSmall(false);
@@ -337,14 +341,15 @@ export function useDare() {
       ...s,
       lastCheckin: ci,
       checkins: opts.persistCheckin ? [...s.checkins, { ...ci, date: todayStr() }].slice(-60) : s.checkins,
+      // Reemplaza cualquier Dare de hoy aún SIN completar (p. ej. "Another dare"
+      // no apila): conserva los ya completados para el recuento del día.
       todaysDares: [
-        ...s.todaysDares,
+        ...s.todaysDares.filter((e) => !(e.date === todayStr() && e.completedAt === null)),
         {
           dareId: dare.id,
           date: todayStr(),
           wild: !!dare.wild,
-          // "Get my Dare" / "Just dare me" abren el Dare directamente.
-          revealed: true,
+          revealed: true, // "Get my Dare" / "Just dare me" / "Reveal" abren el Dare directamente
           why,
           startedAt: null,
           completedAt: null,
@@ -352,17 +357,32 @@ export function useDare() {
       ],
     }));
     setDraft(emptyDraft);
-    setScreen("detail");
+    setScreen(opts.navigate === "home" ? "home" : "detail");
   }
 
   /** "Get my Dare" desde el check-in completo → abre el Detail directamente. */
   function runCheckin(ci: Checkin) {
-    generateInto(ci, { persistCheckin: true });
+    generateInto(ci, { persistCheckin: true, navigate: "detail" });
   }
 
   /** "Just dare me": Dare inmediato. Último check-in si existe, o default seguro. */
   function justDareMe() {
-    generateInto(store.lastCheckin ?? SAFE_CI, { persistCheckin: false });
+    generateInto(store.lastCheckin ?? SAFE_CI, { persistCheckin: false, navigate: "detail" });
+  }
+
+  /** Today "Reveal today's dare": revela el Dare de hoy INLINE (sin navegar).
+   *  Si ya hay uno sin revelar, lo abre; si no, genera uno al instante. */
+  function revealTodayDare() {
+    if (currentEntry && currentEntry.completedAt === null) {
+      if (!currentEntry.revealed) patchCurrentEntry({ revealed: true });
+      return;
+    }
+    generateInto(store.lastCheckin ?? SAFE_CI, { persistCheckin: false, navigate: "home" });
+  }
+
+  /** Today "Another dare": genera un Dare distinto y lo deja revelado inline. */
+  function anotherDare() {
+    generateInto(store.lastCheckin ?? SAFE_CI, { persistCheckin: false, navigate: "home" });
   }
 
   function revealDare() {
@@ -673,6 +693,8 @@ export function useDare() {
     pickCard,
     runCheckin,
     justDareMe,
+    revealTodayDare,
+    anotherDare,
     revealDare,
     startDare,
     swapToSmall,
