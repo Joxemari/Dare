@@ -10,9 +10,13 @@ import { wrap, pad } from "../components/layout";
 import type { Cat } from "../types";
 import type { DareApp } from "../lib/useDare";
 
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
 export function You({ app }: { app: DareApp }) {
-  const { store, journey, chapter, daysDone, card, catFeedback, proofCount, currentIdentity } = app;
+  const { store, journey, chapter, daysDone, card, catFeedback, proofCount, currentIdentity, notifyPermission } = app;
   const identity = findTrait(currentIdentity);
+  const notif = store.notifications;
+  const notifOn = notif.enabled && notifyPermission === "granted";
   const done = store.completed.length;
   const frac = daysDone / SPRINT_DAYS;
   const RY = 34;
@@ -134,6 +138,62 @@ export function You({ app }: { app: DareApp }) {
             </p>
             <p style={{ fontSize: 12.5, color: C.dim, marginTop: 3 }}>
               Chapter {chapter.n} — {chapter.name} · {daysDone} / {SPRINT_DAYS} days
+            </p>
+          </div>
+
+          {/* daily reminder */}
+          <div className="card" style={{ padding: 18, marginBottom: 14 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+              <p className="lbl">Daily reminder</p>
+              {notifyPermission === "unsupported" ? (
+                <span style={{ fontSize: 11, color: C.faint }}>Not supported</span>
+              ) : notifOn ? (
+                <button className="pill" onClick={() => app.disableNotifications()}>
+                  {SYMBOLS.spark} On
+                </button>
+              ) : (
+                <button className="btn btn-line" style={{ width: "auto", padding: "6px 16px", fontSize: 12 }} onClick={() => app.enableNotifications()}>
+                  Enable
+                </button>
+              )}
+            </div>
+            <p style={{ fontSize: 12.5, color: C.dim, lineHeight: 1.5, marginBottom: notifOn ? 14 : 0 }}>
+              A single nudge with today's briefing — the same reading as your Today tab.
+            </p>
+
+            {notifOn && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: 13, color: C.dim }}>Remind me at</span>
+                <input
+                  type="time"
+                  value={`${pad2(notif.hour)}:${pad2(notif.minute)}`}
+                  onChange={(e) => {
+                    const [h, m] = e.target.value.split(":").map(Number);
+                    if (!Number.isNaN(h) && !Number.isNaN(m)) app.setNotificationTime(h, m);
+                  }}
+                  style={{
+                    background: C.bg,
+                    color: C.text,
+                    border: `1px solid ${C.line}`,
+                    borderRadius: 8,
+                    padding: "6px 10px",
+                    fontFamily: "inherit",
+                    fontSize: 14,
+                    colorScheme: "dark",
+                  }}
+                  aria-label="Reminder time"
+                />
+              </div>
+            )}
+
+            {notifyPermission === "denied" && (
+              <p style={{ fontSize: 11.5, color: C.coral, marginTop: 10, lineHeight: 1.5 }}>
+                Notifications are blocked. Enable them for DARE in your browser or system settings.
+              </p>
+            )}
+            <p style={{ fontSize: 11, color: C.faint, marginTop: 10, lineHeight: 1.5 }}>
+              Delivered while DARE is open or in the background where your device allows. Reliable
+              background delivery needs a server — coming later.
             </p>
           </div>
 

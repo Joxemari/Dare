@@ -14,6 +14,7 @@ import type {
 import { DARES } from "../data/dares";
 import { TAROT } from "../data/tarot";
 import { TRAITS } from "../data/traits";
+import { CATS } from "../data/colors";
 import { JOURNEYS, journeyById, currentChapter, SPRINT_DAYS } from "../data/journeys";
 import { generateDare, recentDareIds } from "./generator";
 import { rollTreat, sample } from "./random";
@@ -21,6 +22,8 @@ import { findDare, findCard } from "./lookup";
 import { earnedTraits } from "./achievements";
 import { load, save, defaultStore, clearStore } from "./storage";
 import { todayStr, daysBetween } from "./date";
+import { buildBriefing, buildReminder, reminderDue, type BriefingInput } from "./briefing";
+import { notificationPermission, requestNotificationPermission, showReminderNotification } from "./notify";
 
 export type Screen =
   | "onboarding"
@@ -187,6 +190,67 @@ export function useDare() {
   const card = findCard(store.dailyCard?.cardId);
   const showPendingFb =
     !!store.pendingFeedback && Date.now() - store.pendingFeedback.at >= FB_DELAY;
+
+  // ---- briefing diario (widget + recordatorio) ----
+  const bestEnergyCat = (Object.entries(catFeedback) as [Cat, number][])
+    .filter(([, v]) => (v ?? 0) > 0)
+    .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))[0];
+  const briefingInput: BriefingInput = {
+    date: today,
+    hour: new Date().getHours(),
+    momentum: store.momentum.count,
+    journeyName: journey.name,
+    journeySym: journey.sym,
+    chapterName: chapter.name,
+    daysDone,
+    sprintDays: SPRINT_DAYS,
+    doneToday: daresToday > 0,
+    dareTitle:
+      currentDare && currentDare.revealed && !currentDare.completed ? currentDare.dare.title : null,
+    cardName: card ? card.name : null,
+    topEnergyLabel: bestEnergyCat ? CATS[bestEnergyCat[0]].label : null,
+    proofCount,
+  };
+  const briefing = buildBriefing(briefingInput);
+  const notifyPermission = notificationPermission();
+
+  // Recordatorio local: comprueba al montar, al enfocar la pestaña y cada
+  // minuto mientras la app está viva. La DECISIÓN (`reminderDue`) y el
+  // CONTENIDO (`buildReminder`) son puros; el efecto de mostrar y el permiso
+  // viven en `notify.ts`. Límite honesto: sin backend no hay push con la app
+  // cerrada (ver notify.ts).
+  useEffect(() => {
+    if (!store.notifications.enabled || notifyPermission !== "granted") return;
+    let cancelled = false;
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    const check = () => {
+      if (cancelled) return;
+      const now = new Date();
+      if (!reminderDue(store.notifications, now, daresToday > 0)) return;
+      const r = buildReminder({ ...briefingInput, hour: now.getHours() });
+      showReminderNotification(r.title, r.body, url);
+      setStore((s) => ({ ...s, notifications: { ...s.notifications, lastShown: todayStr(now) } }));
+    };
+    check();
+    const id = setInterval(check, 60 * 1000);
+    const onVis = () => {
+      if (document.visibilityState === "visible") check();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    store.notifications.enabled,
+    store.notifications.hour,
+    store.notifications.minute,
+    store.notifications.lastShown,
+    notifyPermission,
+    daresToday,
+  ]);
 
   // ---- mutadores ----
   const patch = (p: Partial<DareStore>) => setStore((s) => ({ ...s, ...p }));
@@ -534,6 +598,27 @@ export function useDare() {
     }));
   }
 
+  // ---- notificaciones (recordatorio diario) ----
+  /** Pide permiso y activa el recordatorio si se concede. Devuelve el estado. */
+  async function enableNotifications(): Promise<NotificationPermission | "unsupported"> {
+    const perm = await requestNotificationPermission();
+    setStore((s) => ({
+      ...s,
+      notifications: { ...s.notifications, enabled: perm === "granted" },
+    }));
+    return perm;
+  }
+
+  function disableNotifications() {
+    setStore((s) => ({ ...s, notifications: { ...s.notifications, enabled: false } }));
+  }
+
+  /** Fija la hora local del recordatorio; resetea `lastShown` para permitir
+      que un horario recién adelantado pueda disparar hoy mismo. */
+  function setNotificationTime(hour: number, minute: number) {
+    setStore((s) => ({ ...s, notifications: { ...s.notifications, hour, minute, lastShown: "" } }));
+  }
+
   return {
     store,
     // navegación
@@ -561,6 +646,8 @@ export function useDare() {
     dreamReward,
     currentIdentity,
     showPendingFb,
+    briefing,
+    notifyPermission,
     // timer + treat transitorio
     secs,
     setSecs,
@@ -602,6 +689,9 @@ export function useDare() {
     saveBossPlaylist,
     togglePlanDare,
     scheduleDate,
+    enableNotifications,
+    disableNotifications,
+    setNotificationTime,
   };
 }
 

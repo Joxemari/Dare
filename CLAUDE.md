@@ -78,13 +78,19 @@ src/
                                   la señal de feedback que alimenta la generación
                  share.ts         capa social: texto/payload PUROS para compartir
                                   la Daily Card vía Web Share API (ver más abajo)
+                 briefing.ts      "lectura del día" estilo Co-Star: contenido del
+                                  widget Y del recordatorio (buildBriefing/
+                                  buildReminder) + reminderDue(). Puro, seeded por
+                                  fecha (ver más abajo)
                Frontera con efectos (I/O), aisladas a propósito:
-                 storage.ts    load/save/migrate sobre localStorage (v3)
+                 storage.ts    load/save/migrate sobre localStorage (v4)
                  useDare.ts    hook de React: estado de la app + orquestación
                  feedback.ts   vibración (navigator.vibrate) + sonido sintetizado
                                (Web Audio, sin assets). Impuro; no se testea.
+                 notify.ts     recordatorio local: permiso + showNotification vía
+                               service worker. Impuro; no se testea.
   components/  Presentacionales: Ico, TarotArt, Dots, Nav, Meta, Effects,
-               MilestoneModal, ShareCardButton, layout.
+               MilestoneModal, ShareCardButton, Briefing, layout.
   screens/     Pantallas (Onboarding, Dream, Reentry, Home, Checkin, Detail,
                Timer, Complete, Journey, Journeys, Progress, You). Consumen
                el hook.
@@ -210,6 +216,38 @@ identidad. El diseño completo y el modelo de datos a preparar están en
 `docs/social-layer.md` (principio de producto: *presencia, no ranking* — no
 romper el tono anti-gamificación).
 
+### Briefing diario + recordatorio (estilo Co-Star)
+
+Una **"lectura del día"** —titular poético + líneas de estado + un empujón
+concreto— que sirve DE FORMA COMPARTIDA a dos superficies: el **widget in-app**
+(tarjeta en Home) y el **recordatorio local** (notificación). Reparto según la
+regla del repo (lógica pura vs. efectos en la frontera):
+
+- **`src/lib/briefing.ts`** — PURO y testeado (`briefing.test.ts`).
+  `buildBriefing()` construye la lectura; `buildReminder()` deriva el título/cuerpo
+  de la notificación; `reminderDue()` decide (recibiendo `now`) si toca avisar.
+  La variedad se elige con un **PRNG sembrado por la FECHA** (`mulberry32`), así el
+  briefing es **estable dentro del día** y cambia cada día (y los tests son
+  reproducibles). Respeta el vocabulario del producto: un test *guard* prohíbe
+  XP/level/streak/badge/calorie/burn.
+- **`src/lib/notify.ts`** — frontera con efectos (impura, no testeada, como
+  `feedback.ts`): permiso (`Notification`), y `showReminderNotification()` vía
+  `serviceWorker.ready.showNotification` (fallback a `new Notification`). El clic
+  lo maneja `public/sw.js` (`notificationclick` → enfoca/abre la app).
+- **`src/lib/useDare.ts`** — orquesta: expone el `briefing` derivado, las acciones
+  (`enableNotifications`/`disableNotifications`/`setNotificationTime`) y un efecto
+  que comprueba `reminderDue` al montar, al enfocar la pestaña y **cada minuto
+  mientras la app está viva**; al disparar, sella `notifications.lastShown` (dedupe
+  diario).
+- **`src/components/Briefing.tsx`** (widget presentacional, en Home) y la sección
+  **"Daily reminder"** de `src/screens/You.tsx` (toggle + hora + estado del permiso).
+
+**Límite honesto (sin backend):** es un recordatorio **LOCAL**, fiable mientras la
+pestaña vive. El **push con la app cerrada** exige servidor push + VAPID → queda
+**diferido** a cuando DARE tenga backend. Igual, los **widgets nativos** de
+pantalla de inicio no existen para una PWA; por eso el "widget" es la tarjeta
+in-app. Las preferencias viven en `store.notifications` (ver *Datos persistidos*).
+
 ### PWA (instalable + offline)
 
 DARE es una PWA instalable hecha **sin dependencias** (nada de `vite-plugin-pwa`):
@@ -223,9 +261,10 @@ manifest estático, service worker a mano y unas etiquetas en `<head>`. Piezas:
   **network-first en navegación** (online sirve siempre el último deploy → los que
   instalen NO se clavan en una versión vieja) y **cache-first en assets hasheados**
   (inmutables por hash de contenido → rápido y offline tras la primera carga). El
-  `CACHE` lleva versión (`dare-v1`); al activar purga las viejas — **súbela si
+  `CACHE` lleva versión (`dare-v2`); al activar purga las viejas — **súbela si
   cambias la estrategia o el shell**. El `BASE` se deriva del scope del SW, no del
-  literal `/Dare/`.
+  literal `/Dare/`. También maneja `notificationclick` (recordatorio diario →
+  enfoca/abre la app; ver *Briefing diario*).
 - **`public/icons/`** — iconos derivados del glifo sparkle de `favicon.svg`
   (`192`, `512`, `512-maskable`, `apple-touch-180`). Se generan con el Chromium de
   Playwright; ver `public/icons/README.md`.
@@ -245,9 +284,10 @@ que `index.html` enlaza manifest + apple-touch-icon.
   progreso por journey, journeys completados, dream rewards, check-ins, dares
   del día, daily card, proof library, momentum, badges (clave `traits`),
   `smallVersionUses`, identidades, milestones, companion shelf, boss playlist,
-  planned dares, dates, historial de treats y feedback). Lo *derivable* (p. ej.
-  el scoring de un dare, el nº de proofs, la identidad actual, el capítulo
-  desbloqueado) se recalcula, no se guarda.
+  planned dares, dates, historial de treats, feedback y las preferencias de
+  notificación). Lo *derivable* (p. ej. el scoring de un dare, el nº de proofs,
+  la identidad actual, el capítulo desbloqueado, **el briefing del día**) se
+  recalcula, no se guarda.
 - **Guarda referencias, no copias.** Persiste **identificadores** (p. ej. el `id`
   del dare o de la carta) y re-resuelve el resto contra la fuente viva (`src/data`
   vía `lookup.ts`) al leer. Así, cambiar el contenido de un dato no rompe los
@@ -259,9 +299,10 @@ que `index.html` enlaza manifest + apple-touch-icon.
   build viejo nunca escribió recibe un valor por defecto. v2→v3 renombra el
   vocabulario del prototipo al de producto (streak→momentum, rewardDraws→treats,
   tarot→dailyCard) y **descarta** `xp`/`badges` v2 (no mapean 1:1). v3→v4 añade el
-  modelo multi-journey: como un store v3 nunca tuvo `activeJourneyIds`, se
-  **deriva** (cualquier Journey con progreso > 0 o completado se marca activo),
-  así un usuario existente no pierde su Journey en curso. La migración es
+  modelo multi-journey y el recordatorio diario: como un store v3 nunca tuvo
+  `activeJourneyIds`, se **deriva** (cualquier Journey con progreso > 0 o
+  completado se marca activo), así un usuario existente no pierde su Journey en
+  curso; y `notifications` recibe su valor por defecto al mergear. La migración es
   **idempotente**: aplicarla a un store ya v4 lo deja igual. Si cambia la forma,
   **hay que subir la versión y ampliar la migración en la misma PR.**
 - **Defensivo ante datos corruptos:** si el JSON no parsea, se arranca limpio con

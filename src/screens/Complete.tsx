@@ -5,6 +5,7 @@ import { SYMBOLS } from "../data/symbols";
 import { TRAITS } from "../data/traits";
 import { journeyById } from "../data/journeys";
 import { wrap, pad } from "../components/layout";
+import { cardRevealFeedback } from "../lib/feedback";
 import type { DareApp } from "../lib/useDare";
 
 export function Complete({ app }: { app: DareApp }) {
@@ -57,7 +58,10 @@ export function Complete({ app }: { app: DareApp }) {
               <button
                 className="tcard pulse"
                 style={{ width: 180, height: 104, margin: "0 auto 24px", display: "block" }}
-                onClick={() => app.setTreatFlipped(true)}
+                onClick={() => {
+                  cardRevealFeedback();
+                  app.setTreatFlipped(true);
+                }}
               >
                 <span style={{ color: C.gold, fontSize: 16 }}>{SYMBOLS.treat}</span>
                 <p className="lbl" style={{ marginTop: 8 }}>

@@ -11,6 +11,10 @@ describe("migrate (v2/v3 → v4)", () => {
     expect(migrate({}).smallVersionUses).toBe(0);
   });
 
+  it("añade el default de notifications a un store sin él", () => {
+    expect(migrate({}).notifications).toEqual({ enabled: false, hour: 9, minute: 0, lastShown: "" });
+  });
+
   it("remapea el vocabulario v2 al de producto", () => {
     const v2 = {
       version: 2,
@@ -75,5 +79,29 @@ describe("migrate (v2/v3 → v4)", () => {
     expect(twice).toEqual(once);
     expect(twice.proofLibrary).toHaveLength(1);
     expect(twice.activeJourneyIds).toEqual(["ember"]);
+  });
+
+  it("v3 → v4: conserva lo transferible y recibe notifications por defecto", () => {
+    const v3 = {
+      ...defaultStore(),
+      version: 3 as unknown as 4, // simula un store guardado por un build v3
+      onboarded: true,
+      momentum: { count: 4, lastDate: "2026-07-03" },
+    };
+    // un store v3 no llevaba `notifications`
+    delete (v3 as Record<string, unknown>).notifications;
+    const m = migrate(v3);
+    expect(m.version).toBe(4);
+    expect(m.onboarded).toBe(true);
+    expect(m.momentum).toEqual({ count: 4, lastDate: "2026-07-03" });
+    expect(m.notifications).toEqual({ enabled: false, hour: 9, minute: 0, lastShown: "" });
+  });
+
+  it("preserva unas notifications ya guardadas (completando campos que falten)", () => {
+    const s = { ...defaultStore(), notifications: { enabled: true, hour: 7, minute: 30, lastShown: "2026-07-04" } };
+    expect(migrate(s).notifications).toEqual({ enabled: true, hour: 7, minute: 30, lastShown: "2026-07-04" });
+    // parcial → completa desde el default
+    const partial = { ...defaultStore(), notifications: { enabled: true } as never };
+    expect(migrate(partial).notifications).toEqual({ enabled: true, hour: 9, minute: 0, lastShown: "" });
   });
 });
