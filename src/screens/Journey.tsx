@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { C } from "../data/colors";
 import { SYMBOLS } from "../data/symbols";
-import { MS_T, SPRINT_DAYS, totalMilestones } from "../data/journeys";
+import { MS_T, SPRINT_DAYS, totalMilestones, chapterState } from "../data/journeys";
 import { Ico } from "../components/Ico";
 import { Nav } from "../components/Nav";
 import { MilestoneModal } from "../components/MilestoneModal";
@@ -10,23 +10,20 @@ import type { Milestone } from "../types";
 import type { DareApp } from "../lib/useDare";
 
 export function Journey({ app }: { app: DareApp }) {
-  const { journey, daysDone, chapter, store } = app;
+  const { journey, daysDone, chapter, store, isJourneyActive } = app;
   const [openCh, setOpenCh] = useState<number | null>(chapter.idx);
   const [modal, setModal] = useState<Milestone | null>(null);
   const isPlaceholder = journey.plan.length === 0;
+  const dreamReward = store.dreamRewards[journey.id];
 
   const allMs = journey.chapters.flatMap((c) => c.milestones);
   const mDone = allMs.filter((m) => store.milestones[m.id]).length;
   const mTot = totalMilestones(journey);
   const currentDay = Math.min(SPRINT_DAYS, daysDone + 1);
 
-  const now = new Date();
-  const dayLabel = (i: number) => {
-    if (i === daysDone) return "Today";
-    if (i === daysDone + 1) return "Tomorrow";
-    const dt = new Date(now.getTime() + (i - daysDone) * 86400000);
-    return dt.toLocaleDateString("en-GB", { weekday: "short" });
-  };
+  // La pantalla Journey usa una línea de tiempo de SECUENCIA (Day 1..7), no de
+  // calendario: un usuario puede terminar el sprint en menos de 7 días reales.
+  const dayLabel = (i: number) => `Day ${i + 1}`;
 
   return (
     <div className="dare-root">
@@ -35,7 +32,7 @@ export function Journey({ app }: { app: DareApp }) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <p className="lbl">Your journey</p>
             <button className="link" onClick={() => app.setScreen("journeys")}>
-              Change journey
+              {isJourneyActive ? "Change journey" : "All journeys"}
             </button>
           </div>
           <h2 className="serif" style={{ fontSize: 34, marginBottom: 2, color: journey.color }}>
@@ -43,8 +40,24 @@ export function Journey({ app }: { app: DareApp }) {
           </h2>
           <p style={{ color: C.dim, fontSize: 13.5, marginBottom: 14 }}>{journey.tag}</p>
 
+          {/* not started yet — Begin Journey (no auto-start on launch) */}
+          {!isPlaceholder && !isJourneyActive && (
+            <div className="card rise" style={{ padding: 22, marginBottom: 22, borderColor: journey.color + "55" }}>
+              <p style={{ fontSize: 14.5, lineHeight: 1.55, marginBottom: 10 }}>{journey.promise}</p>
+              <p className="serif" style={{ fontStyle: "italic", fontSize: 16, color: C.dim, marginBottom: 18 }}>
+                "{journey.lesson}"
+              </p>
+              <button className="btn btn-green" onClick={() => app.startJourney(journey.id)}>
+                Begin Journey {SYMBOLS.spark}
+              </button>
+              <p style={{ fontSize: 11.5, color: C.faint, marginTop: 10, textAlign: "center" }}>
+                {dreamReward ? `Dream Reward set: ${dreamReward}` : "You'll choose a Dream Reward first."}
+              </p>
+            </div>
+          )}
+
           {/* completion band */}
-          {!isPlaceholder && (
+          {!isPlaceholder && isJourneyActive && (
             <div
               className="card"
               style={{ padding: "14px 18px", marginBottom: 22, borderColor: journey.color + "44", display: "flex", justifyContent: "space-around", textAlign: "center" }}
@@ -69,7 +82,9 @@ export function Journey({ app }: { app: DareApp }) {
             </div>
           )}
 
-          {/* the days ahead */}
+          {/* the days ahead (solo cuando el Journey está activo) */}
+          {isJourneyActive && (
+          <>
           <p className="lbl" style={{ marginBottom: 12 }}>
             The days ahead
           </p>
@@ -83,7 +98,7 @@ export function Journey({ app }: { app: DareApp }) {
               const border = isToday ? journey.color : isDone ? C.green : gold ? C.gold + "77" : C.line;
               const fg = isToday ? journey.color : isDone ? C.green : gold ? C.gold : C.dim;
               const glyph = isDone ? "✓" : isToday ? SYMBOLS.spark : isDream ? SYMBOLS.dream : isChapter ? SYMBOLS.dream : SYMBOLS.cycle;
-              const label = isDone ? "Done" : isToday ? "Today" : isDream ? "Dream" : isChapter ? "Chapter" : "Sealed";
+              const label = isDone ? "Done" : isToday ? "Current" : isDream ? "Dream" : isChapter ? "Chapter" : "Locked";
               return (
                 <div key={i} style={{ minWidth: 64, textAlign: "center" }}>
                   <div
@@ -113,7 +128,7 @@ export function Journey({ app }: { app: DareApp }) {
             })}
           </div>
           <p style={{ fontSize: 12.5, color: C.dim, marginBottom: 18 }}>
-            Day {currentDay} of {SPRINT_DAYS} — {journey.plan[Math.min(SPRINT_DAYS - 1, daysDone)]?.title}. The rest stays sealed until its day.
+            Day {currentDay} of {SPRINT_DAYS} — {journey.plan[Math.min(SPRINT_DAYS - 1, daysDone)]?.title}. Finish a chapter to unlock the next.
           </p>
 
           {/* planned dares + dates (explican el color) */}
@@ -132,9 +147,9 @@ export function Journey({ app }: { app: DareApp }) {
             </div>
           )}
 
-          {/* milestone path — capítulos en orden */}
+          {/* milestone path — capítulos en orden, desbloqueo por COMPLETADO */}
           {journey.chapters.map((c, i) => {
-            const state = currentDay > c.days[1] ? "done" : currentDay >= c.days[0] ? "now" : "locked";
+            const state = chapterState(journey, i, store.milestones);
             const marks = c.milestones;
             const chDone = marks.filter((m) => store.milestones[m.id]).length;
             const open = openCh === i && state !== "locked" && marks.length > 0;
@@ -258,15 +273,19 @@ export function Journey({ app }: { app: DareApp }) {
               </div>
             );
           })}
+          </>
+          )}
 
           {isPlaceholder && (
             <p style={{ fontSize: 12, color: C.faint, marginTop: 16 }}>
               This journey is coming soon. Dares still count all the same.
             </p>
           )}
-          <p style={{ fontSize: 12.5, color: C.faint, textAlign: "center", marginTop: 22 }}>
-            Missed a day? No reset. Take the next dare.
-          </p>
+          {isJourneyActive && (
+            <p style={{ fontSize: 12.5, color: C.faint, textAlign: "center", marginTop: 22 }}>
+              Missed a day? No reset. Take the next dare.
+            </p>
+          )}
         </div>
         <Nav tab="journey" go={app.setScreen} />
       </div>

@@ -211,6 +211,43 @@ export function chapterOf(j: Journey, daysDone: number): Chapter & { idx: number
   return { ...j.chapters[idx], idx };
 }
 
+/* ---- Desbloqueo de capítulos por COMPLETADO (no por calendario) ----
+   Un capítulo se completa cuando TODOS sus milestones están hechos; el
+   siguiente se desbloquea al instante, sin esperar a que cambie el día.
+   Un capítulo sin milestones (placeholder) no se puede completar, así que
+   actúa de tope: no desbloquea a los siguientes. */
+
+/** ¿Están todos los milestones del capítulo completados? */
+export function chapterCompleted(c: Chapter, done: Record<string, boolean>): boolean {
+  return c.milestones.length > 0 && c.milestones.every((m) => done[m.id]);
+}
+
+/** Nº de capítulos desbloqueados: el 1º siempre; cada siguiente al completar el anterior. */
+export function unlockedChapterCount(j: Journey, done: Record<string, boolean>): number {
+  let n = 1;
+  for (let i = 0; i < j.chapters.length - 1; i++) {
+    if (chapterCompleted(j.chapters[i], done)) n++;
+    else break;
+  }
+  return Math.min(n, j.chapters.length);
+}
+
+/** Estado de un capítulo dado el mapa de milestones completados. */
+export function chapterState(j: Journey, idx: number, done: Record<string, boolean>): "done" | "now" | "locked" {
+  if (chapterCompleted(j.chapters[idx], done)) return "done";
+  return idx < unlockedChapterCount(j, done) ? "now" : "locked";
+}
+
+/** Capítulo "en curso": el primero desbloqueado y sin completar (o el último). */
+export function currentChapter(j: Journey, done: Record<string, boolean>): Chapter & { idx: number } {
+  const unlocked = unlockedChapterCount(j, done);
+  for (let i = 0; i < unlocked; i++) {
+    if (!chapterCompleted(j.chapters[i], done)) return { ...j.chapters[i], idx: i };
+  }
+  const idx = Math.max(0, unlocked - 1);
+  return { ...j.chapters[idx], idx };
+}
+
 /** Total de milestones de un Journey (para el % de completion). */
 export function totalMilestones(j: Journey): number {
   return j.chapters.reduce((n, c) => n + c.milestones.length, 0);

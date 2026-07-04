@@ -22,10 +22,11 @@ export function Journeys({ app }: { app: DareApp }) {
           <p className="serif" style={{ fontStyle: "italic", fontSize: 18, color: C.dim, marginBottom: 24, textAlign: "center" }}>
             Every journey is a 7-day sprint.
             <br />
-            Switch whenever you want.
+            Run one or several at once.
           </p>
           {journeys.map((j) => {
             const cur = j.id === store.journeyId;
+            const active = store.activeJourneyIds.includes(j.id);
             const p = store.journeyProgress[j.id];
             const completed = store.journeysCompleted.includes(j.id);
             const placeholder = j.plan.length === 0;
@@ -35,7 +36,8 @@ export function Journeys({ app }: { app: DareApp }) {
             let status: string;
             if (placeholder) status = "Coming soon";
             else if (completed) status = "Completed";
-            else if (p > 0) status = `In progress · ${remaining} ${remaining === 1 ? "day" : "days"} remaining`;
+            else if (active && p > 0) status = `In progress · ${remaining} ${remaining === 1 ? "day" : "days"} remaining`;
+            else if (active) status = "Started";
             else if (j.id === "iron") status = "Not started · Recommended after The Ember";
             else status = "Not started";
 
@@ -73,7 +75,7 @@ export function Journeys({ app }: { app: DareApp }) {
                       </p>
                     )}
                   </div>
-                  {cur && <span style={{ color: j.color, fontSize: 13 }}>● current</span>}
+                  {active && <span style={{ color: j.color, fontSize: 13 }}>● active</span>}
                 </div>
               </button>
             );

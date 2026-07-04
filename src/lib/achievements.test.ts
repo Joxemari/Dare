@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { earnedTraits } from "./achievements";
 import { findDare } from "./lookup";
-import type { Cat, Checkin, Dare } from "../types";
+import type { Checkin, Dare } from "../types";
 
 const dumbbell = findDare("iron-first-weight")!;
 const small = findDare("out-the-door")!;
-const pool = findDare("water-reset")!;
+const strongForest = findDare("forest-intervals")!; // level "Strong"
 
 function ctx(over: Partial<Parameters<typeof earnedTraits>[0]>) {
   const baseCi: Checkin = { energy: 6, time: 12, loc: "home", dest: null, state: "normal" };
@@ -14,61 +14,59 @@ function ctx(over: Partial<Parameters<typeof earnedTraits>[0]>) {
     ci: baseCi,
     counts: {},
     totalCompleted: 1,
-    nToday: 1,
-    hour: 10,
-    momentum: 1,
-    usedSmallVersion: false,
-    restartedAfterGap: false,
-    prevCat: undefined,
+    distinctDays: 1,
+    smallVersionUses: 0,
     have: () => false,
     ...over,
   });
 }
 
-describe("earnedTraits", () => {
+describe("earnedTraits (badges) — hitos, no premios por acción", () => {
   it("otorga 'starter' en el primer dare completado", () => {
     expect(ctx({})).toContain("starter");
   });
 
-  it("otorga 'strength-builder' con un dare de fuerza", () => {
-    expect(ctx({ dare: dumbbell })).toContain("strength-builder");
+  it("la mayoría de completions no desbloquean badges nuevos", () => {
+    // ya tiene starter, no cruza ningún umbral → sin badges nuevos
+    expect(ctx({ have: (id) => id === "starter" })).toEqual([]);
   });
 
-  it("otorga 'minimalist' con un Small Dare", () => {
-    expect(ctx({ dare: small })).toContain("minimalist");
+  it("otorga 'courageous' con un Dare de nivel Strong", () => {
+    expect(ctx({ dare: strongForest, have: (id) => id === "starter" })).toContain("courageous");
   });
 
-  it("otorga 'water-reset' con un dare de piscina", () => {
-    expect(ctx({ dare: pool })).toContain("water-reset");
+  it("'water-reset' requiere 3 dares de piscina (no salta con 1)", () => {
+    expect(ctx({ counts: { pool: 1 }, have: (id) => id === "starter" })).not.toContain("water-reset");
+    expect(ctx({ counts: { pool: 3 }, have: (id) => id === "starter" })).toContain("water-reset");
   });
 
-  it("otorga 'unblocked' con energía ≤ 3", () => {
-    const ci: Checkin = { energy: 2, time: 12, loc: "home", dest: null, state: "tired" };
-    expect(ctx({ ci })).toContain("unblocked");
+  it("'forest-mind' requiere 3 dares de bosque", () => {
+    expect(ctx({ counts: { forest: 3 }, have: (id) => id === "starter" })).toContain("forest-mind");
   });
 
-  it("otorga 'extra-spark' en el segundo dare del día", () => {
-    expect(ctx({ nToday: 2 })).toContain("extra-spark");
+  it("'focus-keeper' requiere 3 dares de focus", () => {
+    expect(ctx({ counts: { focus: 2 }, have: (id) => id === "starter" })).not.toContain("focus-keeper");
+    expect(ctx({ counts: { focus: 3 }, have: (id) => id === "starter" })).toContain("focus-keeper");
   });
 
-  it("otorga 'night-mover' pasadas las 21h", () => {
-    expect(ctx({ hour: 22 })).toContain("night-mover");
+  it("'builder' se gana con 5 dares de fuerza acumulados", () => {
+    expect(ctx({ counts: { dumbbells: 3, carry: 2 }, have: (id) => id === "starter" })).toContain("builder");
   });
 
-  it("otorga 'consistent' con momentum ≥ 7", () => {
-    expect(ctx({ momentum: 7 })).toContain("consistent");
+  it("'rhythm-finder' requiere repetir la misma categoría 3 veces", () => {
+    expect(ctx({ dare: dumbbell, counts: { dumbbells: 3 }, have: (id) => id === "starter" })).toContain("rhythm-finder");
   });
 
-  it("no re-otorga traits ya conseguidos", () => {
+  it("'momentum-keeper' requiere dares en 3 días distintos", () => {
+    expect(ctx({ distinctDays: 2, have: (id) => id === "starter" })).not.toContain("momentum-keeper");
+    expect(ctx({ distinctDays: 3, have: (id) => id === "starter" })).toContain("momentum-keeper");
+  });
+
+  it("'reset-artist' requiere usar la versión de baja energía 3 veces", () => {
+    expect(ctx({ smallVersionUses: 3, dare: small, have: (id) => id === "starter" })).toContain("reset-artist");
+  });
+
+  it("no re-otorga badges ya conseguidos", () => {
     expect(ctx({ have: (id) => id === "starter" })).not.toContain("starter");
-  });
-
-  it("otorga 'rhythm-finder' si repite categoría", () => {
-    expect(ctx({ prevCat: "dumbbells" as Cat })).toContain("rhythm-finder");
-  });
-
-  it("otorga 'forest-mind' al tercer dare de bosque", () => {
-    const forest = findDare("pine-reset")!;
-    expect(ctx({ dare: forest, counts: { forest: 3 } })).toContain("forest-mind");
   });
 });

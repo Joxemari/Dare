@@ -8,8 +8,10 @@ import { wrap, pad } from "../components/layout";
 import type { DareApp } from "../lib/useDare";
 
 export function Complete({ app }: { app: DareApp }) {
-  const { treat, treatFlipped, lastProof, newTraits, justCompletedJourney } = app;
+  const { treat, treatFlipped, newTraits, justCompletedJourney } = app;
   const t = treat ? TIER[treat.tier] : TIER.common;
+  // Como máximo UN badge en la completion (el destacado); el resto, en Progress.
+  const badge = newTraits.length ? TRAITS.find((x) => x.id === newTraits[0]) : undefined;
   const [dateChosen, setDateChosen] = useState<string | null>(null);
   const completedJourney = justCompletedJourney ? journeyById(justCompletedJourney) : null;
 
@@ -47,18 +49,10 @@ export function Complete({ app }: { app: DareApp }) {
             <h2 className="serif" style={{ fontSize: 38, marginBottom: 6 }}>
               Dare completed.
             </h2>
-            <p style={{ color: C.green, fontSize: 17, marginBottom: 16 }}>Proof collected.</p>
+            <p style={{ color: C.green, fontSize: 15, marginBottom: 6 }}>Proof collected · saved to your library.</p>
+            <p style={{ color: C.gold, fontSize: 17, marginBottom: 20 }}>{SYMBOLS.treat} Treat unlocked.</p>
 
-            {/* proof statement */}
-            {lastProof && (
-              <div className="card" style={{ padding: 16, margin: "0 auto 24px", maxWidth: 300, background: C.card2 }}>
-                <p className="serif" style={{ fontStyle: "italic", fontSize: 18, lineHeight: 1.4 }}>
-                  "{lastProof}"
-                </p>
-              </div>
-            )}
-
-            {/* treat draw */}
+            {/* treat draw — the hero of the completion */}
             {treat && !treatFlipped ? (
               <button
                 className="tcard pulse"
@@ -93,18 +87,15 @@ export function Complete({ app }: { app: DareApp }) {
               )
             )}
 
-            {/* new traits */}
-            {newTraits.length > 0 && (
-              <div className="card" style={{ padding: 14, marginBottom: 24, display: "inline-block", textAlign: "left" }}>
-                {newTraits.map((id) => {
-                  const tr = TRAITS.find((x) => x.id === id);
-                  if (!tr) return null;
-                  return (
-                    <p key={id} style={{ fontSize: 13, marginBottom: 2 }}>
-                      <span style={{ color: C.gold }}>{SYMBOLS[tr.sym]}</span> &nbsp;New trait — {tr.name}
-                    </p>
-                  );
-                })}
+            {/* one badge, at most — meaningful, not spammy */}
+            {badge && (
+              <div
+                className="card flip"
+                style={{ padding: "12px 16px", marginBottom: 24, display: "inline-block", borderColor: C.gold + "55" }}
+              >
+                <p style={{ fontSize: 13 }}>
+                  <span style={{ color: C.gold, fontSize: 15 }}>{SYMBOLS[badge.sym]}</span> &nbsp;Badge unlocked — {badge.name}
+                </p>
               </div>
             )}
 

@@ -5,10 +5,36 @@ import { SYMBOLS, SECTION_SYM } from "../data/symbols";
 import { SPRINT_DAYS } from "../data/journeys";
 import { findScience } from "../data/science";
 import { Ico } from "../components/Ico";
-import { Meta } from "../components/Meta";
+import { Meta, companionWord } from "../components/Meta";
 import { Effects } from "../components/Effects";
 import { wrap, pad } from "../components/layout";
+import type { Dare } from "../types";
 import type { DareApp } from "../lib/useDare";
+
+/** Nota explicativa del Companion (por qué acompañar la acción ayuda). */
+function companionNote(d: Dare): string {
+  switch (companionWord(d)) {
+    case "Silence":
+      return "Silence gives your brain fewer inputs to process. Use the quiet as part of the reset.";
+    case "Podcast":
+    case "Audiobook":
+      return "Something to listen to lowers how hard the effort feels, so starting and continuing is easier.";
+    case "Netflix":
+      return "Pair the effort with a show you already want to watch — the reward is built in, so you show up.";
+    case "Playlist":
+    case "Album":
+    case "Music":
+      return "Music you like lowers perceived effort and sets the pace, so your brain negotiates less.";
+    case "Coffee":
+      return "A small reward waiting at the end turns the action into something you get to do, not have to.";
+    case "Friend":
+      return "Doing it with someone adds connection and accountability — play, not homework.";
+    case "Daylight":
+      return "Daylight itself is the companion: it lifts alertness and helps set your body clock.";
+    default:
+      return "A companion makes the action enjoyable, so you're far more likely to begin.";
+  }
+}
 
 function Section({ symKey, title, color, children }: { symKey: keyof typeof SECTION_SYM; title: string; color?: string; children: ReactNode }) {
   const glyph = SYMBOLS[SECTION_SYM[symKey]];
@@ -70,38 +96,23 @@ export function Detail({ app }: { app: DareApp }) {
             <Meta dare={d} />
           </div>
 
-          {/* 1 · Why this Dare today */}
-          <Section symKey="why" title="Why this Dare today" color={C.purple}>
-            <p style={{ fontSize: 14, lineHeight: 1.55, color: C.text }}>{why}</p>
-          </Section>
-
-          {/* 2 · Trigger */}
+          {/* 1 · Trigger — la acción primero, no la explicación */}
           <Section symKey="trigger" title="Trigger" color={C.green}>
             <p className="serif" style={{ fontSize: 18, color: C.text }}>"{d.trigger}"</p>
           </Section>
 
-          {/* 3 · Companion */}
+          {/* 2 · Companion (con explicación de por qué ayuda) */}
           <Section symKey="companion" title="Companion" color={C.purple}>
-            <p style={{ fontSize: 14, color: C.text }}>{d.companion}</p>
+            <p style={{ fontSize: 14, color: C.text, marginBottom: 6 }}>{d.companion}</p>
+            <p style={{ fontSize: 13, lineHeight: 1.55, color: C.dim }}>{companionNote(d)}</p>
           </Section>
 
-          {/* 4 · Expected Effect */}
+          {/* 3 · Expected Effect */}
           <Section symKey="effect" title="Expected Effect" color={C.green}>
             <Effects effects={d.effects} />
           </Section>
 
-          {/* 5 · Science Behind Today's Dare */}
-          {science && (
-            <Section symKey="science" title="Science Behind Today's Dare" color={C.gold}>
-              <p style={{ fontSize: 13, fontWeight: 500, marginBottom: 6 }}>{science.title}</p>
-              <p style={{ fontSize: 13.5, lineHeight: 1.55, color: C.dim }}>{science.text}</p>
-              <p className="lbl" style={{ fontSize: 8.5, marginTop: 10, color: C.faint }}>
-                Evidence: {science.evidence}
-              </p>
-            </Section>
-          )}
-
-          {/* 6 · Steps */}
+          {/* 4 · Steps */}
           <Section symKey="steps" title="Steps">
             {d.steps.map((s, i) => (
               <div
@@ -120,12 +131,23 @@ export function Detail({ app }: { app: DareApp }) {
             ))}
           </Section>
 
-          {/* 7 · Treat Locked */}
+          {/* 5 · Science Behind Today's Dare */}
+          {science && (
+            <Section symKey="science" title="Science Behind Today's Dare" color={C.gold}>
+              <p style={{ fontSize: 13, fontWeight: 500, marginBottom: 6 }}>{science.title}</p>
+              <p style={{ fontSize: 13.5, lineHeight: 1.55, color: C.dim }}>{science.text}</p>
+              <p className="lbl" style={{ fontSize: 8.5, marginTop: 10, color: C.faint }}>
+                Evidence: {science.evidence}
+              </p>
+            </Section>
+          )}
+
+          {/* 6 · Treat Locked */}
           <Section symKey="treat" title="Treat Locked" color={C.gold}>
             <p style={{ fontSize: 13.5, lineHeight: 1.45, color: C.dim }}>
               A sealed Treat Draw unlocks when you finish — sometimes it's golden.
             </p>
-            {app.dreamReward && (
+            {app.isJourneyActive && app.dreamReward && (
               <p style={{ fontSize: 12.5, color: C.gold, marginTop: 10 }}>
                 {SYMBOLS.dream} Dream Reward: {app.dreamReward} · {remaining} to go
               </p>
@@ -140,6 +162,11 @@ export function Detail({ app }: { app: DareApp }) {
               {SYMBOLS.soft} No energy → 3-minute version
             </button>
           </div>
+
+          {/* 7 · Why this Dare today — al final: primero qué hacer, luego el porqué */}
+          <Section symKey="why" title="Why this Dare today" color={C.purple}>
+            <p style={{ fontSize: 14, lineHeight: 1.55, color: C.text }}>{why}</p>
+          </Section>
         </div>
       </div>
     </div>

@@ -16,8 +16,10 @@ export function Home({ app }: { app: DareApp }) {
     .toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })
     .toUpperCase();
   const greet = now.getHours() < 12 ? "Good morning." : now.getHours() < 19 ? "Good afternoon." : "Good evening.";
-  const { journey, chapter, currentDare, daresToday, card, cardOptions, dreamReward, daysDone } = app;
+  const { journey, chapter, currentDare, daresToday, card, cardOptions, dreamReward, daysDone, activeJourneys, isJourneyActive } = app;
   const remaining = Math.max(0, SPRINT_DAYS - daysDone);
+  const noJourney = activeJourneys.length === 0;
+  const multiJourney = activeJourneys.length > 1;
 
   return (
     <div className="dare-root">
@@ -46,10 +48,16 @@ export function Home({ app }: { app: DareApp }) {
               <br />
               One dare today.
             </h1>
-            <p className="lbl" style={{ color: journey.color, marginTop: 10 }}>
-              {journey.name} · Chapter {chapter.n} — {chapter.name}
-            </p>
-            {dreamReward && (
+            {isJourneyActive ? (
+              <p className="lbl" style={{ color: journey.color, marginTop: 10 }}>
+                {journey.name} · Chapter {chapter.n} — {chapter.name}
+              </p>
+            ) : (
+              <p className="lbl" style={{ color: C.faint, marginTop: 10 }}>
+                No active Journey
+              </p>
+            )}
+            {isJourneyActive && dreamReward && (
               <p style={{ fontSize: 12, color: C.gold, marginTop: 8 }}>
                 {SYMBOLS.dream} Dream Reward: {dreamReward} · {remaining} {remaining === 1 ? "Dare" : "Dares"} remaining
               </p>
@@ -131,6 +139,53 @@ export function Home({ app }: { app: DareApp }) {
                 <p style={{ fontSize: 13.5, lineHeight: 1.55, color: C.text }}>{card.msg}</p>
               </div>
             </button>
+          )}
+
+          {/* no active Journey — soft prompt (does not block the daily Dare) */}
+          {noJourney && !currentDare && (
+            <div className="card rise" style={{ padding: 20, marginBottom: 16, textAlign: "center", borderColor: journey.color + "44" }}>
+              <p className="serif" style={{ fontSize: 20, marginBottom: 4 }}>
+                Choose a Journey to begin.
+              </p>
+              <p style={{ color: C.dim, fontSize: 12.5, marginBottom: 14 }}>
+                A 7-day sprint toward real energy. You can still take a Dare today.
+              </p>
+              <button className="btn btn-line" onClick={() => app.setScreen("journeys")}>
+                Go to Journeys {SYMBOLS.spark}
+              </button>
+            </div>
+          )}
+
+          {/* multiple active Journeys — choose your lane */}
+          {multiJourney && !currentDare && (
+            <div className="card rise" style={{ padding: 18, marginBottom: 16 }}>
+              <p className="lbl" style={{ marginBottom: 12 }}>
+                Choose your lane
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {activeJourneys.map((j) => {
+                  const on = j.id === journey.id;
+                  return (
+                    <button
+                      key={j.id}
+                      className="pill"
+                      style={{
+                        padding: "10px 14px",
+                        fontSize: 13,
+                        textAlign: "left",
+                        borderColor: on ? j.color + "88" : C.line,
+                        color: on ? j.color : C.text,
+                      }}
+                      aria-pressed={on}
+                      onClick={() => app.setJourney(j.id)}
+                    >
+                      {SYMBOLS[j.sym]} &nbsp;{j.name}
+                      {on ? "  ·  focused" : ""}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           )}
 
           {/* before check-in */}
