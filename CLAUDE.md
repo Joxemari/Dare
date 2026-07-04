@@ -71,6 +71,19 @@ Por qué así:
   `localStorage`; `useDare.ts` es el único que mantiene estado de React. Así el
   resto se testea como funciones.
 
+### Arte de las cartas (arcanos mayores)
+
+Las **22 cartas del tarot** se sirven como **PNG estático** desde
+`public/arcana/`, un fichero por carta nombrado **exactamente igual que su `id`**
+en `src/data/tarot.ts` (p. ej. `fool.png`, `priestess.png`, `wheel.png`). El
+componente `TarotArt` resuelve la URL como
+`` `${import.meta.env.BASE_URL}arcana/${id}.png` `` (respeta el `base: '/Dare/'`)
+y **cae a una marca ✦** si el fichero falta, para no romper el layout. Los
+nombres van en **minúscula, una palabra, sin espacios** (la ruta de Pages
+distingue mayúsculas); `src/data/tarot.test.ts` verifica que los `id` cumplen esa
+forma. Añadir una carta = añadir su entrada en `tarot.ts` **y** su PNG en
+`public/arcana/` con el mismo `id`.
+
 ### Datos persistidos (`localStorage`)
 
 - **Qué se guarda vs. qué se recalcula:** se persiste el *estado* del usuario
