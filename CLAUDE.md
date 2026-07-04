@@ -67,6 +67,12 @@ src/
                  random.ts        sample() y rollTreat() (usan Math.random)
                  date.ts          helpers de fecha local (todayStr, daysBetween)
                  lookup.ts        búsquedas sobre los datos (findDare, findCard)
+                 contentSchema.ts validateDare(): reglas duras del contenido
+                                  (schema, rangos, ids aditivos, ejercicios y
+                                  vocabulario prohibidos). Red del pipeline
+                                  de contenido generativo.
+                 generationInput.ts  buildGenerationInput(): resume el store en
+                                  la señal de feedback que alimenta la generación
                Frontera con efectos (I/O), aisladas a propósito:
                  storage.ts    load/save/migrate sobre localStorage (v3)
                  useDare.ts    hook de React: estado de la app + orquestación
@@ -77,6 +83,17 @@ src/
                el hook.
   App.tsx      "Router" por estado: decide qué pantalla mostrar.
 ```
+
+### Contenido generativo (pipeline de PRs, no runtime)
+
+El contenido nuevo (Dares) se **propone en el pipeline**, no en el navegador:
+`scripts/generate-content.mjs` (workflow semanal `content.yml`) redacta
+propuestas en `src/data/_proposed/week-<AAAA-Www>.ts`, que pasan por la MISMA
+compuerta que el corpus vivo — `validateDare` vía `npm test` — antes de abrir una
+PR para tu validación humana. La generación es **aditiva** (ids nuevos, nunca
+mutar/borrar los existentes: romperia las referencias guardadas). El feedback del
+usuario (`buildGenerationInput`) alimenta el prompt. Detalle completo en
+`docs/content-pipeline.md`.
 
 ### Vocabulario del producto (UI en inglés)
 
@@ -254,3 +271,8 @@ tendrá), documenta en su momento:
   `base: '/Dare/'` para que los assets resuelvan bajo `/Dare/` (debe coincidir
   EXACTAMENTE con el nombre del repo `Dare`: la ruta de Pages distingue mayúsculas;
   un rename a `dare` no es posible porque GitHub trata ambos nombres como iguales).
+- **`.github/workflows/content.yml`** — semanal (lunes) + `workflow_dispatch`.
+  Genera propuestas de Dares (`scripts/generate-content.mjs`), las valida con
+  `npm test`/`typecheck` (misma compuerta que la CI) y abre una PR para tu
+  revisión. Usa `secrets.ANTHROPIC_API_KEY` si está; si no, stub determinista.
+  Ver `docs/content-pipeline.md`.

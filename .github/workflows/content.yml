@@ -1,0 +1,56 @@
+name: Contenido generativo (semanal)
+
+# Propone Dares nuevos cada semana y abre una PR para tu validación.
+# La generación es ADITIVA y pasa por la MISMA compuerta que el corpus:
+# `npm test` (validateDare). Aprobar/mergear la PR = validación humana.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # lunes 06:00 UTC
+  workflow_dispatch: {} # permite lanzarla a mano
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  proponer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Generar propuestas
+        env:
+          # Opcional: si no está, el script usa un stub determinista.
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DARE_BATCH: "3"
+        run: node scripts/generate-content.mjs
+
+      - name: Validar (misma compuerta que la CI)
+        run: |
+          npm test
+          npm run typecheck
+
+      - name: Abrir PR con las propuestas
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: content/propuestas-semanales
+          title: "Contenido: propuestas de Dares para revisión"
+          commit-message: "Contenido: propuestas de Dares generadas para revisión"
+          body: |
+            Propuestas de Dares generadas automáticamente para tu validación.
+
+            - Viven en `src/data/_proposed/` (transitorio).
+            - Han pasado `validateDare` vía `npm test` (compuerta automática).
+            - **Aprobar = mergear** tras revisar tono y encaje.
+            - Al aprobar: mover las entradas a `dares.ts`/`wildcards.ts` y borrar
+              el fichero de `_proposed/`. Ver `docs/content-pipeline.md`.
+          add-paths: |
+            src/data/_proposed/**
