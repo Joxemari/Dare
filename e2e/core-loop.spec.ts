@@ -111,9 +111,10 @@ test("Journey: Begin explícito, milestones accionables + tabs Progress/You", as
   await expect(page.getByText("The days ahead")).toHaveCount(0);
   await expect(page.getByText(/milestones completed/).first()).toBeVisible();
 
-
-  // abrir un milestone (Letter) y completarlo — arregla el "Start" muerto
-  await page.getByText("You don't have a discipline problem.").click();
+  // La "Next step" card lleva de un toque al milestone pendiente exacto —
+  // lo abre y se completa (arregla el "Start" muerto de milestones).
+  await expect(page.getByText(/Next step/)).toBeVisible();
+  await page.getByText(/Next step/).click();
   await expect(page.getByRole("button", { name: "Mark as read" })).toBeVisible();
   await page.getByRole("button", { name: "Mark as read" }).click();
 

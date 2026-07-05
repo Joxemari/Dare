@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { DARES } from "./dares";
 import { WILDCARDS } from "./wildcards";
-import { JOURNEYS, MVP_JOURNEYS, MVP_JOURNEY_IDS, ROADMAP_JOURNEYS, isMvpJourney, totalMilestones, journeyMilestoneIds, todaysDayPlan, chapterCompleted, unlockedChapterCount, currentChapter, nextAction, journeyComplete, SPRINT_DAYS } from "./journeys";
+import { JOURNEYS, MVP_JOURNEYS, MVP_JOURNEY_IDS, ROADMAP_JOURNEYS, isMvpJourney, totalMilestones, journeyMilestoneIds, todaysDayPlan, chapterCompleted, unlockedChapterCount, currentChapter, nextAction, nextMilestone, milestoneProgress, journeyComplete, SPRINT_DAYS } from "./journeys";
 import { SCIENCE, findScience } from "./science";
 import { TRAITS, findTrait } from "./traits";
 import { SYMBOLS, JOURNEY_SYM } from "./symbols";
@@ -162,6 +162,35 @@ describe("completion de Journey por milestones (dispara la celebración)", () =>
     const done = allMs(ember);
     expect(journeyComplete(ember, done)).toBe(true);
     expect(journeyComplete(iron, done)).toBe(false);
+  });
+
+  it("milestoneProgress: 0% sin nada, 100% con todo, y coherente con el total", () => {
+    for (const j of JOURNEYS) {
+      const total = totalMilestones(j);
+      expect(milestoneProgress(j, {})).toEqual({ done: 0, total, pct: 0 });
+      expect(milestoneProgress(j, allMs(j))).toEqual({ done: total, total, pct: 100 });
+    }
+  });
+
+  it("milestoneProgress alcanza 100% exactamente cuando journeyComplete es true", () => {
+    const ember = JOURNEYS.find((j) => j.id === "ember")!;
+    const done = allMs(ember);
+    expect(milestoneProgress(ember, done).pct).toBe(100);
+    expect(journeyComplete(ember, done)).toBe(true);
+  });
+
+  it("nextMilestone: primer pendiente del capítulo en curso; null si está completo", () => {
+    const ember = JOURNEYS.find((j) => j.id === "ember")!;
+    expect(nextMilestone(ember, {})?.id).toBe(ember.chapters[0].milestones[0].id);
+    const done = { [ember.chapters[0].milestones[0].id]: true };
+    expect(nextMilestone(ember, done)?.id).toBe(ember.chapters[0].milestones[1].id);
+    expect(nextMilestone(ember, allMs(ember))).toBeNull();
+  });
+
+  it("nextAction sigue coincidiendo con el título de nextMilestone", () => {
+    const ember = JOURNEYS.find((j) => j.id === "ember")!;
+    expect(nextAction(ember, {})).toBe(nextMilestone(ember, {})!.title);
+    expect(nextAction(ember, allMs(ember))).toBe(ember.promise);
   });
 });
 
