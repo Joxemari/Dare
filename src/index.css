@@ -283,6 +283,24 @@ body {
     transform: none;
   }
 }
+/* Splash como overlay que se DESVANECE sobre la app (crossfade): la app se
+   monta debajo desde el inicio y el splash se va con un fade suave. */
+.splash-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+}
+.splash-leaving {
+  animation: dareSplashOut 0.5s ease forwards;
+}
+@keyframes dareSplashOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
 /* Voltear la carta al pulsarla (boca abajo → se da la vuelta y se va). */
 .card-flip-out {
   animation: dareFlipOut 0.36s ease both;
