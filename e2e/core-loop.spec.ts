@@ -28,25 +28,38 @@ async function enterApp(page: Page) {
   await expect(page.getByText("Today's Door")).toBeVisible();
 }
 
-test("Today: ritual de carta + revelado inline del Dare, loop sin errores", async ({ page }) => {
+test("Today: Door→Briefing + Your Dare tras check-in rápido, loop sin errores", async ({ page }) => {
   const errors = guardPageErrors(page);
   await enterApp(page);
 
-  // atmósfera + Dare cerrado + sin Journeys todavía
-  await expect(page.getByText("One opening is enough.")).toBeVisible();
-  await expect(page.getByText("One dare is waiting.")).toBeVisible();
+  // Card pull inline + Today's Door + Dare cerrado (pide check-in) + sin Journeys
+  await expect(page.getByText("DRAW YOUR CARD FOR TODAY")).toBeVisible();
+  await expect(page.getByText("Tap to open today's briefing")).toBeVisible();
+  await expect(page.getByText("20 seconds. Then we choose for you.")).toBeVisible();
   await expect(page.getByText("No Journey started yet.")).toBeVisible();
 
-  // ritual de la carta del día vive fuera de Today, tras el icono del header
-  await page.getByRole("button", { name: "Today's card" }).click();
-  await expect(page.getByText("Draw your card.")).toBeVisible();
+  // abrir la puerta revela Today's Briefing detrás (consejo inspirado)
+  await page.getByRole("button", { name: "Open today's briefing" }).click();
+  await expect(page.getByText("Today's briefing")).toBeVisible();
+  await expect(page.getByText("Today:", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Close" }).click();
+
+  // card pull AHORA inline en Today: elegir una carta la revela a pantalla completa
   await page.locator('button[aria-label="Face-down daily card"]').first().click();
   await expect(page.getByText("Tap to continue")).toBeVisible();
   await page.getByText("Tap to continue").click();
   await expect(page.getByText("Today's Door")).toBeVisible();
+  await expect(page.getByText("TODAY'S CARD")).toBeVisible(); // carta ya elegida (miniatura)
 
-  // revelar el Dare INLINE, de un solo toque (sin cambiar de pantalla)
-  await page.getByRole("button", { name: "Reveal today's dare" }).click();
+  // "Your Dare" EXIGE un check-in rápido (energía · foco · qué evitas)
+  await page.getByRole("button", { name: "Start check-in" }).click();
+  await expect(page.getByText("Quick check-in")).toBeVisible();
+  await page.getByRole("button", { name: "4", exact: true }).nth(0).click(); // energy
+  await page.getByRole("button", { name: "4", exact: true }).nth(1).click(); // focus
+  await page.getByRole("button", { name: "Admin", exact: true }).click();
+  await page.getByRole("button", { name: "Get my Dare" }).click();
+
+  // Dare revelado inline
   await expect(page.getByRole("button", { name: "Start now" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Another dare" })).toBeVisible();
 
@@ -55,6 +68,10 @@ test("Today: ritual de carta + revelado inline del Dare, loop sin errores", asyn
   await page.getByRole("button", { name: "Finish dare" }).click();
   await expect(page.getByText("Dare completed.")).toBeVisible();
   await expect(page.getByText("Treat unlocked.")).toBeVisible();
+
+  // el Treat es el héroe: se revela de un toque; la feedback aparece tras revelar.
+  // La tarjeta tiene animación `pulse` (nunca "stable"): forzamos el click.
+  await page.getByText("Tap to reveal").click({ force: true });
 
   // no debe aparecer XP en ninguna parte visible de la completion
   const body = (await page.locator("body").innerText()).toLowerCase();
@@ -68,23 +85,25 @@ test("Today: ritual de carta + revelado inline del Dare, loop sin errores", asyn
   expect(errors, errors.join("\n")).toEqual([]);
 });
 
-test("Today: check-in personalizado → Get my dare abre el Detail", async ({ page }) => {
+test("Dare page: What this is / Why this works, sin Treat Locked + Plan for later", async ({ page }) => {
   const errors = guardPageErrors(page);
   await enterApp(page);
 
-  // el check-in de 30 s sigue accesible desde Today (link discreto)
-  await page.getByRole("button", { name: /Personalize/ }).click();
-  await expect(page.getByText("How are you today?")).toBeVisible();
-  await page.getByRole("button", { name: "6", exact: true }).click();
-  await page.getByRole("button", { name: "20 min" }).click();
-  await page.getByRole("button", { name: "Home", exact: true }).click();
-  await page.getByRole("button", { name: "Normal" }).click();
-  await page.getByRole("button", { name: "Get my dare" }).click();
+  // check-in rápido → Dare revelado → View details abre el Detail
+  await page.getByRole("button", { name: "Start check-in" }).click();
+  await page.getByRole("button", { name: "3", exact: true }).nth(0).click(); // energy
+  await page.getByRole("button", { name: "3", exact: true }).nth(1).click(); // focus
+  await page.getByRole("button", { name: "Mind", exact: true }).click();
+  await page.getByRole("button", { name: "Get my Dare" }).click();
+  await page.getByRole("button", { name: "View details" }).click();
 
-  // "Get my dare" abre el Detail directamente — sin tap-to-reveal
+  // la primera sección es un resumen, no "Trigger"; y "Why this works" fusiona ciencia
+  await expect(page.getByText("What this is")).toBeVisible();
   await expect(page.getByText("Expected Effect")).toBeVisible();
-  await expect(page.getByText("Treat Locked")).toBeVisible();
-  await expect(page.getByText("Why this Dare today")).toBeVisible();
+  await expect(page.getByText("Why this works")).toBeVisible();
+  // ya NO hay "Treat Locked" ni sección "Trigger" en la pantalla del Dare
+  await expect(page.getByText("Treat Locked")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Plan for later/ })).toBeVisible();
 
   expect(errors, errors.join("\n")).toEqual([]);
 });
@@ -97,22 +116,20 @@ test("Journey: Begin explícito, milestones accionables + tabs Progress/You", as
   await page.getByRole("button", { name: "Journey", exact: true }).click();
   await page.getByRole("button", { name: /Begin Journey/ }).click();
 
-  // sin Dream Reward → setup; al elegirlo, el Journey arranca y muestra el plan.
+  // sin Dream Reward → setup; al elegirlo, el Journey arranca y muestra capítulos.
   // El Journey en foco por defecto es Iron Quiet (MVP, physical-energy-first).
   await expect(page.getByText(/What would feeling stronger/)).toBeVisible();
   await page.getByText("New training top").click();
-  await expect(page.getByText("The days ahead")).toBeVisible();
+  // La pantalla Journey ya NO muestra "Days Ahead": se centra en capítulos,
+  // milestones, % de completion y Dream Reward activo.
+  await expect(page.getByText("Chapters")).toBeVisible();
+  await expect(page.getByText("The days ahead")).toHaveCount(0);
   await expect(page.getByText(/milestones completed/).first()).toBeVisible();
 
-  // briefing del día actual: contenido rico + selector de variante ◌/◆/⟁
-  await page.getByText("Day 1", { exact: true }).click();
-  await expect(page.getByText(/No gym\. Just two weights/)).toBeVisible(); // Trigger del día (sólo en el modal)
-  await expect(page.getByRole("button", { name: /Real/ })).toBeVisible();
-  await page.getByRole("button", { name: /Soft/ }).click(); // cambiar de variante
-  await page.getByRole("button", { name: "✕" }).click();
-
-  // abrir un milestone (Letter) y completarlo — arregla el "Start" muerto
-  await page.getByText("You don't have a discipline problem.").click();
+  // La "Next step" card lleva de un toque al milestone pendiente exacto —
+  // lo abre y se completa (arregla el "Start" muerto de milestones).
+  await expect(page.getByText(/Next step/)).toBeVisible();
+  await page.getByText(/Next step/).click();
   await expect(page.getByRole("button", { name: "Mark as read" })).toBeVisible();
   await page.getByRole("button", { name: "Mark as read" }).click();
 

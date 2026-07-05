@@ -7,14 +7,17 @@ const DEFAULT_NOTIFS = {
   evening: { hour: 18, minute: 0, lastShown: "" },
 };
 
-describe("migrate (v2/v3/v4 → v5)", () => {
-  it("arranca en v5 con defaults ante entradas vacías/corruptas", () => {
-    expect(migrate(null).version).toBe(5);
-    expect(migrate("nope" as unknown).version).toBe(5);
-    expect(migrate({}).version).toBe(5);
+describe("migrate (v2/v3/v4/v5 → v6)", () => {
+  it("arranca en v6 con defaults ante entradas vacías/corruptas", () => {
+    expect(migrate(null).version).toBe(6);
+    expect(migrate("nope" as unknown).version).toBe(6);
+    expect(migrate({}).version).toBe(6);
     // por defecto no hay ningún Journey activo
     expect(migrate({}).activeJourneyIds).toEqual([]);
     expect(migrate({}).smallVersionUses).toBe(0);
+    // campos nuevos → arrancan vacíos
+    expect(migrate({}).darePlans).toEqual([]);
+    expect(migrate({}).rejectedDares).toEqual([]);
   });
 
   it("añade el default de notifications e install a un store sin ellos", () => {
@@ -36,7 +39,7 @@ describe("migrate (v2/v3/v4 → v5)", () => {
       catCounts: { walk: 3 },
     };
     const m = migrate(v2);
-    expect(m.version).toBe(5);
+    expect(m.version).toBe(6);
     expect(m.onboarded).toBe(true);
     expect(m.journeyId).toBe("iron");
     // streak → momentum
@@ -50,7 +53,7 @@ describe("migrate (v2/v3/v4 → v5)", () => {
     expect(m.catCounts.walk).toBe(3);
     // badges v2 no mapean a traits (empieza vacío)
     expect(m.traits).toEqual([]);
-    // no debe arrastrar `xp` al store v4
+    // no debe arrastrar `xp` al store nuevo
     expect((m as unknown as { xp?: number }).xp).toBeUndefined();
   });
 
@@ -63,7 +66,7 @@ describe("migrate (v2/v3/v4 → v5)", () => {
       journeysCompleted: [],
     };
     const m = migrate(v3);
-    expect(m.version).toBe(5);
+    expect(m.version).toBe(6);
     // The Ember tenía progreso → sigue activo tras migrar
     expect(m.activeJourneyIds).toContain("ember");
     expect(m.activeJourneyIds).not.toContain("iron");
@@ -79,7 +82,7 @@ describe("migrate (v2/v3/v4 → v5)", () => {
     expect(migrate(v3).activeJourneyIds).toContain("ember");
   });
 
-  it("es idempotente sobre un store ya v5", () => {
+  it("es idempotente sobre un store ya v6", () => {
     const s = { ...defaultStore(), onboarded: true, activeJourneyIds: ["ember" as const], proofLibrary: [{ date: "x", dareId: "y", text: "z" }] };
     const once = migrate(s);
     const twice = migrate(once);
@@ -88,10 +91,10 @@ describe("migrate (v2/v3/v4 → v5)", () => {
     expect(twice.activeJourneyIds).toEqual(["ember"]);
   });
 
-  it("v3 → v5: conserva lo transferible y recibe notifications por defecto", () => {
+  it("v3 → v6: conserva lo transferible y recibe notifications por defecto", () => {
     const v3 = {
       ...defaultStore(),
-      version: 3 as unknown as 5, // simula un store guardado por un build v3
+      version: 3 as unknown as 6, // simula un store guardado por un build v3
       onboarded: true,
       momentum: { count: 4, lastDate: "2026-07-03" },
     };
@@ -99,23 +102,59 @@ describe("migrate (v2/v3/v4 → v5)", () => {
     delete (v3 as Record<string, unknown>).notifications;
     delete (v3 as Record<string, unknown>).install;
     const m = migrate(v3);
-    expect(m.version).toBe(5);
+    expect(m.version).toBe(6);
     expect(m.onboarded).toBe(true);
     expect(m.momentum).toEqual({ count: 4, lastDate: "2026-07-03" });
     expect(m.notifications).toEqual(DEFAULT_NOTIFS);
     expect(m.install).toEqual({ dismissedAt: "", installedAt: "" });
   });
 
-  it("v4 → v5: promueve la hora única a la franja de la mañana; tarde por defecto", () => {
+  it("v4 → v6: conserva check-ins guardados (el `vibe` opcional queda undefined)", () => {
+    const v4 = {
+      ...defaultStore(),
+      version: 4 as unknown as 6, // simula un store guardado por un build v4
+      onboarded: true,
+      lastCheckin: { energy: 6, time: 20, loc: "home", dest: null, state: "normal" },
+      checkins: [{ energy: 6, time: 20, loc: "home", dest: null, state: "normal", date: "2026-07-04" }],
+    };
+    const m = migrate(v4);
+    expect(m.version).toBe(6);
+    expect(m.lastCheckin).toEqual({ energy: 6, time: 20, loc: "home", dest: null, state: "normal" });
+    expect(m.lastCheckin?.vibe).toBeUndefined();
+    expect(m.checkins).toHaveLength(1);
+  });
+
+  it("v4 → v6: un store v4 sin Planned Dares recibe los campos por defecto", () => {
+    const v4 = { ...defaultStore(), version: 4 as unknown as 6, onboarded: true };
+    delete (v4 as Record<string, unknown>).darePlans;
+    delete (v4 as Record<string, unknown>).rejectedDares;
+    const m = migrate(v4);
+    expect(m.version).toBe(6);
+    expect(m.darePlans).toEqual([]);
+    expect(m.rejectedDares).toEqual([]);
+  });
+
+  it("v6 → v6: conserva Planned Dares y rechazos ya guardados", () => {
+    const s = {
+      ...defaultStore(),
+      darePlans: [{ id: "p1", dareId: "one-song", when: "later-today" as const, dueDate: "2026-07-05", label: "One Song", createdAt: "2026-07-05" }],
+      rejectedDares: [{ dareId: "pine-reset", date: "2026-07-05" }],
+    };
+    const m = migrate(s);
+    expect(m.darePlans).toHaveLength(1);
+    expect(m.rejectedDares).toEqual([{ dareId: "pine-reset", date: "2026-07-05" }]);
+  });
+
+  it("v4 → v6: promueve la hora única a la franja de la mañana; tarde por defecto", () => {
     // un store v4 traía `notifications: { enabled, hour, minute, lastShown }`
     const v4 = {
       ...defaultStore(),
-      version: 4 as unknown as 5,
+      version: 4 as unknown as 6,
       notifications: { enabled: true, hour: 7, minute: 30, lastShown: "2026-07-04" } as never,
     };
     delete (v4 as Record<string, unknown>).install;
     const m = migrate(v4);
-    expect(m.version).toBe(5);
+    expect(m.version).toBe(6);
     expect(m.notifications).toEqual({
       enabled: true,
       morning: { hour: 7, minute: 30, lastShown: "2026-07-04" },
@@ -125,7 +164,7 @@ describe("migrate (v2/v3/v4 → v5)", () => {
     expect(m.install).toEqual({ dismissedAt: "", installedAt: "" });
   });
 
-  it("preserva unas notifications v5 ya guardadas (completando franjas que falten)", () => {
+  it("preserva unas notifications de dos franjas ya guardadas (completando franjas que falten)", () => {
     const s = {
       ...defaultStore(),
       notifications: {

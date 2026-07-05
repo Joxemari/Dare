@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { DARES } from "./dares";
 import { WILDCARDS } from "./wildcards";
-import { JOURNEYS, MVP_JOURNEYS, MVP_JOURNEY_IDS, ROADMAP_JOURNEYS, isMvpJourney, totalMilestones, journeyMilestoneIds, todaysDayPlan, chapterCompleted, unlockedChapterCount, currentChapter, nextAction, SPRINT_DAYS } from "./journeys";
+import { JOURNEYS, MVP_JOURNEYS, MVP_JOURNEY_IDS, ROADMAP_JOURNEYS, isMvpJourney, totalMilestones, journeyMilestoneIds, todaysDayPlan, chapterCompleted, unlockedChapterCount, currentChapter, nextAction, nextMilestone, milestoneProgress, journeyComplete, SPRINT_DAYS } from "./journeys";
 import { SCIENCE, findScience } from "./science";
 import { TRAITS, findTrait } from "./traits";
 import { SYMBOLS, JOURNEY_SYM } from "./symbols";
@@ -147,6 +147,108 @@ describe("desbloqueo de capítulos por completado", () => {
     const ember = JOURNEYS.find((j) => j.id === "ember")!;
     const allDoneMap = Object.fromEntries(ember.chapters.flatMap((c) => c.milestones).map((m) => [m.id, true]));
     expect(nextAction(ember, allDoneMap)).toBe(ember.promise);
+  });
+});
+
+describe("completion de Journey por milestones (dispara la celebración)", () => {
+  const allMs = (j: (typeof JOURNEYS)[number]) =>
+    Object.fromEntries(j.chapters.flatMap((c) => c.milestones).map((m) => [m.id, true]));
+
+  it("un Journey no está completo sin milestones", () => {
+    for (const j of JOURNEYS) expect(journeyComplete(j, {}), j.id).toBe(false);
+  });
+
+  it("completar TODOS los milestones marca el Journey como completo", () => {
+    for (const j of JOURNEYS) expect(journeyComplete(j, allMs(j)), j.id).toBe(true);
+  });
+
+  it("si falta un solo milestone (p. ej. el badge final), el Journey no está completo", () => {
+    for (const j of JOURNEYS) {
+      const done = allMs(j);
+      const lastCh = j.chapters[j.chapters.length - 1];
+      const lastMs = lastCh.milestones[lastCh.milestones.length - 1];
+      delete done[lastMs.id];
+      expect(journeyComplete(j, done), j.id).toBe(false);
+    }
+  });
+
+  it("completar un Journey no marca completos a los demás (independencia)", () => {
+    const ember = JOURNEYS.find((j) => j.id === "ember")!;
+    const iron = JOURNEYS.find((j) => j.id === "iron")!;
+    const done = allMs(ember);
+    expect(journeyComplete(ember, done)).toBe(true);
+    expect(journeyComplete(iron, done)).toBe(false);
+  });
+
+  it("milestoneProgress: 0% sin nada, 100% con todo, y coherente con el total", () => {
+    for (const j of JOURNEYS) {
+      const total = totalMilestones(j);
+      expect(milestoneProgress(j, {})).toEqual({ done: 0, total, pct: 0 });
+      expect(milestoneProgress(j, allMs(j))).toEqual({ done: total, total, pct: 100 });
+    }
+  });
+
+  it("milestoneProgress alcanza 100% exactamente cuando journeyComplete es true", () => {
+    const ember = JOURNEYS.find((j) => j.id === "ember")!;
+    const done = allMs(ember);
+    expect(milestoneProgress(ember, done).pct).toBe(100);
+    expect(journeyComplete(ember, done)).toBe(true);
+  });
+
+  it("nextMilestone: primer pendiente del capítulo en curso; null si está completo", () => {
+    const ember = JOURNEYS.find((j) => j.id === "ember")!;
+    expect(nextMilestone(ember, {})?.id).toBe(ember.chapters[0].milestones[0].id);
+    const done = { [ember.chapters[0].milestones[0].id]: true };
+    expect(nextMilestone(ember, done)?.id).toBe(ember.chapters[0].milestones[1].id);
+    expect(nextMilestone(ember, allMs(ember))).toBeNull();
+  });
+
+  it("nextAction sigue coincidiendo con el título de nextMilestone", () => {
+    const ember = JOURNEYS.find((j) => j.id === "ember")!;
+    expect(nextAction(ember, {})).toBe(nextMilestone(ember, {})!.title);
+    expect(nextAction(ember, allMs(ember))).toBe(ember.promise);
+  });
+});
+
+describe("Expected Effect — perfiles ricos y distintos por Dare", () => {
+  // Cota SUPERIOR para todo el corpus: Expected Effect nunca satura (la UI de
+  // `Effects` está diseñada para 3–5 filas). NO imponemos una cota inferior
+  // global: el corpus incluye "micro" Dares de vida (admin, comunicación,
+  // emoción, teléfono, recuperación…) deliberadamente ESTRECHOS —forzarlos a 3+
+  // efectos sería relleno deshonesto— y `contentSchema` solo exige ≥1. La
+  // garantía anti-pobreza (perfil rico + efecto característico) se comprueba por
+  // Dare representativo de cada familia en el test de más abajo.
+  it("ningún Dare satura Expected Effect (máximo 5 efectos)", () => {
+    for (const d of ALL) {
+      const n = Object.keys(d.effects).length;
+      expect(n >= 1 && n <= 5, `${d.id} tiene ${n} efectos`).toBe(true);
+    }
+  });
+
+  it("los Dares de bosque/naturaleza no muestran solo Calm/Mood", () => {
+    const pine = DARES.find((d) => d.id === "pine-reset")!;
+    const keys = Object.keys(pine.effects);
+    expect(keys.some((k) => !["Calm", "Mood"].includes(k)), "pine-reset solo Calm/Mood").toBe(true);
+  });
+
+  // Los Dares representativos de cada familia (los que enriquecimos en este
+  // pase) son ricos —3+ efectos— y con su efecto característico. Se comprueba
+  // por Dare concreto, no sobre TODO el corpus, para no chocar con Dares
+  // estrechos legítimos que añada el pipeline de contenido.
+  it("cada familia de Dare tiene un perfil rico y su efecto característico", () => {
+    const rep = (id: string) => DARES.find((d) => d.id === id)!;
+    const checks: [string, keyof import("../types").EffectMap][] = [
+      ["pine-reset", "Stress"], // forest → alivio de estrés
+      ["iron-first-weight", "Strength"], // strength
+      ["water-reset", "Recovery"], // pool/recovery
+      ["micro-tabata", "Momentum"], // tabata
+      ["the-unblock", "Focus"], // focus/admin
+    ];
+    for (const [id, key] of checks) {
+      const d = rep(id);
+      expect(Object.keys(d.effects).length, `${id} pobre`).toBeGreaterThanOrEqual(3);
+      expect(d.effects[key], `${id} sin ${key}`).toBeGreaterThan(0);
+    }
   });
 });
 

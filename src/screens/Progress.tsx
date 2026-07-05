@@ -2,19 +2,29 @@ import { C, CATS } from "../data/colors";
 import { CAT_ICO } from "../data/icons";
 import { SYMBOLS } from "../data/symbols";
 import { TRAITS, findTrait } from "../data/traits";
-import { SPRINT_DAYS } from "../data/journeys";
+import { milestoneProgress } from "../data/journeys";
 import { findDare } from "../lib/lookup";
 import { todayStr } from "../lib/date";
 import { Ico } from "../components/Ico";
 import { Nav } from "../components/Nav";
 import { wrap, pad } from "../components/layout";
-import type { Cat } from "../types";
+import type { Cat, PlanWhen } from "../types";
 import type { DareApp } from "../lib/useDare";
 
+const WHEN_LABEL: Record<PlanWhen, string> = {
+  "later-today": "Later today",
+  "tomorrow-am": "Tomorrow morning",
+  "tomorrow-pm": "Tomorrow evening",
+  weekend: "This weekend",
+  journey: "In your Journey",
+};
+
 export function Progress({ app }: { app: DareApp }) {
-  const { store, catFeedback, proofCount, currentIdentity, journey, daysDone, dreamReward, isJourneyActive } = app;
+  const { store, catFeedback, proofCount, currentIdentity, journey, dreamReward, isJourneyActive } = app;
   const identity = findTrait(currentIdentity);
-  const remaining = Math.max(0, SPRINT_DAYS - daysDone);
+  // Dream Reward por MILESTONES (coherente con el trigger de completion), no por
+  // días de calendario.
+  const mp = milestoneProgress(journey, store.milestones);
 
   // Semana de CALENDARIO (Today / Tomorrow / días de la semana), distinta de la
   // línea de tiempo Day 1..7 del Journey. Muestra lo hecho hoy y lo planeado.
@@ -94,6 +104,39 @@ export function Progress({ app }: { app: DareApp }) {
             </div>
           )}
 
+          {/* Planned Dares (v5): Dares apartados para más tarde */}
+          {store.darePlans.length > 0 && (
+            <>
+              <p className="lbl" style={{ marginBottom: 10, color: C.purple }}>
+                {SYMBOLS.focus} Planned Dares
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 22 }}>
+                {store.darePlans.map((p) => (
+                  <div
+                    key={p.id}
+                    className="card"
+                    style={{ padding: 14, display: "flex", alignItems: "center", justifyContent: "space-between", background: C.card2 }}
+                  >
+                    <div>
+                      <p style={{ fontSize: 14, color: C.text }}>{p.label}</p>
+                      <p className="lbl" style={{ fontSize: 8.5, marginTop: 3, color: C.faint }}>
+                        {WHEN_LABEL[p.when]}
+                      </p>
+                    </div>
+                    <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+                      <button className="link" style={{ color: C.faint, fontSize: 12 }} onClick={() => app.removeDarePlan(p.id)}>
+                        Remove
+                      </button>
+                      <button className="link" style={{ color: C.green }} onClick={() => app.startPlannedDare(p)}>
+                        Start
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
           {/* top cards: Proof / Momentum / Identity */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
             <div className="card" style={{ padding: 18 }}>
@@ -151,10 +194,10 @@ export function Progress({ app }: { app: DareApp }) {
               </p>
               <p style={{ fontSize: 14, marginBottom: 8 }}>{dreamReward}</p>
               <div style={{ height: 4, background: C.line, borderRadius: 99, marginBottom: 6 }}>
-                <div style={{ height: 4, width: `${(daysDone / SPRINT_DAYS) * 100}%`, background: C.gold, borderRadius: 99 }} />
+                <div style={{ height: 4, width: `${mp.pct}%`, background: C.gold, borderRadius: 99 }} />
               </div>
               <p style={{ fontSize: 11.5, color: C.dim }}>
-                {journey.name} · {remaining} {remaining === 1 ? "Dare" : "Dares"} remaining
+                {journey.name} · {mp.done === mp.total ? "unlocked" : `${mp.done}/${mp.total} milestones`}
               </p>
             </div>
           )}

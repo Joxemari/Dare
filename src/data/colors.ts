@@ -45,11 +45,25 @@ export const CATS: Record<Cat, { color: string; label: string }> = {
   recovery: { color: C.purple, label: "Recovery" },
   focus: { color: C.gold, label: "Focus" },
   small: { color: C.green, label: "Small Dare" },
+  // anti-procrastinación / activación
+  admin: { color: C.gold, label: "Admin" },
+  communication: { color: C.teal, label: "Communication" },
+  bodyreset: { color: C.green, label: "Body Reset" },
+  environment: { color: C.teal, label: "Environment Reset" },
+  creative: { color: C.purple, label: "Creative Start" },
+  social: { color: C.coral, label: "Social Courage" },
+  decision: { color: C.gold, label: "Decision Reduction" },
+  emotion: { color: C.purple, label: "Emotional Reset" },
+  phone: { color: C.coral, label: "Phone Boundary" },
+  taskcontact: { color: C.gold, label: "Task Contact" },
+  close: { color: C.green, label: "Completion Close" },
 };
 
 export const LEVELS: Record<Level, number> = { Easy: 1, Medium: 2, Strong: 3 };
 
-/** Color por efecto esperado (feeling-based, no neuroquímica). */
+/** Color por efecto esperado (feeling-based, no neuroquímica).
+ *  Agrupados por familia: energía=verde, foco/ánimo=oro, calma/recuperación/
+ *  sueño=púrpura, fuerza/confianza=coral, claridad/estrés=turquesa. */
 export const EFFECT_COLOR: Record<Effect, string> = {
   Energy: C.green,
   Focus: C.gold,
@@ -58,6 +72,10 @@ export const EFFECT_COLOR: Record<Effect, string> = {
   Strength: C.coral,
   Confidence: C.coral,
   Recovery: C.purple,
+  Clarity: C.teal,
+  Stress: C.teal,
+  Sleep: C.purple,
+  Momentum: C.green,
 };
 
 export const colorOf = (d: Dare): string => (d.wild ? C.gold : CATS[d.cat].color);

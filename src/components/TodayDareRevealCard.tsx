@@ -1,13 +1,13 @@
 import { C, CATS, colorOf } from "../data/colors";
 import { SYMBOLS } from "../data/symbols";
-import { cardRevealFeedback } from "../lib/feedback";
+import { QuickCheckin } from "./QuickCheckin";
 import type { DareApp } from "../lib/useDare";
 
 /* ============================================================
-   TodayDareRevealCard — el "one hidden Dare" de Today.
-   Estado cerrado: "YOUR DARE / One dare is waiting" + un solo toque
-   para revelar. El revelado ocurre INLINE en la misma tarjeta (sin
-   navegar a otra pantalla) y sin volver a bloquear tras revelar.
+   TodayDareRevealCard — "Your Dare" en Today.
+   A diferencia de antes, generar un Dare EXIGE un check-in rápido
+   (energía · foco · qué evitas): tap en "Your Dare" → check-in →
+   Dare generado → Start. El Dare se revela INLINE (sin navegar).
    ============================================================ */
 
 const LABEL = "YOUR DARE";
@@ -16,6 +16,11 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
   const cd = app.currentDare;
   const revealed = !!cd && cd.revealed;
   const completed = !!cd && cd.completed;
+
+  // ---- Check-in rápido en curso: sustituye la tarjeta ----
+  if (app.checkingIn) {
+    return <QuickCheckin app={app} />;
+  }
 
   // ---- Completado hoy: estado mínimo y sereno ----
   if (cd && completed) {
@@ -28,7 +33,7 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
         <p className="serif" style={{ fontSize: 22, marginBottom: 16 }}>
           Done for today.
         </p>
-        <button className="link" onClick={() => app.anotherDare()}>
+        <button className="link" onClick={() => app.startQuickCheckin()}>
           Another dare {SYMBOLS.spark}
         </button>
       </div>
@@ -47,7 +52,7 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
         <p className="serif" style={{ fontSize: 26, lineHeight: 1.2, marginBottom: 8 }}>
           {d.title}
         </p>
-        <p style={{ fontSize: 14, color: C.dim, lineHeight: 1.5, marginBottom: 14 }}>{d.trigger}</p>
+        <p style={{ fontSize: 14, color: C.dim, lineHeight: 1.5, marginBottom: 14 }}>{d.summary ?? d.trigger}</p>
         <p className="lbl" style={{ fontSize: 9, color: C.faint, marginBottom: 20 }}>
           {d.min} min · {CATS[d.cat].label}
         </p>
@@ -66,28 +71,39 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
     );
   }
 
-  // ---- Cerrado: un dare esperando, un solo toque para abrirlo ----
+  // ---- Un Dare oculto ya generado (p. ej. Planned) — un toque lo revela ----
+  if (cd && !revealed) {
+    return (
+      <div className="card rise" style={{ padding: 30, textAlign: "center" }}>
+        <div className="pulse" style={{ fontSize: 22, color: C.gold, marginBottom: 14, opacity: 0.85 }}>
+          {SYMBOLS.spark}
+        </div>
+        <p className="lbl" style={{ marginBottom: 8, color: C.dim }}>
+          {LABEL}
+        </p>
+        <p className="serif" style={{ fontSize: 24, marginBottom: 22 }}>
+          One dare is waiting.
+        </p>
+        <button className="btn btn-green" onClick={() => app.revealTodayDare()}>
+          Reveal it
+        </button>
+      </div>
+    );
+  }
+
+  // ---- Cerrado: "Your Dare" pide un check-in rápido antes de generar ----
   return (
     <div className="card rise" style={{ padding: 30, textAlign: "center" }}>
-      <div className="pulse" style={{ fontSize: 22, color: C.gold, marginBottom: 14, opacity: 0.85 }}>
+      <div className="pulse" style={{ fontSize: 22, color: C.green, marginBottom: 14, opacity: 0.9 }}>
         {SYMBOLS.spark}
       </div>
       <p className="lbl" style={{ marginBottom: 8, color: C.dim }}>
-        {LABEL}
+        YOUR DARE OF THE DAY
       </p>
-      <p className="serif" style={{ fontSize: 24, marginBottom: 22 }}>
-        One dare is waiting.
-      </p>
-      <button
-        className="btn btn-green"
-        onClick={() => {
-          cardRevealFeedback();
-          app.revealTodayDare();
-        }}
-      >
-        Reveal today's dare
+      <p style={{ fontSize: 15, color: C.dim, marginBottom: 22 }}>20 seconds. Then we choose for you.</p>
+      <button className="btn btn-green" onClick={() => app.startQuickCheckin()}>
+        Start check-in
       </button>
-      <p style={{ fontSize: 11, color: C.faint, marginTop: 12 }}>Open when ready.</p>
     </div>
   );
 }

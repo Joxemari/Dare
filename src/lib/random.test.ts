@@ -71,17 +71,17 @@ describe("pickTreat", () => {
 
 describe("rollTreat", () => {
   it("es determinista con un rand sembrado", () => {
-    const a = Array.from({ length: 20 }, () => rollTreat("walk", mulberry32(42)));
-    const b = Array.from({ length: 20 }, () => rollTreat("walk", mulberry32(42)));
+    const a = Array.from({ length: 20 }, () => rollTreat("walk", 0, mulberry32(42)));
+    const b = Array.from({ length: 20 }, () => rollTreat("walk", 0, mulberry32(42)));
     expect(a).toEqual(b);
   });
 
   it("respeta los umbrales de rareza: <6% golden, <30% rare, resto common", () => {
-    expect(rollTreat(null, seq([0.05, 0.5])).tier).toBe("golden");
-    expect(rollTreat(null, seq([0.06, 0.5])).tier).toBe("rare");
-    expect(rollTreat(null, seq([0.29, 0.5])).tier).toBe("rare");
-    expect(rollTreat(null, seq([0.3, 0.5])).tier).toBe("common");
-    expect(rollTreat(null, seq([0.99, 0.5])).tier).toBe("common");
+    expect(rollTreat(null, 0, seq([0.05, 0.5])).tier).toBe("golden");
+    expect(rollTreat(null, 0, seq([0.06, 0.5])).tier).toBe("rare");
+    expect(rollTreat(null, 0, seq([0.29, 0.5])).tier).toBe("rare");
+    expect(rollTreat(null, 0, seq([0.3, 0.5])).tier).toBe("common");
+    expect(rollTreat(null, 0, seq([0.99, 0.5])).tier).toBe("common");
   });
 
   it("nunca ofrece un treat que choca con la categoría del Dare", () => {
@@ -96,7 +96,7 @@ describe("rollTreat", () => {
     expect(clashing.size).toBeGreaterThan(0); // el test tiene dientes
     const rand = mulberry32(1);
     for (let i = 0; i < 400; i++) {
-      expect(clashing.has(rollTreat("forest", rand).text)).toBe(false);
+      expect(clashing.has(rollTreat("forest", 0, rand).text)).toBe(false);
     }
   });
 
@@ -112,6 +112,25 @@ describe("rollTreat", () => {
       if (draw.special !== undefined) {
         expect(["golden", "date", "dreamBoost", "choose"]).toContain(draw.special);
       }
+    }
+  });
+
+  it("boost sesga hacia mejores treats (más golden/rare que sin boost)", () => {
+    const N = 4000;
+    let baseGood = 0;
+    let boostGood = 0;
+    for (let i = 0; i < N; i++) {
+      if (rollTreat(null, 0).tier !== "common") baseGood++;
+      if (rollTreat(null, 1).tier !== "common") boostGood++;
+    }
+    // base: ~30% no-common; boost=1: ~44% → el sesgo debe notarse con N grande
+    expect(boostGood).toBeGreaterThan(baseGood);
+  });
+
+  it("clampa el boost fuera de [0,1] sin romper la forma", () => {
+    for (let i = 0; i < 200; i++) {
+      const draw = rollTreat(null, 5); // boost fuera de rango → se clampa a 1
+      expect(["common", "rare", "golden"]).toContain(draw.tier);
     }
   });
 });

@@ -17,7 +17,11 @@ import { C } from "./colors";
    vive en `lib/random.ts` (pickTreat/rollTreat); aquí SOLO datos.
    ============================================================ */
 
-/** Treats por rareza. Los golden NO son "double XP" — son treats reales. */
+/** Treats por rareza. Los golden NO son "double XP" — son treats reales.
+    Pool amplio a propósito: la variedad mantiene viva la recompensa post-Dare.
+    Cada treat es consciente del contexto (`fits`/`avoid` por categoría) y la
+    tirada la SESGA `rollTreat(cat, boost)` cuando has completado con poca
+    motivación o has probado algo nuevo (ver `lib/random.ts`). */
 export const TREATS: Record<Tier, readonly Treat[]> = {
   common: [
     // Neutros — valen tras cualquier Dare.
@@ -75,6 +79,7 @@ export const TREATS: Record<Tier, readonly Treat[]> = {
     { text: "Golden — breakfast for dinner. Full ceremony.", special: "golden" },
     { text: "Golden — the small thing that's been sitting in your cart. It's time.", special: "golden" },
     { text: "Golden — book the 'someday' thing today.", special: "golden" },
+    { text: "A whole slow morning this weekend, no plans. You earned it.", special: "choose" },
   ],
 };
 
@@ -96,6 +101,12 @@ export const DATE_IDEAS = [
   "🎬 Cinema alone",
   "🏺 Ceramics workshop",
   "📷 Long walk with camera",
+  "🍵 Tea house afternoon",
+  "🎧 Record shop crate-dig",
+  "🏊 Swim then sauna",
+  "🥐 New bakery across town",
+  "🌅 Sunrise viewpoint",
+  "🎾 A sport you've never tried",
 ];
 
 export type { TreatDraw };

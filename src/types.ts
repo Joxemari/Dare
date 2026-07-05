@@ -8,6 +8,7 @@
 import type { SymbolKey } from "./data/symbols";
 
 export type Cat =
+  // --- energía física (contexto con localización: check-in completo) ---
   | "forest"
   | "walk"
   | "dumbbells"
@@ -18,7 +19,19 @@ export type Cat =
   | "carry"
   | "recovery"
   | "focus"
-  | "small";
+  | "small"
+  // --- anti-procrastinación / activación (Today: check-in rápido en casa) ---
+  | "admin" // papeleo, correos, trámites: hacer contacto sin terminar
+  | "communication" // mensajes, llamadas, responder lo pendiente
+  | "bodyreset" // reset corporal breve (estiramiento, postura, agua)
+  | "environment" // ordenar/limpiar una superficie o rincón
+  | "creative" // arrancar algo creativo (página en blanco)
+  | "social" // valentía social: un pequeño gesto hacia alguien
+  | "decision" // reducir decisiones: elegir una sola cosa
+  | "emotion" // regulación emocional: nombrar, respirar, soltar
+  | "phone" // límite con el teléfono: distancia con la pantalla
+  | "taskcontact" // hacer contacto con la tarea temida (sin forzar el final)
+  | "close"; // cerrar/terminar algo pequeño ya empezado
 
 export type Level = "Easy" | "Medium" | "Strong";
 
@@ -33,6 +46,10 @@ export type Dest = "forest" | "pool" | "gym" | "padel" | "cafe";
 
 export type MentalState = "blocked" | "tired" | "normal" | "active" | "stressed";
 
+/** Qué está evitando el usuario (check-in rápido de Today). El Dare le ayuda
+ *  a hacer contacto con lo evitado, sin exigirle terminarlo. */
+export type Avoid = "admin" | "body" | "people" | "mind" | "none";
+
 export type JourneyId =
   | "ember" // First Flame (id histórico conservado para no romper datos guardados)
   | "iron" // Iron Quiet
@@ -45,7 +62,10 @@ export type JourneyId =
 
 export type Tier = "common" | "rare" | "golden";
 
-/** Efectos esperados — categorías de sensación, no neuroquímica. */
+/** Efectos esperados — categorías de sensación, no neuroquímica.
+ *  Set ampliado para que el detalle nunca se sienta pobre (solo Calm/Mood).
+ *  `Stress` es un efecto de REDUCCIÓN: se renderiza con "↓" (ver Effects.tsx),
+ *  y su intensidad 1..3 mide cuánto baja el estrés. */
 export type Effect =
   | "Energy"
   | "Focus"
@@ -53,10 +73,57 @@ export type Effect =
   | "Calm"
   | "Strength"
   | "Confidence"
-  | "Recovery";
+  | "Recovery"
+  | "Clarity"
+  | "Stress"
+  | "Sleep"
+  | "Momentum";
 
 /** Intensidad de un efecto: 1 (+), 2 (++), 3 (+++). */
 export type EffectMap = Partial<Record<Effect, 1 | 2 | 3>>;
+
+/* ------------------------- COMPANIONS -------------------------
+   Companion = recompensa DURANTE la acción (temptation bundling,
+   Nudge): emparejar algo que "deberías hacer" (esfuerzo) con algo
+   que "quieres hacer" (placer). NO es un personaje ni decoración:
+   es el anzuelo que hace que la actividad sea menos aburrida. La
+   regla del producto: el companion ocurre DURANTE el Dare, nunca
+   antes. Catálogo en `data/companions.ts`, lógica en
+   `lib/companions.ts`. */
+
+/** Familias de companion (cada una ataca una fricción distinta). */
+export type CompanionCategory =
+  | "entertainment" // Netflix, YouTube, podcast, audiobook, playlist
+  | "social" // llamar a alguien, clase con gente, caminar acompañada
+  | "sensory" // café, vela, sauna, ducha caliente, ropa bonita, sol
+  | "novelty" // ruta nueva, clase nueva, deporte nuevo, sitio nuevo
+  | "identity"; // "hot walk mode", "strong woman mode", "boxing girl mode"
+
+/** Lo que el usuario elige en el check-in: "¿qué lo haría menos
+    aburrido hoy?". Sesga la generación hacia una familia de companion. */
+export type CompanionVibe =
+  | "watch" // ver algo
+  | "listen" // escuchar algo
+  | "talk" // hablar con alguien
+  | "elsewhere" // ir a un sitio distinto
+  | "aesthetic" // hacerlo bonito
+  | "social" // hacerlo social
+  | "brutal" // corto y brutal
+  | "surprise"; // sorpréndeme
+
+/** Un Companion concreto y accionable (vive en `data/companions.ts`). */
+export interface Companion {
+  id: string;
+  category: CompanionCategory;
+  /** Palabra única para el chip (p. ej. "Netflix"). */
+  word: string;
+  /** Frase corta y accionable, en presente, DURANTE la acción. */
+  label: string;
+  /** Por qué funciona (temptation bundling), una frase. */
+  note: string;
+  /** Categorías de Dare a las que encaja mejor (vacío = cualquiera). */
+  cats?: Cat[];
+}
 
 export interface Dare {
   id: string;
@@ -66,10 +133,16 @@ export interface Dare {
   level: Level;
   energy: [number, number];
   locs: Loc[];
-  /** Companion: qué acompaña la acción para hacerla disfrutable. */
+  /** Companion: qué acompaña la acción para hacerla disfrutable.
+   *  Debe ser CONCRETO y tangible ("A glass of cold water", "A 2-minute
+   *  timer"), no abstracto ("silence", "daylight"). */
   companion: string;
-  /** Trigger: la frase que ayuda a empezar. */
+  /** Trigger: la frase que ayuda a empezar. En la UI ya no es una sección
+   *  propia: se muestra como el primer paso práctico dentro de Steps. */
   trigger: string;
+  /** Resumen corto de qué ES/HACE el Dare ("What this is"): primera sección
+   *  de la pantalla del Dare. Si falta, se deriva un fallback. */
+  summary?: string;
   /** Proof statement en primera persona, se colecciona al completar. */
   proof: string;
   /** Efectos esperados (sensaciones), para el detalle. */
@@ -91,6 +164,15 @@ export interface Checkin {
   /** A dónde acepta que DARE le mande (o null = "Not now"). */
   dest: Dest | null;
   state: MentalState;
+  /** "¿Qué lo haría menos aburrido hoy?" — sesga el companion del Dare.
+      Opcional: los check-ins antiguos (pre-companions) no lo tienen → surprise. */
+  vibe?: CompanionVibe | null;
+  /** Capacidad de foco 1..10 (check-in rápido de Today la aporta). Opcional
+   *  para no romper el check-in completo, que no la pide. */
+  focus?: number;
+  /** Qué está evitando ahora mismo (check-in rápido). El generador lo usa para
+   *  ofrecer un Dare que haga contacto con lo evitado. Opcional. */
+  avoiding?: Avoid;
 }
 
 export interface TarotCard {
@@ -283,6 +365,28 @@ export interface PlannedDare {
   date?: string;
 }
 
+/** Cuándo se quiere retomar un Dare planeado (Planned Dares). */
+export type PlanWhen =
+  | "later-today"
+  | "tomorrow-am"
+  | "tomorrow-pm"
+  | "weekend"
+  | "journey";
+
+/** Un Dare que el usuario aparta para más tarde. Guarda el id del Dare
+ *  (referencia, no copia) y cuándo debe volver a aparecer. `dueDate` es la
+ *  fecha (YYYY-MM-DD) a partir de la cual se surface en Today; para
+ *  "journey" queda vacío (vive en el contexto del Journey). */
+export interface DarePlan {
+  id: string;
+  dareId: string;
+  when: PlanWhen;
+  dueDate: string;
+  /** Título del Dare, cacheado para la lista (se re-resuelve al iniciarlo). */
+  label: string;
+  createdAt: string;
+}
+
 export interface ScheduledDate {
   when: string; // "saturday" | "sunday" | "later" | fecha
   idea?: string;
@@ -328,9 +432,13 @@ export interface InstallPrefs {
   installedAt: string;
 }
 
-/** localStorage — versión 5. Ver storage.ts (migración desde v2/v3/v4). */
+/** localStorage — versión 6. Ver storage.ts (migración desde v2/v3/v4/v5).
+    v6 UNIFICA varias v5 que colisionaron en ramas paralelas: Planned Dares
+    (`darePlans` + `rejectedDares`), el recordatorio de dos franjas + nudge de
+    instalación (`notifications` morning/evening + `install`) y los Companions
+    (campo opcional `vibe` en `Checkin`). */
 export interface DareStore {
-  version: 5;
+  version: 6;
   onboarded: boolean;
   /** Journey "en foco" para la pantalla Journey y la lane de Today. */
   journeyId: JourneyId;
@@ -376,6 +484,10 @@ export interface DareStore {
   companionShelf: CompanionShelf | null;
   bossPlaylist: BossPlaylist | null;
   plannedDares: PlannedDare[];
+  /** Planned Dares (v5): Dares concretos apartados para más tarde. */
+  darePlans: DarePlan[];
+  /** Dares rechazados ("Another dare") con su fecha, para no repetirlos pronto (v5). */
+  rejectedDares: Array<{ dareId: string; date: string }>;
   dates: ScheduledDate[];
   /** Feedback diferido "+30 min"; se muestra en la próxima apertura. */
   pendingFeedback: { dareId: string; cat: Cat; at: number } | null;

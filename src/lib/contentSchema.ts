@@ -20,11 +20,14 @@ import type { Cat, Dare, Effect, Level, Loc, MentalState } from "../types";
 export const CATS_VALID: readonly Cat[] = [
   "forest", "walk", "dumbbells", "fitboxing", "pool",
   "padel", "tabata", "carry", "recovery", "focus", "small",
+  "admin", "communication", "bodyreset", "environment", "creative",
+  "social", "decision", "emotion", "phone", "taskcontact", "close",
 ];
 export const LOCS_VALID: readonly Loc[] = ["home", "outside", "forest", "pool", "gym", "padel"];
 export const LEVELS_VALID: readonly Level[] = ["Easy", "Medium", "Strong"];
 export const EFFECTS_VALID: readonly Effect[] = [
   "Energy", "Focus", "Mood", "Calm", "Strength", "Confidence", "Recovery",
+  "Clarity", "Stress", "Sleep", "Momentum",
 ];
 export const STATES_VALID: readonly MentalState[] = ["blocked", "tired", "normal", "active", "stressed"];
 

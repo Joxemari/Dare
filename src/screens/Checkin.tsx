@@ -1,5 +1,6 @@
 import { C } from "../data/colors";
 import { SYMBOLS } from "../data/symbols";
+import { VIBES } from "../data/companions";
 import { wrap, pad } from "../components/layout";
 import type { CurrentLoc, Dest, MentalState } from "../types";
 import type { DareApp } from "../lib/useDare";
@@ -142,6 +143,32 @@ export function Checkin({ app }: { app: DareApp }) {
             ))}
           </div>
 
+          {/* Companion / temptation bundling: qué haría la acción menos aburrida.
+              Opcional (no bloquea "Get my dare"); sesga el companion del Dare. */}
+          <p className="lbl" style={{ marginBottom: 4 }}>
+            What would make this less boring today?
+          </p>
+          <p style={{ color: C.dim, fontSize: 12, marginBottom: 10 }}>
+            Optional — I'll build the dare around it.
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8, marginBottom: 26 }}>
+            {VIBES.map((v) => {
+              const on = draft.vibe === v.vibe;
+              return (
+                <button
+                  key={v.vibe}
+                  className={"pill" + (on ? " on" : "")}
+                  style={{ fontSize: 12 }}
+                  aria-pressed={on}
+                  // segundo toque deselecciona → vuelve a "surprise"
+                  onClick={() => setDraft({ ...draft, vibe: on ? null : v.vibe })}
+                >
+                  {v.label}
+                </button>
+              );
+            })}
+          </div>
+
           <button
             className="btn btn-ghost"
             disabled={!ready}
@@ -155,6 +182,7 @@ export function Checkin({ app }: { app: DareApp }) {
                 // null (sin tocar) o "none" (Not now) → sin destino
                 dest: draft.dest && draft.dest !== "none" ? draft.dest : null,
                 state: draft.state!,
+                vibe: draft.vibe,
               })
             }
           >

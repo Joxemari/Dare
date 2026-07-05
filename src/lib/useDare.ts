@@ -1,22 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import type {
+  Avoid,
   BossPlaylist,
   Cat,
   Checkin,
   CompanionShelf,
+  CompanionVibe,
   Dare,
+  DarePlan,
   DareStore,
   Dest,
   JourneyId,
+  PlanWhen,
   TarotCard,
   TreatDraw,
 } from "../types";
 import { DARES } from "../data/dares";
 import { TAROT } from "../data/tarot";
 import { TRAITS } from "../data/traits";
-import { CATS } from "../data/colors";
-import { JOURNEYS, MVP_JOURNEYS, journeyById, currentChapter, journeyMilestoneIds, todaysDayPlan, SPRINT_DAYS } from "../data/journeys";
-import { generateDare, recentDareIds } from "./generator";
+import { JOURNEYS, MVP_JOURNEYS, journeyById, currentChapter, journeyMilestoneIds, todaysDayPlan, journeyComplete } from "../data/journeys";
+import { generateDare, recentDareIds, buildWhy } from "./generator";
 import { recommendJourney } from "./recommend";
 import { rollTreat, sample } from "./random";
 import { findDare, findCard } from "./lookup";
@@ -36,6 +39,7 @@ export type Screen =
   | "detail"
   | "timer"
   | "complete"
+  | "journeyComplete"
   | "journey"
   | "journeys"
   | "progress"
@@ -50,13 +54,59 @@ export type DraftCheckin = {
   loc: Checkin["loc"] | null;
   dest: Dest | "none" | null;
   state: Checkin["state"] | null;
+  /** "¿Qué lo haría menos aburrido hoy?" — opcional (null = surprise). */
+  vibe: CompanionVibe | null;
 };
 
-const emptyDraft: DraftCheckin = { energy: null, time: null, loc: null, dest: null, state: null };
+const emptyDraft: DraftCheckin = { energy: null, time: null, loc: null, dest: null, state: null, vibe: null };
 const FB_DELAY = 30 * 60 * 1000; // 30 minutos
 /** Check-in por defecto para "Just dare me" sin check-in previo:
  *  corto, de baja fricción, inmediato. */
 const SAFE_CI: Checkin = { energy: 5, time: 3, loc: "home", dest: null, state: "normal" };
+
+/** Check-in RÁPIDO de Today: energía + foco (1-5) + qué se evita. Sin
+ *  ningún valor por defecto seleccionado (todos null hasta que el usuario
+ *  toca). Ver pantalla `QuickCheckin` en TodayDareRevealCard. */
+export type QuickDraft = {
+  energy: number | null;
+  focus: number | null;
+  avoiding: Avoid | null;
+};
+const emptyQuick: QuickDraft = { energy: null, focus: null, avoiding: null };
+
+/** Convierte el check-in rápido (1-5) en un Checkin completo (contexto casa).
+ *  Escala energía/foco a 1-10 y deriva el estado mental. */
+function quickToCheckin(q: { energy: number; focus: number; avoiding: Avoid }): Checkin {
+  const state: Checkin["state"] = q.energy <= 2 ? "tired" : q.focus <= 2 ? "blocked" : "normal";
+  return {
+    energy: q.energy * 2,
+    time: 10,
+    loc: "home",
+    dest: null,
+    state,
+    focus: q.focus * 2,
+    avoiding: q.avoiding,
+  };
+}
+
+/** Fecha (YYYY-MM-DD) a partir de la cual un Planned Dare vuelve a Today.
+ *  "journey" no tiene fecha (vive en el contexto del Journey). Impuro (usa
+ *  Date), pero vive en la frontera useDare, no en un módulo puro. */
+function dueDateFor(when: PlanWhen): string {
+  const d = new Date();
+  if (when === "later-today") return todayStr(d);
+  if (when === "tomorrow-am" || when === "tomorrow-pm") {
+    d.setDate(d.getDate() + 1);
+    return todayStr(d);
+  }
+  if (when === "weekend") {
+    // próximo sábado (o hoy si ya es sábado)
+    const delta = (6 - d.getDay() + 7) % 7;
+    d.setDate(d.getDate() + delta);
+    return todayStr(d);
+  }
+  return ""; // journey
+}
 
 /** Rollover diario silencioso: archiva los dares de ayer, refresca la Daily Card. */
 function rollover(s: DareStore): DareStore {
@@ -108,6 +158,15 @@ function featureBadge(earned: string[]): string | null {
   return [...earned].sort((a, b) => rank(a) - rank(b))[0];
 }
 
+/** Badges extra que otorga TERMINAR un Journey, además de su identidad final
+ *  (`journey.identity.id`). Solo First Flame e Iron Quiet tienen badges de
+ *  "Proof of…" propios; el resto se cierran solo con su identidad. */
+function journeyCompletionExtras(journeyId: JourneyId): string[] {
+  if (journeyId === "ember") return ["proof-of-fire"];
+  if (journeyId === "iron") return ["proof-of-iron", "quiet-power", "builder"];
+  return [];
+}
+
 export function useDare() {
   const [store, setStore] = useState<DareStore>(() => rollover(load()));
   const [screen, setScreen] = useState<Screen>(() => (store.onboarded ? "home" : "onboarding"));
@@ -121,6 +180,9 @@ export function useDare() {
   // transitorio (no persistido)
   const [obIdx, setObIdx] = useState(0);
   const [draft, setDraft] = useState<DraftCheckin>(emptyDraft);
+  const [quickDraft, setQuickDraft] = useState<QuickDraft>(emptyQuick);
+  /** ¿Se está mostrando el check-in rápido en Today (gate de "Your Dare")? */
+  const [checkingIn, setCheckingIn] = useState(false);
   const [treat, setTreat] = useState<TreatDraw | null>(null);
   const [treatFlipped, setTreatFlipped] = useState(false);
   const [lastProof, setLastProof] = useState<string>("");
@@ -200,27 +262,14 @@ export function useDare() {
     !!store.pendingFeedback && Date.now() - store.pendingFeedback.at >= FB_DELAY;
 
   // ---- briefing diario (widget + recordatorio) ----
-  const bestEnergyCat = (Object.entries(catFeedback) as [Cat, number][])
-    .filter(([, v]) => (v ?? 0) > 0)
-    .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))[0];
-  const briefingInput: BriefingInput = {
-    date: today,
-    hour: new Date().getHours(),
-    momentum: store.momentum.count,
-    journeyName: journey.name,
-    journeySym: journey.sym,
-    chapterName: chapter.name,
-    daysDone,
-    sprintDays: SPRINT_DAYS,
-    doneToday: daresToday > 0,
-    dareTitle:
-      currentDare && currentDare.revealed && !currentDare.completed ? currentDare.dare.title : null,
-    cardName: card ? card.name : null,
-    topEnergyLabel: bestEnergyCat ? CATS[bestEnergyCat[0]].label : null,
-    proofCount,
-  };
+  const briefingInput: BriefingInput = { date: today, doneToday: daresToday > 0 };
   const briefing = buildBriefing(briefingInput);
   const notifyPermission = notificationPermission();
+
+  // ---- Planned Dares vencidos (para surface en Today) ----
+  const duePlannedDares = store.darePlans.filter(
+    (p) => p.when !== "journey" && p.dueDate && p.dueDate <= today,
+  );
 
   // Recordatorio local (dos franjas: mañana y tarde): comprueba al montar, al
   // enfocar la pestaña y cada minuto mientras la app está viva. La DECISIÓN
@@ -237,7 +286,7 @@ export function useDare() {
       const now = new Date();
       const slot = dueSlot(store.notifications, now, daresToday > 0);
       if (!slot) return;
-      const r = buildReminder({ ...briefingInput, hour: now.getHours() }, slot);
+      const r = buildReminder({ date: todayStr(now), doneToday: daresToday > 0 }, slot);
       showReminderNotification(r.title, r.body, url);
       const today = todayStr(now);
       // Sella SOLO la franja disparada (dedupe independiente mañana/tarde).
@@ -470,8 +519,12 @@ export function useDare() {
    */
   function generateInto(ci: Checkin, opts: { persistCheckin: boolean; navigate: "detail" | "home" }) {
     const recentIds = recentDareIds([...store.completed, ...store.todaysDares]);
-    const { dare, why } = generateDare(ci, store.lastCats, catFeedback, journey, recentIds);
+    // Dares rechazados recientemente ("Another dare") — se evitan un tiempo.
+    const cutoff = todayStr(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000));
+    const rejectedIds = store.rejectedDares.filter((r) => r.date >= cutoff).map((r) => r.dareId);
+    const { dare, why } = generateDare(ci, store.lastCats, catFeedback, journey, recentIds, rejectedIds);
     setUsedSmall(false);
+    setCheckingIn(false);
     setStore((s) => ({
       ...s,
       lastCheckin: ci,
@@ -506,18 +559,44 @@ export function useDare() {
   }
 
   /** Today "Reveal today's dare": revela el Dare de hoy INLINE (sin navegar).
-   *  Si ya hay uno sin revelar, lo abre; si no, genera uno al instante. */
+   *  Solo revela un Dare ya generado que estaba oculto (p. ej. un Planned
+   *  Dare). La generación fresca pasa SIEMPRE por el check-in rápido. */
   function revealTodayDare() {
-    if (currentEntry && currentEntry.completedAt === null) {
-      if (!currentEntry.revealed) patchCurrentEntry({ revealed: true });
-      return;
+    if (currentEntry && currentEntry.completedAt === null && !currentEntry.revealed) {
+      patchCurrentEntry({ revealed: true });
     }
-    generateInto(store.lastCheckin ?? SAFE_CI, { persistCheckin: false, navigate: "home" });
   }
 
-  /** Today "Another dare": genera un Dare distinto y lo deja revelado inline. */
+  /** Today "Your Dare": abre el check-in rápido (gate previo a generar). */
+  function startQuickCheckin() {
+    setQuickDraft(emptyQuick);
+    setCheckingIn(true);
+  }
+
+  function cancelQuickCheckin() {
+    setCheckingIn(false);
+    setQuickDraft(emptyQuick);
+  }
+
+  /** Genera el Dare a partir del check-in rápido y lo revela inline en Today. */
+  function runQuickCheckin(q: { energy: number; focus: number; avoiding: Avoid }) {
+    const ci = quickToCheckin(q);
+    generateInto(ci, { persistCheckin: true, navigate: "home" });
+  }
+
+  /** Marca un Dare como rechazado (no repetir pronto). */
+  function rejectDare(dareId: string) {
+    setStore((s) => ({
+      ...s,
+      rejectedDares: [...s.rejectedDares, { dareId, date: todayStr() }].slice(-40),
+    }));
+  }
+
+  /** Today "Another dare": rechaza el actual y vuelve al check-in rápido para
+   *  elegir de nuevo (variedad guiada por el estado). */
   function anotherDare() {
-    generateInto(store.lastCheckin ?? SAFE_CI, { persistCheckin: false, navigate: "home" });
+    if (currentEntry) rejectDare(currentEntry.dareId);
+    startQuickCheckin();
   }
 
   function revealDare() {
@@ -551,9 +630,16 @@ export function useDare() {
   function finishDare() {
     if (!currentDare || currentDare.completed) return;
     const d: Dare = currentDare.dare;
-    // El treat conoce el CONTEXTO: la categoría del Dare recién hecho
-    // (nada de "un café sentado" tras un paseo por el bosque).
-    const roll = rollTreat(d.cat);
+    // Treat CONSCIENTE DEL CONTEXTO y SESGADO. Dos intenciones combinadas:
+    //  - contexto: la categoría del Dare recién hecho (nada de "un café sentado"
+    //    tras un paseo por el bosque) → `d.cat`.
+    //  - sesgo (temptation bundling / ciencia del hábito): premia fuerte
+    //    completar con poca motivación y probar una categoría nueva → `treatBoost`.
+    const ci = store.lastCheckin;
+    const lowMotivation = !!ci && (ci.energy <= 3 || ci.state === "blocked" || ci.state === "tired");
+    const newCategory = (store.catCounts[d.cat] || 0) === 0;
+    const treatBoost = (lowMotivation ? 0.5 : 0) + (newCategory ? 0.5 : 0);
+    const roll = rollTreat(d.cat, treatBoost);
     const counts = { ...store.catCounts, [d.cat]: (store.catCounts[d.cat] || 0) + 1 };
     const completedBefore = todaysToday.filter((e) => e.completedAt !== null).length;
     const isFirstToday = completedBefore === 0;
@@ -564,13 +650,13 @@ export function useDare() {
     // veces usada la versión de baja energía (para el badge Reset Artist)
     const newSmallUses = store.smallVersionUses + (usedSmall ? 1 : 0);
 
-    // El progreso/completion del Journey SOLO cuenta si el Journey en foco está
-    // activo (arrancado). Sin Journey activo, el Dare aún cuenta para proof,
+    // El progreso del Journey (índice de día) SOLO avanza si el Journey en foco
+    // está activo. La COMPLETION del Journey ya NO depende de este contador: se
+    // dispara al completar todos los milestones (ver completeMilestone), no al
+    // llegar a 7 días. Sin Journey activo, el Dare aún cuenta para proof,
     // momentum y badges globales, pero no avanza ningún sprint.
     const journeyActive = store.activeJourneyIds.includes(store.journeyId);
     const newDaysDone = journeyActive ? daysDone + 1 : daysDone;
-    const finishesJourney =
-      journeyActive && newDaysDone >= SPRINT_DAYS && !store.journeysCompleted.includes(store.journeyId);
 
     // badges ganados por este Dare (función pura, umbrales acumulados)
     const have = (id: string) => store.traits.includes(id);
@@ -584,25 +670,11 @@ export function useDare() {
       have,
     });
 
-    // Cierre de Journey: UN capstone deliberado — la identity del Journey
-    // (First Mover, Quiet Builder…). Los demás badges de un Journey salen de
-    // los umbrales de achievements.ts ganados por el camino (momentum-keeper,
-    // rhythm-finder, courageous…), nunca uno por cada Dare. Así hay más de un
-    // badge por Journey sin spam (spec).
-    const newIdentities: string[] = [];
-    if (finishesJourney) {
-      const identId = journey.identity.id;
-      if (!store.identities.includes(identId)) newIdentities.push(identId);
-      // la identity también se colecciona como badge (findTrait la renderiza).
-      if (!have(identId) && !earned.includes(identId)) earned.push(identId);
-    }
-
     // Un único badge "destacado" para la pantalla de completion (el más
     // importante); el resto se desbloquean en silencio y aparecen en Progress.
-    // Al cerrar Journey, el capstone (identity) se muestra en su propio bloque
-    // premium: lo excluimos del banner para no mostrar el mismo badge dos veces.
-    const capstone = finishesJourney ? journey.identity.id : null;
-    const featured = featureBadge(earned.filter((id) => id !== capstone));
+    // El cierre de Journey (capstone/identity) ya NO se dispara aquí: es
+    // milestone-based y vive en `completeMilestone` (pantalla journeyComplete).
+    const featured = featureBadge(earned);
 
     setStore((s) => {
       // sella la completion en la entrada activa
@@ -620,12 +692,10 @@ export function useDare() {
         completed: [...s.completed, { dareId: d.id, date: today }],
         proofLibrary: [...s.proofLibrary, { date: today, dareId: d.id, text: d.proof }],
         journeyProgress: journeyActive ? { ...s.journeyProgress, [s.journeyId]: newDaysDone } : s.journeyProgress,
-        journeysCompleted: finishesJourney ? [...s.journeysCompleted, s.journeyId] : s.journeysCompleted,
         momentum: { count: newMomentum, lastDate: today },
         lastCats: [d.cat, s.lastCats[0]].filter(Boolean).slice(0, 2) as Cat[],
         traits: [...s.traits, ...earned],
         smallVersionUses: newSmallUses,
-        identities: [...s.identities, ...newIdentities],
         treats: [...s.treats, { date: today, tier: roll.tier, text: roll.text }],
         pendingFeedback: { dareId: d.id, cat: d.cat, at: Date.now() },
       };
@@ -635,7 +705,6 @@ export function useDare() {
     setTreatFlipped(false);
     setLastProof(d.proof);
     setNewTraits(featured ? [featured] : []);
-    setJustCompletedJourney(finishesJourney ? store.journeyId : null);
     setFbNote(false);
     setScreen("complete");
   }
@@ -713,24 +782,59 @@ export function useDare() {
   }
 
   // ---- milestones ----
+  /**
+   * Aplica un cambio en los milestones y, si con ello algún Journey ACTIVO
+   * queda con TODOS sus milestones completados por primera vez, lo marca como
+   * terminado, desbloquea su Dream Reward + Badge/identidad final y dispara la
+   * celebración (pantalla `journeyComplete`). La completion persiste vía
+   * `journeysCompleted` (idempotente: solo se celebra una vez por Journey).
+   * Los demás Journeys activos no se ven afectados.
+   */
+  function applyMilestones(patch: Record<string, boolean>, extra?: Partial<DareStore>) {
+    const nextMilestones = { ...store.milestones, ...patch };
+    // ¿Algún Journey activo acaba de completarse (y no estaba ya completado)?
+    const completedId = store.activeJourneyIds.find(
+      (id) => !store.journeysCompleted.includes(id) && journeyComplete(journeyById(id), nextMilestones),
+    );
+
+    if (!completedId) {
+      setStore((s) => ({ ...s, ...extra, milestones: { ...s.milestones, ...patch } }));
+      return;
+    }
+
+    const cj = journeyById(completedId);
+    const identId = cj.identity.id;
+    const newBadges = [identId, ...journeyCompletionExtras(completedId)].filter(
+      (b) => !store.traits.includes(b),
+    );
+    const newIdentities = store.identities.includes(identId) ? [] : [identId];
+
+    setStore((s) => ({
+      ...s,
+      ...extra,
+      milestones: { ...s.milestones, ...patch },
+      journeysCompleted: [...s.journeysCompleted, completedId],
+      traits: [...s.traits, ...newBadges.filter((b) => !s.traits.includes(b))],
+      identities: [...s.identities, ...newIdentities.filter((i) => !s.identities.includes(i))],
+      // Enfoca el Journey recién terminado para que la celebración y las
+      // pantallas siguientes muestren su Dream Reward e identidad.
+      journeyId: completedId,
+    }));
+
+    setJustCompletedJourney(completedId);
+    setScreen("journeyComplete");
+  }
+
   function completeMilestone(id: string) {
-    setStore((s) => ({ ...s, milestones: { ...s.milestones, [id]: true } }));
+    applyMilestones({ [id]: true });
   }
 
   function saveCompanionShelf(shelf: CompanionShelf, milestoneId?: string) {
-    setStore((s) => ({
-      ...s,
-      companionShelf: shelf,
-      milestones: milestoneId ? { ...s.milestones, [milestoneId]: true } : s.milestones,
-    }));
+    applyMilestones(milestoneId ? { [milestoneId]: true } : {}, { companionShelf: shelf });
   }
 
   function saveBossPlaylist(pl: BossPlaylist, milestoneId?: string) {
-    setStore((s) => ({
-      ...s,
-      bossPlaylist: pl,
-      milestones: milestoneId ? { ...s.milestones, [milestoneId]: true } : s.milestones,
-    }));
+    applyMilestones(milestoneId ? { [milestoneId]: true } : {}, { bossPlaylist: pl });
   }
 
   // ---- planning + dates ----
@@ -745,6 +849,71 @@ export function useDare() {
           : [...s.plannedDares, { id: `${dest}-${s.plannedDares.length}`, dest, label }],
       };
     });
+  }
+
+  // ---- Planned Dares (v5): apartar un Dare concreto para más tarde ----
+  /** Aparta el Dare `dareId` para el momento `when`. Guarda referencia (id),
+   *  no copia; el resto se re-resuelve al iniciarlo. */
+  function planDare(dareId: string, when: PlanWhen, label: string) {
+    setStore((s) => ({
+      ...s,
+      darePlans: [
+        ...s.darePlans,
+        {
+          id: `${dareId}-${when}-${s.darePlans.length}`,
+          dareId,
+          when,
+          dueDate: dueDateFor(when),
+          label,
+          createdAt: todayStr(),
+        },
+      ],
+    }));
+  }
+
+  function removeDarePlan(id: string) {
+    setStore((s) => ({ ...s, darePlans: s.darePlans.filter((p) => p.id !== id) }));
+  }
+
+  /** "Plan for later" desde la pantalla del Dare: aparta el Dare ACTUAL para
+   *  el momento elegido, lo quita de hoy (para que Today vuelva al check-in) y
+   *  regresa a Today. */
+  function planCurrentForLater(when: PlanWhen) {
+    if (!currentDare) return;
+    const d = currentDare.dare;
+    planDare(d.id, when, d.title);
+    setStore((s) => ({
+      ...s,
+      todaysDares: s.todaysDares.filter((e) => !(e.date === todayStr() && e.completedAt === null)),
+    }));
+    setScreen("home");
+  }
+
+  /** Retoma un Planned Dare: lo pone como Dare de hoy (revelado), lo quita de
+   *  la lista y abre el detalle. Completarlo cuenta como cualquier otro Dare. */
+  function startPlannedDare(plan: DarePlan) {
+    const dare = findDare(plan.dareId);
+    if (!dare) {
+      removeDarePlan(plan.id);
+      return;
+    }
+    setStore((s) => ({
+      ...s,
+      darePlans: s.darePlans.filter((p) => p.id !== plan.id),
+      todaysDares: [
+        ...s.todaysDares.filter((e) => !(e.date === todayStr() && e.completedAt === null)),
+        {
+          dareId: dare.id,
+          date: todayStr(),
+          wild: !!dare.wild,
+          revealed: true,
+          why: buildWhy(store.lastCheckin ?? SAFE_CI, dare),
+          startedAt: null,
+          completedAt: null,
+        },
+      ],
+    }));
+    setScreen("detail");
   }
 
   function scheduleDate(when: string, idea?: string) {
@@ -834,9 +1003,12 @@ export function useDare() {
     setAway,
     obIdx,
     setObIdx,
-    // check-in draft
+    // check-in draft (completo) + check-in rápido de Today
     draft,
     setDraft,
+    quickDraft,
+    setQuickDraft,
+    checkingIn,
     // derivados
     journey,
     daysDone,
@@ -855,6 +1027,7 @@ export function useDare() {
     showPendingFb,
     briefing,
     notifyPermission,
+    duePlannedDares,
     // instalación PWA
     installNudge,
     installSettings,
@@ -888,7 +1061,15 @@ export function useDare() {
     runCheckin,
     justDareMe,
     revealTodayDare,
+    startQuickCheckin,
+    cancelQuickCheckin,
+    runQuickCheckin,
+    rejectDare,
     anotherDare,
+    planDare,
+    planCurrentForLater,
+    removeDarePlan,
+    startPlannedDare,
     revealDare,
     startDare,
     swapToSmall,

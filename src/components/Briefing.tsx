@@ -3,43 +3,36 @@ import { SYMBOLS } from "../data/symbols";
 import type { Briefing as BriefingData } from "../lib/briefing";
 
 /* ============================================================
-   Widget de Briefing diario — la "lectura del día" estilo Co-Star.
-   Presentacional puro: recibe el `Briefing` ya construido por la
-   lógica pura (`lib/briefing.ts`). Superficie compartida con el
-   recordatorio local (mismo contenido). Ver CLAUDE.md.
+   Today's Briefing — la "lectura del día": UN consejo concreto
+   inspirado en una persona conocida y un hábito/método real,
+   accionable hoy. Presentacional puro: recibe el `Briefing` ya
+   construido por la lógica pura (`lib/briefing.ts`).
+
+   Se muestra DETRÁS de "Today's Door" (se revela al tocar la
+   puerta). El CTA lo aporta el contenedor. Ver CLAUDE.md.
    ============================================================ */
 export function Briefing({
   briefing,
-  accent,
+  accent = C.gold,
 }: {
   briefing: BriefingData;
-  accent: string;
+  accent?: string;
 }) {
   return (
-    <div
-      className="card rise"
-      style={{
-        padding: 20,
-        marginBottom: 22,
-        background: C.card2,
-        borderColor: accent + "33",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+    <div>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
         <span style={{ color: accent, fontSize: 15 }}>{SYMBOLS[briefing.sym]}</span>
         <span className="lbl" style={{ color: accent }}>
           Today's briefing
         </span>
       </div>
-      <p className="serif" style={{ fontSize: 20, lineHeight: 1.3, marginBottom: 12 }}>
-        {briefing.headline}
+      <p className="serif" style={{ fontSize: 20, lineHeight: 1.3, marginBottom: 8, color: C.text }}>
+        {briefing.person}
       </p>
-      {briefing.lines.map((line, i) => (
-        <p key={i} style={{ fontSize: 13, color: C.dim, lineHeight: 1.55, marginBottom: 4 }}>
-          {line}
-        </p>
-      ))}
-      <p style={{ fontSize: 13, color: accent, marginTop: 12, lineHeight: 1.5 }}>{briefing.focus}</p>
+      <p style={{ fontSize: 14, color: C.dim, lineHeight: 1.6, marginBottom: 14 }}>{briefing.insight}</p>
+      <p style={{ fontSize: 14.5, color: C.text, lineHeight: 1.55 }}>
+        <span style={{ color: accent }}>Today:</span> {briefing.action}
+      </p>
     </div>
   );
 }
