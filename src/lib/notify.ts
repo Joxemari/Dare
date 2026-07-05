@@ -4,8 +4,8 @@
    Impuro POR DISEÑO: habla con `Notification`, con el service
    worker y con el reloj, así que vive fuera de los módulos puros
    de `src/lib` y NO se testea unitariamente (misma categoría que
-   `feedback.ts`/`storage.ts`). La DECISIÓN de si toca avisar
-   (`reminderDue`) y el CONTENIDO (`buildReminder`) son puros y
+   `feedback.ts`/`storage.ts`). La DECISIÓN de qué franja avisar
+   (`dueSlot`) y el CONTENIDO (`buildReminder`) son puros y
    viven en `briefing.ts`, con sus tests.
 
    Límite honesto (sin backend): esto es un recordatorio LOCAL. Se
