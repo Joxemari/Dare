@@ -56,7 +56,7 @@ export function Home({ app }: { app: DareApp }) {
 
           <div style={{ height: 8 }} />
         </div>
-        <Nav tab="home" go={app.setScreen} />
+        <Nav tab="home" go={app.navigateTab} />
       </div>
     </div>
   );

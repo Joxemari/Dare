@@ -106,8 +106,12 @@ test("Journey: Begin explícito, milestones accionables + tabs Progress/You", as
   const errors = guardPageErrors(page);
   await enterApp(page);
 
-  // Journey tab — sin arrancar aún, ofrece "Begin Journey"
+  // Journey tab — sin ningún Journey activo, aterriza en el picker con TODOS
+  // los Journeys (no hay que pulsar "All journeys").
   await page.getByRole("button", { name: "Journey", exact: true }).click();
+  await expect(page.getByText("Choose a journey")).toBeVisible();
+  // Elige Iron Quiet → entra a su pantalla, donde se arranca explícitamente.
+  await page.getByRole("button", { name: /Iron Quiet/ }).click();
   await page.getByRole("button", { name: /Begin Journey/ }).click();
 
   // sin Dream Reward → setup; al elegirlo, el Journey arranca y muestra capítulos.

@@ -281,7 +281,7 @@ export function Progress({ app }: { app: DareApp }) {
             </p>
           )}
         </div>
-        <Nav tab="progress" go={app.setScreen} />
+        <Nav tab="progress" go={app.navigateTab} />
       </div>
     </div>
   );

@@ -1,24 +1,38 @@
+import type { CSSProperties } from "react";
 import { C } from "../data/colors";
 import { SYMBOLS } from "../data/symbols";
 import { SPRINT_DAYS, ROADMAP_JOURNEYS } from "../data/journeys";
+import { Nav } from "../components/Nav";
 import { wrap, pad } from "../components/layout";
 import type { DareApp } from "../lib/useDare";
 
 /** Journey picker — cada Journey conserva su propio progreso. Debajo de los 4
  *  del MVP, los Journeys de roadmap aparecen como "Coming soon": solo un
- *  preview (nombre, tag, promesa y la estructura de capítulos), sin CTA. */
+ *  preview (nombre, tag, promesa y la estructura de capítulos), sin CTA.
+ *
+ *  Es también el ATERRIZAJE de la pestaña Journey cuando no hay ningún Journey
+ *  activo (ver `navigateTab` en useDare): por eso lleva su propio `Nav` abajo.
+ *  En ese caso es la raíz de la pestaña y NO muestra la flecha atrás; cuando se
+ *  llega desde "All journeys" (con un Journey activo) sí, para volver al suyo. */
 export function Journeys({ app }: { app: DareApp }) {
   const { store, journeys } = app;
   const store_recommended = app.recommendedJourneyId;
+  // Con un Journey activo, el picker es una sub-página (se llegó por "All
+  // journeys") → hay vuelta atrás. Sin ninguno activo, es la raíz de la pestaña.
+  const hasActive = store.activeJourneyIds.length > 0;
 
   return (
     <div className="dare-root">
       <div style={wrap}>
         <div style={pad}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
-            <button className="link" style={{ textDecoration: "none", fontSize: 16 }} aria-label="Back" onClick={() => app.setScreen("journey")}>
-              ←
-            </button>
+            {hasActive ? (
+              <button className="link" style={{ textDecoration: "none", fontSize: 16 }} aria-label="Back" onClick={() => app.setScreen("journey")}>
+                ←
+              </button>
+            ) : (
+              <span style={{ width: 16 }} />
+            )}
             <span className="lbl">Choose a journey</span>
             <span style={{ width: 16 }} />
           </div>
@@ -28,7 +42,6 @@ export function Journeys({ app }: { app: DareApp }) {
             Run one or several at once.
           </p>
           {journeys.map((j) => {
-            const cur = j.id === store.journeyId;
             const active = store.activeJourneyIds.includes(j.id);
             const p = store.journeyProgress[j.id];
             const completed = store.journeysCompleted.includes(j.id);
@@ -50,10 +63,15 @@ export function Journeys({ app }: { app: DareApp }) {
             return (
               <button
                 key={j.id}
-                className="card"
+                className="card jcard"
                 disabled={placeholder}
                 onClick={() => !placeholder && app.chooseJourney(j.id)}
                 style={{
+                  // El resalte (glow + borde de color) YA NO es permanente sobre
+                  // el seleccionado: se aplica al pasar el cursor (`.jcard:hover`
+                  // en index.css, con el color propio del Journey vía `--jcolor`).
+                  // Aplica a TODOS los ofrecibles, incl. los ya activos.
+                  "--jcolor": j.color,
                   padding: 20,
                   marginBottom: 12,
                   width: "100%",
@@ -62,13 +80,14 @@ export function Journeys({ app }: { app: DareApp }) {
                   fontFamily: "inherit",
                   color: C.text,
                   opacity: placeholder ? 0.55 : 1,
-                  borderColor: cur ? j.color + "88" : C.line,
-                  boxShadow: cur ? `0 0 30px -14px ${j.color}` : "none",
-                }}
+                  borderColor: C.line,
+                } as CSSProperties}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
-                    <p className="serif t-heading" style={{ color: cur ? j.color : C.text }}>
+                    {/* El color del título tampoco es "seleccionado": se tiñe al
+                        hacer hover (`.jcard:hover .jtitle`), como el glow. */}
+                    <p className="serif t-heading jtitle" style={{ color: C.text }}>
                       {SYMBOLS[j.sym]} &nbsp;{j.name}
                     </p>
                     <p style={{ fontSize: 13, color: C.dim, marginTop: 4 }}>{j.tag}</p>
@@ -115,6 +134,7 @@ export function Journeys({ app }: { app: DareApp }) {
             </div>
           ))}
         </div>
+        <Nav tab="journey" go={app.navigateTab} />
       </div>
     </div>
   );

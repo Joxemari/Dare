@@ -244,7 +244,7 @@ export function You({ app }: { app: DareApp }) {
             </button>
           </div>
         </div>
-        <Nav tab="you" go={app.setScreen} />
+        <Nav tab="you" go={app.navigateTab} />
       </div>
     </div>
   );
