@@ -197,6 +197,21 @@ export const DARES: Dare[] = [
     effects: { Focus: 3, Calm: 1 }, scienceId: "brain-movement",
     steps: ["One playlist, press play", "Clear the desk until it ends", "Everything has a place or the bin", "Sit down at a clean surface"] },
 
+  // ---------------- COMPANION SNACKS (temptation bundling explícito) ----------------
+  // El companion ES el formato: la recompensa ocurre DURANTE la acción.
+  { id: "netflix-strength-snack", title: "Netflix Strength Snack", cat: "dumbbells", min: 12, level: "Medium", energy: [4, 9], locs: ["home"],
+    trigger: "Only one episode.", companion: "Netflix — playing only while you move.", proof: "Turned screen time into strength.",
+    effects: { Strength: 2, Mood: 2, Energy: 1 }, scienceId: "dumbbells",
+    steps: ["Pick one episode, start a 12-minute timer", "Every scene change: 10 squats", "Every new character: 8 glute bridges", "Rest while you watch", "Stop when the timer ends — next episode's earned"] },
+  { id: "podcast-run", title: "Podcast Run", cat: "walk", min: 15, level: "Medium", energy: [4, 9], locs: ["outside", "forest"],
+    trigger: "Your episode is waiting.", companion: "An addictive podcast, movement only.", proof: "Reserved the good episode for moving.",
+    effects: { Energy: 2, Mood: 2 }, scienceId: "walking-outdoors",
+    steps: ["Pick an episode you're hooked on", "Walk the first 3 minutes", "Jog lightly for 10 minutes", "Walk the last 2 minutes", "The episode only continues on future walks"] },
+  { id: "hot-walk-mode", title: "Hot Walk Mode", cat: "walk", min: 25, level: "Easy", energy: [3, 8], locs: ["outside"],
+    trigger: "Dress the part first.", companion: "Playlist + coffee at the far end.", proof: "Left the house as the person I'm becoming.",
+    effects: { Energy: 2, Mood: 2, Confidence: 1 }, scienceId: "walking-outdoors",
+    steps: ["Sunglasses, nice outfit, playlist on", "Grab or plan the good coffee", "Walk outside for 25 minutes", "No pace target — just move and feel it"] },
+
   /* ============================================================
      ANTI-PROCRASTINACIÓN / ACTIVACIÓN
      Dares hechos en casa (o en cualquier sitio), pensados para el
