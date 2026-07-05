@@ -1,5 +1,6 @@
 import { C } from "../data/colors";
 import { SYMBOLS } from "../data/symbols";
+import { DareWord } from "../components/Wordmark";
 
 /* ============================================================
    Splash — pantalla oscura de apertura. Reveal por CAPAS: primero
@@ -41,20 +42,7 @@ export function Splash() {
         </div>
         {/* 2 · DARE + eslogan entran después */}
         <div className="splash-word">
-          <div
-            role="img"
-            aria-label="DARE"
-            style={{
-              fontFamily: "var(--font-sans)",
-              fontWeight: 400,
-              fontSize: 30,
-              letterSpacing: "0.42em",
-              textIndent: "0.42em",
-              color: C.text,
-            }}
-          >
-            DARE
-          </div>
+          <DareWord style={{ fontSize: 30, letterSpacing: "0.42em", textIndent: "0.42em" }} />
           <p style={{ fontSize: 12.5, color: C.green, marginTop: 14, letterSpacing: "0.02em" }}>
             Daily Actions. Real Energy.
           </p>

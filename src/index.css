@@ -266,8 +266,26 @@ body {
 }
 /* Splash escalonado: el glifo (favicon) entra PRIMERO; luego "DARE" + eslogan
    suben con un fade con retardo. Da un reveal por capas, elegante. */
+/* Pulso GRANDE del favicon: entra al 75%, crece hasta 200% y vuelve a 100%
+   definitivo, todo antes de que aparezcan "DARE" + eslogan (word a 1.5s). */
 .splash-glyph {
-  animation: dareSplashIn 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: dareGlyphGrow 1.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@keyframes dareGlyphGrow {
+  0% {
+    opacity: 0;
+    transform: scale(0.75);
+  }
+  18% {
+    opacity: 1;
+  }
+  55% {
+    transform: scale(2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 /* "DARE" + eslogan entran TARDE: el favicon respira solo ~1.5s antes. */
 .splash-word {
