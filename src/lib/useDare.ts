@@ -26,7 +26,7 @@ import { findDare, findCard } from "./lookup";
 import { earnedTraits } from "./achievements";
 import { load, save, defaultStore, clearStore } from "./storage";
 import { todayStr, daysBetween } from "./date";
-import { buildBriefing, buildReminder, dueSlot, type BriefingInput } from "./briefing";
+import { buildReminder, dueSlot } from "./briefing";
 import { notificationPermission, requestNotificationPermission, showReminderNotification } from "./notify";
 import { installOffer, isIOS, isInStandaloneMode, type InstallOffer } from "./install";
 
@@ -261,9 +261,9 @@ export function useDare() {
   const showPendingFb =
     !!store.pendingFeedback && Date.now() - store.pendingFeedback.at >= FB_DELAY;
 
-  // ---- briefing diario (widget + recordatorio) ----
-  const briefingInput: BriefingInput = { date: today, doneToday: daresToday > 0 };
-  const briefing = buildBriefing(briefingInput);
+  // ---- briefing diario (SOLO recordatorio) ----
+  // El briefing ya no tiene widget in-app (Today es mínimo); su contenido se
+  // construye bajo demanda en el efecto del recordatorio (buildReminder).
   const notifyPermission = notificationPermission();
 
   // ---- Planned Dares vencidos (para surface en Today) ----
@@ -556,6 +556,13 @@ export function useDare() {
   /** "Just dare me": Dare inmediato. Último check-in si existe, o default seguro. */
   function justDareMe() {
     generateInto(store.lastCheckin ?? SAFE_CI, { persistCheckin: false, navigate: "detail" });
+  }
+
+  /** Today "Just dare me": genera al instante (último check-in o default seguro)
+   *  y lo revela INLINE en Today, sin pasar por el check-in rápido. El check-in
+   *  queda como opción ("Check in first"), no como peaje diario. */
+  function quickDareMe() {
+    generateInto(store.lastCheckin ?? SAFE_CI, { persistCheckin: false, navigate: "home" });
   }
 
   /** Today "Reveal today's dare": revela el Dare de hoy INLINE (sin navegar).
@@ -1025,7 +1032,6 @@ export function useDare() {
     dreamReward,
     currentIdentity,
     showPendingFb,
-    briefing,
     notifyPermission,
     duePlannedDares,
     // instalación PWA
@@ -1060,6 +1066,7 @@ export function useDare() {
     pickCard,
     runCheckin,
     justDareMe,
+    quickDareMe,
     revealTodayDare,
     startQuickCheckin,
     cancelQuickCheckin,

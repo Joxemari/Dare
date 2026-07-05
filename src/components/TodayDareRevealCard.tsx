@@ -91,7 +91,7 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
     );
   }
 
-  // ---- Cerrado: "Your Dare" pide un check-in rápido antes de generar ----
+  // ---- Cerrado: un toque genera el Dare; el check-in queda opcional ----
   return (
     <div className="card rise" style={{ padding: 30, textAlign: "center" }}>
       <div className="pulse" style={{ fontSize: 22, color: C.green, marginBottom: 14, opacity: 0.9 }}>
@@ -100,9 +100,12 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
       <p className="lbl" style={{ marginBottom: 8, color: C.dim }}>
         YOUR DARE OF THE DAY
       </p>
-      <p style={{ fontSize: 15, color: C.dim, marginBottom: 22 }}>20 seconds. Then we choose for you.</p>
-      <button className="btn btn-green" onClick={() => app.startQuickCheckin()}>
-        Start check-in
+      <p style={{ fontSize: 15, color: C.dim, marginBottom: 22 }}>One action, chosen for you.</p>
+      <button className="btn btn-green" onClick={() => app.quickDareMe()}>
+        Just dare me
+      </button>
+      <button className="link" style={{ marginTop: 14 }} onClick={() => app.startQuickCheckin()}>
+        Check in first
       </button>
     </div>
   );

@@ -5,9 +5,10 @@ import { cardRevealFeedback } from "../lib/feedback";
 import type { DareApp } from "../lib/useDare";
 
 /* ============================================================
-   DailyCardDraw — el "card pull" del día, ahora INLINE en la parte
-   alta de Today (antes vivía tras un icono en la esquina). Dos
-   estados:
+   DailyCardDraw — el "card pull" del día. Vive en la pestaña You
+   (antes estaba arriba en Today, que ahora es mínimo: solo el Dare).
+   Es un placer opcional que buscas, no un peaje del ritual diario.
+   Dos estados:
      1. Sin carta elegida → "DRAW YOUR CARD FOR TODAY" + tres cartas
         boca abajo para elegir una (`pickCard` → revela en `Card`).
      2. Carta elegida → miniatura tappable para volver a verla.

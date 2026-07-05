@@ -24,40 +24,23 @@ async function enterApp(page: Page) {
   await expect(page.getByText("You don't need")).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("button", { name: "Enter DARE" }).click();
-  // Today mínimo: atmósfera + un Dare oculto. Sin arrancar Journey.
-  await expect(page.getByText("Today's Door")).toBeVisible();
+  // Today mínimo: SOLO el Dare como héroe. Sin carta, sin puerta/briefing,
+  // sin arrancar Journey.
+  await expect(page.getByText("YOUR DARE OF THE DAY")).toBeVisible();
 }
 
-test("Today: Door→Briefing + Your Dare tras check-in rápido, loop sin errores", async ({ page }) => {
+test("Today: mínimo (solo Dare) + 'Just dare me' un toque, loop sin errores", async ({ page }) => {
   const errors = guardPageErrors(page);
   await enterApp(page);
 
-  // Card pull inline + Today's Door + Dare cerrado (pide check-in) + sin Journeys
-  await expect(page.getByText("DRAW YOUR CARD FOR TODAY")).toBeVisible();
-  await expect(page.getByText("Tap to open today's briefing")).toBeVisible();
-  await expect(page.getByText("20 seconds. Then we choose for you.")).toBeVisible();
+  // Today es mínimo: NO hay card pull ni Today's Door; solo el Dare + Journeys.
+  await expect(page.getByText("One action, chosen for you.")).toBeVisible();
   await expect(page.getByText("No Journey started yet.")).toBeVisible();
+  await expect(page.getByText("DRAW YOUR CARD FOR TODAY")).toHaveCount(0);
+  await expect(page.getByText("Today's Door")).toHaveCount(0);
 
-  // abrir la puerta revela Today's Briefing detrás (consejo inspirado)
-  await page.getByRole("button", { name: "Open today's briefing" }).click();
-  await expect(page.getByText("Today's briefing")).toBeVisible();
-  await expect(page.getByText("Today:", { exact: false })).toBeVisible();
-  await page.getByRole("button", { name: "Close" }).click();
-
-  // card pull AHORA inline en Today: elegir una carta la revela a pantalla completa
-  await page.locator('button[aria-label="Face-down daily card"]').first().click();
-  await expect(page.getByText("Tap to continue")).toBeVisible();
-  await page.getByText("Tap to continue").click();
-  await expect(page.getByText("Today's Door")).toBeVisible();
-  await expect(page.getByText("TODAY'S CARD")).toBeVisible(); // carta ya elegida (miniatura)
-
-  // "Your Dare" EXIGE un check-in rápido (energía · foco · qué evitas)
-  await page.getByRole("button", { name: "Start check-in" }).click();
-  await expect(page.getByText("Quick check-in")).toBeVisible();
-  await page.getByRole("button", { name: "4", exact: true }).nth(0).click(); // energy
-  await page.getByRole("button", { name: "4", exact: true }).nth(1).click(); // focus
-  await page.getByRole("button", { name: "Admin", exact: true }).click();
-  await page.getByRole("button", { name: "Get my Dare" }).click();
+  // "Just dare me": un toque genera y revela el Dare INLINE (check-in opcional)
+  await page.getByRole("button", { name: "Just dare me" }).click();
 
   // Dare revelado inline
   await expect(page.getByRole("button", { name: "Start now" })).toBeVisible();
@@ -89,8 +72,8 @@ test("Dare page: What this is / Why this works, sin Treat Locked + Plan for late
   const errors = guardPageErrors(page);
   await enterApp(page);
 
-  // check-in rápido → Dare revelado → View details abre el Detail
-  await page.getByRole("button", { name: "Start check-in" }).click();
+  // check-in opcional ("Check in first") → Dare revelado → View details abre el Detail
+  await page.getByRole("button", { name: "Check in first" }).click();
   await page.getByRole("button", { name: "3", exact: true }).nth(0).click(); // energy
   await page.getByRole("button", { name: "3", exact: true }).nth(1).click(); // focus
   await page.getByRole("button", { name: "Mind", exact: true }).click();
@@ -140,9 +123,10 @@ test("Journey: Begin explícito, milestones accionables + tabs Progress/You", as
   await expect(page.getByText("Momentum").first()).toBeVisible();
   await expect(page.getByText(/Badges —/)).toBeVisible();
 
-  // You: Identity
+  // You: Identity + el card pull del día vive AQUÍ (movido desde Today)
   await page.getByRole("button", { name: /You/ }).click();
   await expect(page.getByText(/Identity:/)).toBeVisible();
+  await expect(page.getByText("DRAW YOUR CARD FOR TODAY")).toBeVisible();
 
   expect(errors, errors.join("\n")).toEqual([]);
 });

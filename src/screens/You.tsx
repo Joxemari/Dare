@@ -4,7 +4,7 @@ import { SYMBOLS } from "../data/symbols";
 import { findTrait } from "../data/traits";
 import { SPRINT_DAYS } from "../data/journeys";
 import { Ico } from "../components/Ico";
-import { TarotArt } from "../components/TarotArt";
+import { DailyCardDraw } from "../components/DailyCardDraw";
 import { Nav } from "../components/Nav";
 import { InstallBanner } from "../components/InstallBanner";
 import { wrap, pad } from "../components/layout";
@@ -14,7 +14,7 @@ import type { DareApp } from "../lib/useDare";
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
 export function You({ app }: { app: DareApp }) {
-  const { store, journey, chapter, daysDone, card, catFeedback, proofCount, currentIdentity, notifyPermission } = app;
+  const { store, journey, chapter, daysDone, catFeedback, proofCount, currentIdentity, notifyPermission } = app;
   const identity = findTrait(currentIdentity);
   const notif = store.notifications;
   const notifOn = notif.enabled && notifyPermission === "granted";
@@ -116,18 +116,8 @@ export function You({ app }: { app: DareApp }) {
             </div>
           )}
 
-          {/* today's card */}
-          {card && (
-            <div className="card" style={{ padding: "14px 18px", marginBottom: 14, borderColor: C.gold + "33", display: "flex", gap: 12, alignItems: "center" }}>
-              <TarotArt id={card.id} width={34} radius={6} />
-              <p style={{ fontSize: 12.5, color: C.dim }}>
-                <span style={{ color: C.gold }}>
-                  {card.num} · {card.name}
-                </span>{" "}
-                is your card today.
-              </p>
-            </div>
-          )}
+          {/* today's card — el ritual de sacar carta vive aquí (antes en Today) */}
+          <DailyCardDraw app={app} />
 
           {/* current journey */}
           <div className="card" style={{ padding: 18, marginBottom: 14 }}>
