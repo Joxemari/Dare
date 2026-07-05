@@ -35,3 +35,19 @@ export function greetingFor(hour: number): string {
   if (hour >= 12 && hour < 18) return "Good afternoon";
   return "Good evening";
 }
+
+/** Día del año (1..366) en hora local. Puro. Base para rotaciones diarias
+ *  (headline + imagen de fondo del masthead): cambian cada día, estables dentro
+ *  del día. */
+export function dayOfYear(d: Date = new Date()): number {
+  const start = Date.UTC(d.getFullYear(), 0, 0);
+  const today = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  return Math.round((today - start) / 86400000);
+}
+
+/** Elige un elemento de `arr` por el día del año (rotación diaria determinista).
+ *  Vacío → undefined. Puro. */
+export function pickByDay<T>(arr: readonly T[], d: Date = new Date()): T | undefined {
+  if (!arr.length) return undefined;
+  return arr[dayOfYear(d) % arr.length];
+}

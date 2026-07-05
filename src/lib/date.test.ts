@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { todayStr, daysBetween, formatDayLabel, greetingFor } from "./date";
+import { todayStr, daysBetween, formatDayLabel, greetingFor, dayOfYear, pickByDay } from "./date";
 
 describe("todayStr", () => {
   it("formatea una fecha como YYYY-MM-DD con ceros a la izquierda", () => {
@@ -33,6 +33,27 @@ describe("formatDayLabel", () => {
     expect(formatDayLabel(new Date(2026, 6, 5))).toBe("SUNDAY 5 JULY");
     // 1 de enero de 2026 cae en jueves
     expect(formatDayLabel(new Date(2026, 0, 1))).toBe("THURSDAY 1 JANUARY");
+  });
+});
+
+describe("dayOfYear / pickByDay", () => {
+  it("dayOfYear crece con la fecha y reinicia por año", () => {
+    expect(dayOfYear(new Date(2026, 0, 1))).toBe(1);
+    expect(dayOfYear(new Date(2026, 0, 8))).toBe(8);
+    expect(dayOfYear(new Date(2026, 11, 31))).toBe(365);
+  });
+
+  it("pickByDay es determinista dentro del día y rota entre días", () => {
+    const arr = ["a", "b", "c"];
+    // día 1 → índice 1 % 3 = "b"; estable el mismo día
+    expect(pickByDay(arr, new Date(2026, 0, 1))).toBe(pickByDay(arr, new Date(2026, 0, 1)));
+    // días consecutivos rotan
+    const seq = [0, 1, 2, 3, 4].map((i) => pickByDay(arr, new Date(2026, 0, 1 + i)));
+    expect(new Set(seq).size).toBeGreaterThan(1);
+  });
+
+  it("pickByDay con array vacío → undefined", () => {
+    expect(pickByDay([], new Date(2026, 0, 1))).toBeUndefined();
   });
 });
 
