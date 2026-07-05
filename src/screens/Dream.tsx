@@ -44,7 +44,6 @@ export function Dream({ app }: { app: DareApp }) {
                     fontFamily: "inherit",
                     color: C.text,
                     borderColor: pickCustom ? C.gold + "88" : C.line,
-                    boxShadow: pickCustom ? `0 0 24px -14px ${C.gold}` : "none",
                   }}
                 >
                   <span style={{ fontSize: 22 }}>{o.emoji}</span>

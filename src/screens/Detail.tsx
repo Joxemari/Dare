@@ -70,7 +70,6 @@ export function Detail({ app }: { app: DareApp }) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: `0 0 44px -12px ${col}`,
               }}
             >
               <Ico name={CAT_ICO[d.cat]} size={30} color={col} sw={1.3} />
