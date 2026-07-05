@@ -416,7 +416,9 @@ export function useDare() {
   function finishDare() {
     if (!currentDare || currentDare.completed) return;
     const d: Dare = currentDare.dare;
-    const roll = rollTreat();
+    // El treat conoce el CONTEXTO: la categoría del Dare recién hecho
+    // (nada de "un café sentado" tras un paseo por el bosque).
+    const roll = rollTreat(d.cat);
     const counts = { ...store.catCounts, [d.cat]: (store.catCounts[d.cat] || 0) + 1 };
     const completedBefore = todaysToday.filter((e) => e.completedAt !== null).length;
     const isFirstToday = completedBefore === 0;

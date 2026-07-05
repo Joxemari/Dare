@@ -60,14 +60,18 @@ src/
                journeys (planes de 7 días + milestones tipados), tarot,
                symbols (mapa central de glifos), science (biblioteca),
                traits (BADGES: hitos difíciles; persisten bajo la clave
-               `traits` del store), rewards (treats/dates/dream,
+               `traits` del store), rewards (treats etiquetados por
+               contexto — `fits`/`avoid` por categoría —, dates, dream;
                antes draws), icons, colors.
   lib/         Lógica. La mayoría son funciones PURAS y deterministas:
                  generator.ts     selección del dare (scoring, no if/else),
                                   con contexto+destino del check-in
                  achievements.ts  earnedTraits() — qué traits gana un dare
                  prng.ts          PRNG con semilla (mulberry32), reproducible
-                 random.ts        sample() y rollTreat() (usan Math.random)
+                 random.ts        sample() (Math.random) y rollTreat(cat, rand):
+                                  treat draw consciente del contexto (excluye
+                                  `avoid`, prima `fits` ×3; rand inyectable →
+                                  testeable con semilla)
                  date.ts          helpers de fecha local (todayStr, daysBetween)
                  lookup.ts        búsquedas sobre los datos (findDare, findCard)
                  contentSchema.ts validateDare(): reglas duras del contenido
