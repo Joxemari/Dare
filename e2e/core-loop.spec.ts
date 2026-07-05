@@ -32,9 +32,10 @@ test("Today: Door→Briefing + Your Dare tras check-in rápido, loop sin errores
   const errors = guardPageErrors(page);
   await enterApp(page);
 
-  // Today's Door + Dare cerrado (pide check-in) + sin Journeys todavía
+  // Card pull inline + Today's Door + Dare cerrado (pide check-in) + sin Journeys
+  await expect(page.getByText("DRAW YOUR CARD FOR TODAY")).toBeVisible();
   await expect(page.getByText("Tap to open today's briefing")).toBeVisible();
-  await expect(page.getByText("One dare, matched to today.")).toBeVisible();
+  await expect(page.getByText("20 seconds. Then we choose for you.")).toBeVisible();
   await expect(page.getByText("No Journey started yet.")).toBeVisible();
 
   // abrir la puerta revela Today's Briefing detrás (consejo inspirado)
@@ -43,16 +44,15 @@ test("Today: Door→Briefing + Your Dare tras check-in rápido, loop sin errores
   await expect(page.getByText("Today:", { exact: false })).toBeVisible();
   await page.getByRole("button", { name: "Close" }).click();
 
-  // ritual de la carta del día vive fuera de Today, tras el icono del header
-  await page.getByRole("button", { name: "Today's card" }).click();
-  await expect(page.getByText("Draw your card.")).toBeVisible();
+  // card pull AHORA inline en Today: elegir una carta la revela a pantalla completa
   await page.locator('button[aria-label="Face-down daily card"]').first().click();
   await expect(page.getByText("Tap to continue")).toBeVisible();
   await page.getByText("Tap to continue").click();
   await expect(page.getByText("Today's Door")).toBeVisible();
+  await expect(page.getByText("TODAY'S CARD")).toBeVisible(); // carta ya elegida (miniatura)
 
   // "Your Dare" EXIGE un check-in rápido (energía · foco · qué evitas)
-  await page.getByRole("button", { name: "Check in for my dare" }).click();
+  await page.getByRole("button", { name: "Start check-in" }).click();
   await expect(page.getByText("Quick check-in")).toBeVisible();
   await page.getByRole("button", { name: "4", exact: true }).nth(0).click(); // energy
   await page.getByRole("button", { name: "4", exact: true }).nth(1).click(); // focus
@@ -86,7 +86,7 @@ test("Dare page: What this is / Why this works, sin Treat Locked + Plan for late
   await enterApp(page);
 
   // check-in rápido → Dare revelado → View details abre el Detail
-  await page.getByRole("button", { name: "Check in for my dare" }).click();
+  await page.getByRole("button", { name: "Start check-in" }).click();
   await page.getByRole("button", { name: "3", exact: true }).nth(0).click(); // energy
   await page.getByRole("button", { name: "3", exact: true }).nth(1).click(); // focus
   await page.getByRole("button", { name: "Mind", exact: true }).click();

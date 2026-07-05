@@ -1,6 +1,5 @@
-import { C } from "../data/colors";
-import { Ico } from "../components/Ico";
 import { Nav } from "../components/Nav";
+import { DailyCardDraw } from "../components/DailyCardDraw";
 import { TodaysDoor } from "../components/TodaysDoor";
 import { TodayDareRevealCard } from "../components/TodayDareRevealCard";
 import { ActiveJourneyList } from "../components/ActiveJourneyList";
@@ -10,35 +9,12 @@ import type { DareApp } from "../lib/useDare";
 
 /* ============================================================
    TODAY — un ritual diario mínimo, no un dashboard.
-   Header · Today's Door (abre el Briefing) · un Dare tras un
-   check-in rápido · Planned Dares vencidos · Journeys activos.
-   Sin proofs, sin badges, sin cartas de ciencia, sin métricas.
+   Sin iconos en las esquinas: arriba el "card pull" inline
+   ("Draw your card for today"), luego Today's Door (abre el
+   Briefing), Your Dare tras un check-in rápido, Planned Dares
+   vencidos y Journeys activos. El perfil vive en la pestaña You
+   (nav inferior). Sin proofs, badges, ciencia ni métricas.
    ============================================================ */
-
-/** Botón de icono minimalista para el header. */
-function IconButton({ name, label, onClick }: { name: string; label: string; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      aria-label={label}
-      style={{
-        width: 38,
-        height: 38,
-        borderRadius: 12,
-        border: `1px solid ${C.line}`,
-        background: "transparent",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        cursor: "pointer",
-        color: C.dim,
-      }}
-    >
-      <Ico name={name} size={18} sw={1.5} />
-    </button>
-  );
-}
-
 export function Home({ app }: { app: DareApp }) {
   const { briefing, journey } = app;
 
@@ -46,17 +22,8 @@ export function Home({ app }: { app: DareApp }) {
     <div className="dare-root">
       <div style={wrap}>
         <div style={{ ...pad, paddingBottom: 0 }}>
-          {/* Header: icono carta · TODAY · perfil */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
-            <IconButton name="card" label="Today's card" onClick={() => app.setScreen("card")} />
-            <span
-              className="lbl"
-              style={{ fontSize: 13, letterSpacing: "0.42em", color: C.text, paddingLeft: "0.42em" }}
-            >
-              TODAY
-            </span>
-            <IconButton name="person" label="Profile and settings" onClick={() => app.setScreen("you")} />
-          </div>
+          {/* Card pull inline (antes tras un icono en la esquina) */}
+          <DailyCardDraw app={app} />
 
           {/* Today's Door → revela Today's Briefing detrás (flip) */}
           <TodaysDoor briefing={briefing} accent={journey.color} onUseForDare={() => app.startQuickCheckin()} />

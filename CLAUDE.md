@@ -96,9 +96,9 @@ src/
                                service worker. Impuro; no se testea.
   components/  Presentacionales: Ico, TarotArt, Dots, Nav, Meta, Effects,
                MilestoneModal, ShareCardButton, Briefing, PlanForLater, layout;
-               y los de Today: AtmosphereHero, TodaysDoor (puerta→briefing),
-               QuickCheckin (check-in rápido), TodayDareRevealCard,
-               PlannedDueList, ActiveJourneyList.
+               y los de Today: DailyCardDraw (card pull inline), AtmosphereHero,
+               TodaysDoor (puerta→briefing), QuickCheckin (check-in rápido),
+               TodayDareRevealCard, PlannedDueList, ActiveJourneyList.
   screens/     Pantallas (Onboarding, Dream, Reentry, Home, Card, Checkin,
                Detail, Timer, Complete, Journey, Journeys, Progress, You).
                Consumen el hook.
@@ -107,13 +107,16 @@ src/
 
 ### Today — ritual diario mínimo (no dashboard)
 
-La pestaña Today (`screens/Home.tsx`) es deliberadamente MÍNIMA: header
-(icono carta · TODAY · perfil), **Today's Door** (`TodaysDoor`: la puerta se
-**abre con un flip** y revela detrás **Today's Briefing** — un consejo concreto
-inspirado en alguien conocido, con CTA "Use this for my Dare / Close"),
-**Your Dare** (`TodayDareRevealCard`), la lista de **Planned Dares vencidos**
-(`PlannedDueList`) y `ActiveJourneyList`. NO muestra proofs, badges, cartas de
-ciencia ni métricas — eso vive en Progress.
+La pestaña Today (`screens/Home.tsx`) es deliberadamente MÍNIMA y **sin iconos
+en las esquinas** (el perfil vive en la pestaña **You** del nav inferior): arriba
+el **card pull inline** (`DailyCardDraw`: "DRAW YOUR CARD FOR TODAY" + 3 cartas
+boca abajo → elegir revela en `Card`; una vez elegida, miniatura para reabrirla)
+— antes colgaba de un icono en la esquina; luego **Today's Door** (`TodaysDoor`:
+la puerta se **abre con un flip** y revela detrás **Today's Briefing** — un
+consejo concreto inspirado en alguien conocido, con CTA "Use this for my Dare /
+Close"), **Your Dare** (`TodayDareRevealCard`), la lista de **Planned Dares
+vencidos** (`PlannedDueList`) y `ActiveJourneyList`. NO muestra proofs, badges,
+cartas de ciencia ni métricas — eso vive en Progress.
 
 **Your Dare EXIGE un check-in rápido** (fix del "genera sin preguntar"):
 tocar "Your Dare" abre `QuickCheckin` inline — **Energy 1-5 · Focus 1-5 · qué
@@ -124,10 +127,11 @@ Start. En el hook: `startQuickCheckin`/`runQuickCheckin` (mapea el rápido a un
 `Checkin` de contexto casa, escalando 1-5→1-10 y derivando el estado);
 `anotherDare` **rechaza** el actual (no repetir pronto) y reabre el check-in.
 
-El **ritual de la carta del día** (tarot) sigue FUERA de Today: pantalla `Card`
-(elegir 1 de 3 → revelado a pantalla completa), tras el icono izquierdo del
-header. El check-in COMPLETO (loc/dest, para encaminar Dares de piscina/gym/
-bosque) ya no cuelga de Today; se alcanza desde el "one more" de la completion.
+El **card pull del día** (tarot) es ahora **inline en la parte alta de Today**
+(`DailyCardDraw`); elegir una de las 3 cartas abre la pantalla `Card` (revelado a
+pantalla completa) y al volver queda una miniatura. El check-in COMPLETO
+(loc/dest, para encaminar Dares de piscina/gym/bosque) ya no cuelga de Today; se
+alcanza desde el "one more" de la completion.
 
 ### Contenido generativo (pipeline de PRs, no runtime)
 

@@ -94,18 +94,15 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
   // ---- Cerrado: "Your Dare" pide un check-in rápido antes de generar ----
   return (
     <div className="card rise" style={{ padding: 30, textAlign: "center" }}>
-      <div className="pulse" style={{ fontSize: 22, color: C.gold, marginBottom: 14, opacity: 0.85 }}>
+      <div className="pulse" style={{ fontSize: 22, color: C.green, marginBottom: 14, opacity: 0.9 }}>
         {SYMBOLS.spark}
       </div>
       <p className="lbl" style={{ marginBottom: 8, color: C.dim }}>
-        {LABEL}
+        YOUR DARE OF THE DAY
       </p>
-      <p className="serif" style={{ fontSize: 24, marginBottom: 8 }}>
-        One dare, matched to today.
-      </p>
-      <p style={{ fontSize: 12.5, color: C.faint, marginBottom: 22 }}>A 20-second check-in first.</p>
+      <p style={{ fontSize: 15, color: C.dim, marginBottom: 22 }}>20 seconds. Then we choose for you.</p>
       <button className="btn btn-green" onClick={() => app.startQuickCheckin()}>
-        Check in for my dare
+        Start check-in
       </button>
     </div>
   );
