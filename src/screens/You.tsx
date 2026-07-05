@@ -68,7 +68,7 @@ export function You({ app }: { app: DareApp }) {
                 <br />
                 moves daily.
               </h2>
-              <p style={{ fontSize: 12, color: C.dim, marginTop: 6 }}>
+              <p style={{ fontSize: 12.5, color: C.dim, marginTop: 6 }}>
                 Identity: {identity?.name ?? "Starter"} · {proofCount} {proofCount === 1 ? "proof" : "proofs"}
               </p>
             </div>
@@ -101,11 +101,11 @@ export function You({ app }: { app: DareApp }) {
                   <span style={{ width: 20, display: "flex" }}>
                     <Ico name={CAT_ICO[cat]} size={15} color={CATS[cat].color} sw={1.4} />
                   </span>
-                  <span style={{ width: 76, fontSize: 12, color: C.dim }}>{CATS[cat].label}</span>
+                  <span style={{ width: 76, fontSize: 12.5, color: C.dim }}>{CATS[cat].label}</span>
                   <div style={{ flex: 1, height: 3, background: C.line, borderRadius: 99 }}>
                     <div style={{ height: 3, width: `${(n / maxCat) * 100}%`, background: CATS[cat].color, borderRadius: 99, opacity: 0.8 }} />
                   </div>
-                  <span style={{ fontSize: 11, color: C.faint, width: 18, textAlign: "right" }}>{n}</span>
+                  <span style={{ fontSize: 11.5, color: C.faint, width: 18, textAlign: "right" }}>{n}</span>
                 </div>
               ))}
               {bestFb && bestFb[1] > 0 && (
@@ -159,7 +159,7 @@ export function You({ app }: { app: DareApp }) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
               <p className="lbl">Daily notification</p>
               {notifyPermission === "unsupported" ? (
-                <span style={{ fontSize: 11, color: C.faint }}>Not supported</span>
+                <span style={{ fontSize: 11.5, color: C.faint }}>Not supported</span>
               ) : notifOn ? (
                 <button className="pill" onClick={() => app.disableNotifications()}>
                   {SYMBOLS.spark} On
@@ -185,7 +185,7 @@ export function You({ app }: { app: DareApp }) {
                     key={slot}
                     style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}
                   >
-                    <span style={{ fontSize: 13, color: C.dim }}>{label}</span>
+                    <span style={{ fontSize: 12.5, color: C.dim }}>{label}</span>
                     <input
                       type="time"
                       value={`${pad2(s.hour)}:${pad2(s.minute)}`}
