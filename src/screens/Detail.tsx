@@ -56,7 +56,7 @@ export function Detail({ app }: { app: DareApp }) {
       <div style={wrap}>
         <div style={pad}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 22 }}>
-            <button className="link" style={{ textDecoration: "none", fontSize: 16 }} onClick={() => app.setScreen("home")}>
+            <button className="link" style={{ textDecoration: "none", fontSize: 16 }} aria-label="Back to Today" onClick={() => app.setScreen("home")}>
               ←
             </button>
             <span className="lbl" style={{ color: d.wild ? C.gold : C.dim }}>

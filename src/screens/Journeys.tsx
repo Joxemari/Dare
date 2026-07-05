@@ -16,7 +16,7 @@ export function Journeys({ app }: { app: DareApp }) {
       <div style={wrap}>
         <div style={pad}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
-            <button className="link" style={{ textDecoration: "none", fontSize: 16 }} onClick={() => app.setScreen("journey")}>
+            <button className="link" style={{ textDecoration: "none", fontSize: 16 }} aria-label="Back" onClick={() => app.setScreen("journey")}>
               ←
             </button>
             <span className="lbl">Choose a journey</span>
