@@ -24,20 +24,26 @@ export function Splash() {
         overflow: "hidden",
       }}
     >
-      {/* halo/horizonte verde detrás del logo */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          width: 340,
-          height: 340,
-          borderRadius: "50%",
-          background: `radial-gradient(circle, ${C.green}22 0%, transparent 68%)`,
-        }}
-      />
       <div style={{ position: "relative", textAlign: "center", lineHeight: 1 }}>
+        {/* halo/horizonte verde detrás del FAVICON (no del bloque entero): se
+            ancla al glifo para que el glow resida donde está el ✦, no bajo él.
+            El glyph mide ~46px → su centro está a ~23px del top del bloque. */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: 23,
+            transform: "translate(-50%, -50%)",
+            width: 340,
+            height: 340,
+            borderRadius: "50%",
+            background: `radial-gradient(circle, ${C.green}22 0%, transparent 68%)`,
+            pointerEvents: "none",
+          }}
+        />
         {/* 1 · el favicon entra primero */}
-        <div className="splash-glyph" aria-hidden="true" style={{ color: C.green, fontSize: 46, marginBottom: 16 }}>
+        <div className="splash-glyph" aria-hidden="true" style={{ position: "relative", color: C.green, fontSize: 46, marginBottom: 16 }}>
           {SYMBOLS.spark}
         </div>
         {/* 2 · DARE + eslogan entran después */}
