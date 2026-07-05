@@ -17,17 +17,15 @@ function guardPageErrors(page: Page): string[] {
   return errors;
 }
 
-/** Onboarding (3 pantallas) → ritual carta (saltar) → Today. NO arranca Journey. */
+/** Onboarding (2 pantallas) → ritual carta (saltar) → Today. NO arranca Journey. */
 async function enterApp(page: Page) {
   await page.addInitScript(() => localStorage.clear()); // arranque limpio y determinista
   await page.goto("/Dare/");
   // Pantalla 1 (intro). El primer click auto-espera a que el splash (overlay)
   // termine su crossfade antes de pulsar.
   await page.getByRole("button", { name: "Continue" }).click();
-  // Pantalla 2 (la idea)
+  // Pantalla 2 (la idea + el método): lleva el titular y el botón final.
   await expect(page.getByText("You don't need")).toBeVisible();
-  await page.getByRole("button", { name: "Continue" }).click();
-  // Pantalla 3 (el método)
   await page.getByRole("button", { name: "Enter DARE" }).click();
   // Tras el onboarding aparece el ritual de la carta del día; lo saltamos.
   await page.getByRole("button", { name: "Skip for now" }).click();
