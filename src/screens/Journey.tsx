@@ -172,12 +172,13 @@ export function Journey({ app }: { app: DareApp }) {
           {/* progresión SOLO por capítulos + milestones (sin "Days Ahead") */}
           {isJourneyActive && (
           <>
-          {/* Active Dream Reward — el norte del Journey, sin fila de calendario */}
+          {/* Active Dream Reward — el norte del Journey. Va en el COLOR DEL
+              JOURNEY (no oro) para que se sienta parte de ESE Journey. */}
           {dreamReward && (
-            <div className="card" style={{ padding: "12px 16px", marginBottom: 22, borderColor: C.gold + "33", display: "flex", gap: 10, alignItems: "center" }}>
-              <span style={{ color: C.gold, fontSize: 18 }}>{SYMBOLS.dream}</span>
+            <div className="card" style={{ padding: "12px 16px", marginBottom: 22, borderColor: journey.color + "33", display: "flex", gap: 10, alignItems: "center" }}>
+              <span style={{ color: journey.color, fontSize: 18 }}>{SYMBOLS.dream}</span>
               <div>
-                <p className="lbl-sm" style={{ color: C.gold, marginBottom: 2 }}>
+                <p className="lbl-sm" style={{ color: journey.color, marginBottom: 2 }}>
                   Dream Reward
                 </p>
                 <p style={{ fontSize: 13.5 }}>{dreamReward}</p>
