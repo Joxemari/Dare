@@ -35,7 +35,23 @@ export function companionWord(d: Dare): string {
   if (/skincare/.test(c)) return "Skincare";
   if (/class/.test(c)) return "Class";
   if (/daylight|sunlight|light|morning|sun/.test(c)) return "Daylight";
-  const w = d.companion.split(/\s+/)[0].replace(/[^A-Za-z]/g, "");
+  // companions concretos de los Dares de activación
+  if (/timer/.test(c)) return "Timer";
+  if (/water/.test(c)) return "Water";
+  if (/inbox|search bar/.test(c)) return "Inbox";
+  if (/notes|calendar|messages|banking|app/.test(c)) return "App";
+  if (/\bpen\b/.test(c)) return "Pen";
+  if (/blank page|\bpage\b/.test(c)) return "Page";
+  if (/window/.test(c)) return "Window";
+  if (/chair/.test(c)) return "Chair";
+  if (/table|corner|surface/.test(c)) return "Space";
+  if (/shoes/.test(c)) return "Shoes";
+  if (/breath|deep breath/.test(c)) return "Breath";
+  if (/quiet|room/.test(c)) return "Quiet";
+  // fallback: primera palabra con significado (salta artículos y números)
+  const skip = new Set(["a", "an", "the", "one", "your", "my", "two", "cold", "single"]);
+  const words = d.companion.replace(/[^A-Za-z0-9\s]/g, "").split(/\s+/).filter(Boolean);
+  const w = words.find((x) => !skip.has(x.toLowerCase()) && /[a-z]/i.test(x)) ?? words[0] ?? "";
   return w ? w[0].toUpperCase() + w.slice(1) : "Companion";
 }
 
@@ -47,12 +63,20 @@ function companionIco(word: string): string {
   return "headphones";
 }
 
+/** Efecto esperado principal (mayor intensidad) para el strip de metadata. */
+function topEffect(d: Dare): string {
+  const entries = Object.entries(d.effects) as [string, number][];
+  if (!entries.length) return "Reset";
+  return entries.sort((a, b) => b[1] - a[1])[0][0];
+}
+
 export function Meta({ dare }: { dare: Dare }) {
   const companion = companionWord(dare);
+  // "After/Treat" fuera: los Treats aparecen TRAS completar, no antes (spec).
   const rows: [string, string, string][] = [
     [CAT_ICO[dare.cat], "Place", placeWord(dare)],
     [companionIco(companion), "Companion", companion],
-    ["spark", "After", "Treat"],
+    ["spark", "Effect", topEffect(dare)],
   ];
   return (
     <div
