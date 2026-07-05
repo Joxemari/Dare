@@ -30,18 +30,16 @@ export function JourneyComplete({ app }: { app: DareApp }) {
   return (
     <div className="dare-root">
       <div style={{ ...wrap, textAlign: "center", position: "relative", overflow: "hidden" }}>
-        {/* símbolos sutiles ✦ ✧ ◈ flotando en dorado */}
+        {/* Unos pocos símbolos flotando en dorado — contenidos, no confeti. */}
         {[
-          { x: "14%", t: "12%", g: SYMBOLS.spark },
-          { x: "80%", t: "16%", g: SYMBOLS.treat },
-          { x: "22%", t: "70%", g: SYMBOLS.dream },
-          { x: "72%", t: "62%", g: SYMBOLS.spark },
-          { x: "50%", t: "84%", g: SYMBOLS.treat },
+          { x: "15%", t: "13%", g: SYMBOLS.spark },
+          { x: "80%", t: "18%", g: SYMBOLS.treat },
+          { x: "50%", t: "82%", g: SYMBOLS.dream },
         ].map((s, i) => (
           <span
             key={i}
             className="pulse"
-            style={{ position: "absolute", left: s.x, top: s.t, color: C.gold, opacity: 0.32, fontSize: 11 + (i % 3) * 4, animationDelay: `${i * 0.5}s` }}
+            style={{ position: "absolute", left: s.x, top: s.t, color: C.gold, opacity: 0.24, fontSize: 11 + (i % 2) * 3, animationDelay: `${i * 0.6}s` }}
           >
             {s.g}
           </span>

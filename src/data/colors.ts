@@ -4,7 +4,7 @@ import type { Cat, Dare, Effect, Level } from "../types";
 export const C = {
   bg: "#111111",
   card: "#1C1C1C",
-  card2: "#191917",
+  card2: "#141412", // superficie recesiva (apoyo): más cerca del fondo → capas reales
   text: "#F6F6F3",
   dim: "#8B8B85",
   faint: "#5A5A55",

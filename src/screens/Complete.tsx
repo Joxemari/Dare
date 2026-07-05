@@ -19,18 +19,17 @@ export function Complete({ app }: { app: DareApp }) {
   return (
     <div className="dare-root">
       <div style={{ ...wrap, textAlign: "center", position: "relative", overflow: "hidden" }}>
-        {/* símbolos de celebración ✦ ✧ ◈ ⟡ flotando en dorado */}
+        {/* Unos pocos símbolos flotando en dorado — contenidos (premium, no
+            confeti): 3 puntos sutiles, no una lluvia. */}
         {[
-          { x: "16%", t: "12%", g: SYMBOLS.spark },
-          { x: "78%", t: "14%", g: SYMBOLS.treat },
-          { x: "30%", t: "30%", g: SYMBOLS.dream },
-          { x: "70%", t: "34%", g: SYMBOLS.wildcard },
-          { x: "50%", t: "8%", g: SYMBOLS.treat },
+          { x: "18%", t: "13%", g: SYMBOLS.spark },
+          { x: "78%", t: "16%", g: SYMBOLS.treat },
+          { x: "50%", t: "9%", g: SYMBOLS.dream },
         ].map((s, i) => (
           <span
             key={i}
             className="pulse"
-            style={{ position: "absolute", left: s.x, top: s.t, color: C.gold, opacity: 0.35, fontSize: 10 + (i % 3) * 4, animationDelay: `${i * 0.5}s` }}
+            style={{ position: "absolute", left: s.x, top: s.t, color: C.gold, opacity: 0.26, fontSize: 11 + (i % 2) * 3, animationDelay: `${i * 0.6}s` }}
           >
             {s.g}
           </span>
