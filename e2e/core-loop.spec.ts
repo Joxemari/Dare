@@ -47,9 +47,14 @@ test("Today: mínimo (solo Dare) + 'Just dare me' un toque, loop sin errores", a
   // Dare revelado inline
   await expect(page.getByRole("button", { name: "Start now" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Another dare" })).toBeVisible();
+  // "View details" se retiró (los detalles se ven siempre en Your Dare)
+  await expect(page.getByRole("button", { name: "View details" })).toHaveCount(0);
 
-  // start → timer → finish → completion
+  // "Start now" abre SIEMPRE Your Dare (Detail) para explicar el Dare
   await page.getByRole("button", { name: "Start now" }).click();
+  await expect(page.getByText("What this is")).toBeVisible();
+  // desde Your Dare se empieza → timer → finish → completion
+  await page.getByRole("button", { name: "Start dare" }).click();
   await page.getByRole("button", { name: "Finish dare" }).click();
   await expect(page.getByText("Dare completed.")).toBeVisible();
   await expect(page.getByText("Treat unlocked.")).toBeVisible();
