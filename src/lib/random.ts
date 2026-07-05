@@ -1,5 +1,5 @@
 import { TREATS } from "../data/rewards";
-import type { TreatDraw } from "../types";
+import type { Cat, Tier, Treat, TreatDraw } from "../types";
 
 /** Escoge `n` elementos distintos al azar de `arr`. */
 export function sample<T>(arr: readonly T[], n: number): T[] {
@@ -11,15 +11,37 @@ export function sample<T>(arr: readonly T[], n: number): T[] {
   return out;
 }
 
-/** Tira un Treat Draw: common 70% / rare 24% / golden 6%. Sin "double XP". */
-export function rollTreat(): TreatDraw {
-  const r = Math.random();
-  if (r < 0.06) {
-    const g = TREATS.golden[Math.floor(Math.random() * TREATS.golden.length)];
-    return { tier: "golden", text: g.text, special: g.special };
+/**
+ * Elige un treat del pool respetando el contexto del Dare completado:
+ * los que CHOCAN con la categoría (`avoid`) quedan excluidos; los que
+ * ENCAJAN (`fits`) pesan ×3 — se priman sin volverse un guion (la
+ * sorpresa sigue siendo parte del treat). Fallback defensivo: si el
+ * filtro vaciara el pool, se elige entre todos.
+ *
+ * Exportada para poder testearla con pools sintéticos y `rand` sembrado.
+ */
+export function pickTreat(pool: readonly Treat[], cat: Cat | null, rand: () => number): Treat {
+  const eligible = cat ? pool.filter((t) => !t.avoid?.includes(cat)) : pool;
+  const usable = eligible.length ? eligible : pool;
+  const weights = usable.map((t) => (cat && t.fits?.includes(cat) ? 3 : 1));
+  const total = weights.reduce((a, b) => a + b, 0);
+  let x = rand() * total;
+  for (let i = 0; i < usable.length; i++) {
+    x -= weights[i];
+    if (x < 0) return usable[i];
   }
-  if (r < 0.3) {
-    return { tier: "rare", text: TREATS.rare[Math.floor(Math.random() * TREATS.rare.length)] };
-  }
-  return { tier: "common", text: TREATS.common[Math.floor(Math.random() * TREATS.common.length)] };
+  return usable[usable.length - 1];
+}
+
+/**
+ * Tira un Treat Draw: common 70% / rare 24% / golden 6%. Sin "double XP".
+ * `cat` es la categoría del Dare recién completado (contexto del treat);
+ * `rand` es inyectable para que los tests sean deterministas (por defecto,
+ * `Math.random`: la tirada real sigue siendo una sorpresa).
+ */
+export function rollTreat(cat: Cat | null = null, rand: () => number = Math.random): TreatDraw {
+  const r = rand();
+  const tier: Tier = r < 0.06 ? "golden" : r < 0.3 ? "rare" : "common";
+  const t = pickTreat(TREATS[tier], cat, rand);
+  return t.special ? { tier, text: t.text, special: t.special } : { tier, text: t.text };
 }

@@ -62,14 +62,18 @@ src/
                tipados; MVP_JOURNEY_IDS marca los 4 ofrecibles), tarot,
                symbols (mapa central de glifos), science (biblioteca),
                traits (BADGES: hitos difíciles; persisten bajo la clave
-               `traits` del store), rewards (treats/dates/dream,
+               `traits` del store), rewards (treats etiquetados por
+               contexto — `fits`/`avoid` por categoría —, dates, dream;
                antes draws), icons, colors.
   lib/         Lógica. La mayoría son funciones PURAS y deterministas:
                  generator.ts     selección del dare (scoring, no if/else),
                                   con contexto+destino del check-in
                  achievements.ts  earnedTraits() — qué traits gana un dare
                  prng.ts          PRNG con semilla (mulberry32), reproducible
-                 random.ts        sample() y rollTreat() (usan Math.random)
+                 random.ts        sample() (Math.random) y rollTreat(cat, rand):
+                                  treat draw consciente del contexto (excluye
+                                  `avoid`, prima `fits` ×3; rand inyectable →
+                                  testeable con semilla)
                  date.ts          helpers de fecha local (todayStr, daysBetween)
                  lookup.ts        búsquedas sobre los datos (findDare, findCard)
                  contentSchema.ts validateDare(): reglas duras del contenido
@@ -150,7 +154,12 @@ significado, no premios por cada acción; en el store persisten bajo la clave
 **Companion** (recompensa durante el dare) · **Milestones** (no Marks) ·
 **Momentum** (no flexible streak). Los Badges se ganan raramente: la mayoría de
 Dares NO desbloquean ninguno, y la completion muestra COMO MUCHO uno (el más
-importante; el resto quedan en Progress). No mostrar XP,
+importante; el resto quedan en Progress). Dos vías, sin spam: **capstone** —
+al terminar un Journey se otorga UN badge deliberado (su `identity`: First
+Mover, Quiet Builder…), con reveal premium (`.badge-reveal`) en la completion;
+y **badges por umbral** (`achievements.ts`) que caen por hitos acumulados
+(3 del mismo tipo, 3 días distintos, un Strong…), nunca por cada Dare. Así un
+Journey deja más de un badge sin premiar cada acción. No mostrar XP,
 niveles, "streak failed", calorías ni "burn". El sistema de recompensas está
 separado a propósito: *Trigger* (antes) · *Companion* (durante) · *Treat*
 (después) · *Date* (semanal) · *Dream Reward* (al terminar el Journey).
@@ -236,9 +245,7 @@ with", "research suggests"); sin claims médicos. El helper puro `dayVariants(p)
 **Briefing de día** (`DayModal`): en la pantalla Journey, tocar un día hecho o el
 actual abre su plan — selector ◌/◆/⟁ (efímero, por defecto Real), Trigger,
 Companion, Treat, Proof y la ficha de ciencia. Los días futuros siguen sellados
-(no accionables). El timeline usa "Day N" (no Today/Tomorrow). Pendiente: persistir
-la variante elegida por día (necesitaría subir la versión del store) y llevar la
-ficha de ciencia del día a Today.
+(no accionables). El timeline usa "Day N" (no Today/Tomorrow).
 
 **Arranque explícito y multi-journey.** Ningún Journey arranca solo: el
 onboarding lleva a Today sin activar nada. Un Journey se empieza pulsando
