@@ -197,8 +197,11 @@ describe("completion de Journey por milestones (dispara la celebración)", () =>
 describe("Expected Effect — perfiles ricos y distintos por Dare", () => {
   // Cota SUPERIOR para todo el corpus: Expected Effect nunca satura (la UI de
   // `Effects` está diseñada para 3–5 filas). NO imponemos una cota inferior
-  // global: el spec permite que un Dare "muy estrecho" de recuperación muestre
-  // pocos efectos (p. ej. un micro-respiro), y `contentSchema` solo exige ≥1.
+  // global: el corpus incluye "micro" Dares de vida (admin, comunicación,
+  // emoción, teléfono, recuperación…) deliberadamente ESTRECHOS —forzarlos a 3+
+  // efectos sería relleno deshonesto— y `contentSchema` solo exige ≥1. La
+  // garantía anti-pobreza (perfil rico + efecto característico) se comprueba por
+  // Dare representativo de cada familia en el test de más abajo.
   it("ningún Dare satura Expected Effect (máximo 5 efectos)", () => {
     for (const d of ALL) {
       const n = Object.keys(d.effects).length;
