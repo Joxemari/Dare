@@ -36,8 +36,11 @@ function topEffect(d: Dare): string {
   return entries.sort((a, b) => b[1] - a[1])[0][0];
 }
 
-export function Meta({ dare }: { dare: Dare }) {
-  const companion = companionWord(dare);
+export function Meta({ dare, companion: companionOverride }: { dare: Dare; companion?: string }) {
+  // El companion del strip debe COINCIDIR con el de la sección "Companion" del
+  // detalle: si el llamador ya resolvió uno (resolveCompanion, rotado por fecha),
+  // lo usamos; si no, caemos al literal del Dare.
+  const companion = companionOverride ?? companionWord(dare);
   // "After/Treat" fuera: los Treats aparecen TRAS completar, no antes (spec).
   const rows: [string, string, string][] = [
     [CAT_ICO[dare.cat], "Place", placeWord(dare)],
