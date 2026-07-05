@@ -2,26 +2,24 @@ import { useEffect } from "react";
 import { C } from "../data/colors";
 import { SYMBOLS } from "../data/symbols";
 import { wrap, pad } from "../components/layout";
-import { energyForState } from "../lib/generator";
-import type { CurrentLoc, MentalState } from "../types";
+import { energyForLevel, stateForLevel } from "../lib/generator";
+import type { CurrentLoc, EnergyLevel } from "../types";
 import type { DareApp } from "../lib/useDare";
 
-// "Send me somewhere" (loc "anywhere") es la última opción: DARE elige un
-// destino (piscina/gym/bosque/…). Reemplaza a la antigua segunda pregunta.
-const locs: [CurrentLoc, string][] = [
+// Check-in de 3 preguntas (spec): Time / Place / Energy. Place es el filtro
+// más fuerte — "Take me somewhere ✦" (loc "anywhere") es la única excepción,
+// donde DARE elige el destino en vez de quedarse donde estás.
+const places: [CurrentLoc, string][] = [
   ["home", "Home"],
-  ["city", "City / street"],
-  ["park", "Park / outside"],
-  ["office", "Office"],
-  ["travelling", "Travelling"],
-  ["anywhere", "Send me somewhere ✦"],
+  ["city", "City"],
+  ["park", "Park"],
+  ["anywhere", "Take me somewhere ✦"],
 ];
-const states: [MentalState, string][] = [
-  ["blocked", "Blocked"],
+const energyLevels: [EnergyLevel, string][] = [
   ["tired", "Tired"],
+  ["calm", "Calm"],
   ["normal", "Normal"],
-  ["active", "Active"],
-  ["stressed", "Stressed"],
+  ["high", "High"],
 ];
 
 export function Checkin({ app }: { app: DareApp }) {
@@ -31,9 +29,7 @@ export function Checkin({ app }: { app: DareApp }) {
   useEffect(() => {
     window.scrollTo({ top: 0 });
   }, []);
-  // La energía ya no se pregunta: la deriva el Mood. Basta con tiempo, lugar y
-  // estado para generar.
-  const ready = draft.time && draft.loc && draft.state;
+  const ready = draft.time && draft.loc && draft.energyLevel;
 
   return (
     <div className="dare-root">
@@ -59,26 +55,26 @@ export function Checkin({ app }: { app: DareApp }) {
           </button>
 
           <p className="lbl" style={{ marginBottom: 10 }}>
-            Time available
+            Time
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 22 }}>
-            {[3, 10, 20, 30].map((t) => (
+            {[5, 10, 20, 30].map((t) => (
               <button
                 key={t}
                 className={"pill" + (draft.time === t ? " on" : "")}
                 aria-pressed={draft.time === t}
                 onClick={() => setDraft({ ...draft, time: t })}
               >
-                {t} min
+                {t === 30 ? "30+ min" : `${t} min`}
               </button>
             ))}
           </div>
 
           <p className="lbl" style={{ marginBottom: 10 }}>
-            Where are you right now?
+            Place
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8, marginBottom: 22 }}>
-            {locs.map(([id, t]) => (
+            {places.map(([id, t]) => (
               <button
                 key={id}
                 className={"pill" + (draft.loc === id ? " on" : "")}
@@ -92,15 +88,15 @@ export function Checkin({ app }: { app: DareApp }) {
           </div>
 
           <p className="lbl" style={{ marginBottom: 10 }}>
-            Mental state
+            Energy
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 26 }}>
-            {states.map(([id, t]) => (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 26 }}>
+            {energyLevels.map(([id, t]) => (
               <button
                 key={id}
-                className={"pill" + (draft.state === id ? " on" : "")}
-                aria-pressed={draft.state === id}
-                onClick={() => setDraft({ ...draft, state: id })}
+                className={"pill" + (draft.energyLevel === id ? " on" : "")}
+                aria-pressed={draft.energyLevel === id}
+                onClick={() => setDraft({ ...draft, energyLevel: id })}
               >
                 {t}
               </button>
@@ -114,14 +110,11 @@ export function Checkin({ app }: { app: DareApp }) {
             onClick={() =>
               ready &&
               app.runCheckin({
-                // La energía se DERIVA del estado mental (ya no se pregunta).
-                energy: energyForState(draft.state!),
+                // Energy es una pregunta DIRECTA (ya no se deriva del estado mental).
+                energy: energyForLevel(draft.energyLevel!),
                 time: draft.time!,
                 loc: draft.loc!,
-                // El destino ya no es una pregunta aparte: si loc === "anywhere"
-                // ("Send me somewhere"), el generador manda a un sitio.
-                dest: null,
-                state: draft.state!,
+                state: stateForLevel(draft.energyLevel!),
               })
             }
           >

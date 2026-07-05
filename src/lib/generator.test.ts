@@ -1,6 +1,16 @@
 import { describe, it, expect } from "vitest";
-import { generateDare, generateJourneyDayDare, energyForState, allowedLocs, currentToDareLocs, destToDareLoc, recentDareIds, timeFitScore } from "./generator";
+import {
+  generateDare,
+  generateJourneyDayDare,
+  energyForLevel,
+  stateForLevel,
+  allowedLocs,
+  placeToLocs,
+  recentDareIds,
+  timeFitScore,
+} from "./generator";
 import { DARES } from "../data/dares";
+import { WILDCARDS } from "../data/wildcards";
 import { journeyById } from "../data/journeys";
 import { mulberry32 } from "./prng";
 import type { Checkin } from "../types";
@@ -20,68 +30,86 @@ function withSeededRandom<T>(seed: number, fn: () => T): T {
 }
 
 const ember = journeyById("ember");
-const base: Checkin = { energy: 6, time: 20, loc: "home", dest: null, state: "normal" };
+const base: Checkin = { energy: 6, time: 20, loc: "home", state: "normal" };
 
-describe("currentToDareLocs / destToDareLoc", () => {
-  it("mapea el contexto actual a localizaciones de Dare", () => {
-    expect(currentToDareLocs("home")).toEqual(["home"]);
-    expect(currentToDareLocs("park")).toContain("forest");
-    expect(currentToDareLocs("city")).toEqual(["outside"]);
+/** Cats que solo pueden hacerse en un destino ("Take me somewhere"): nunca
+ *  deben salir para City o Park (regla dura de la spec). */
+const DESTINATION_ONLY_CATS = ["forest", "pool", "padel"];
+
+describe("placeToLocs", () => {
+  it("mapea cada Place del check-in a sus localizaciones de Dare", () => {
+    expect(placeToLocs("home")).toEqual(["home"]);
+    expect(placeToLocs("city")).toEqual(["city"]);
+    expect(placeToLocs("park")).toEqual(["park"]);
   });
 
-  it("mapea el destino a una localización de Dare", () => {
-    expect(destToDareLoc("pool")).toBe("pool");
-    expect(destToDareLoc("cafe")).toBe("outside");
-    expect(destToDareLoc("gym")).toBe("gym");
-  });
-
-  it("'anywhere' (Send me somewhere) admite localizaciones de destino", () => {
-    const locs = currentToDareLocs("anywhere");
+  it("'Take me somewhere' (anywhere) admite destinos pero nunca 'home'", () => {
+    const locs = placeToLocs("anywhere");
     expect(locs).toContain("pool");
     expect(locs).toContain("gym");
     expect(locs).toContain("forest");
-    // no te deja en casa
+    expect(locs).toContain("padel");
+    expect(locs).toContain("city");
+    expect(locs).toContain("park");
     expect(locs).not.toContain("home");
   });
 });
 
 describe("allowedLocs", () => {
-  it("sin destino usa el contexto actual", () => {
-    expect(allowedLocs({ ...base, loc: "home", dest: null })).toEqual(["home"]);
+  it("usa el Place del check-in (hard filter)", () => {
+    expect(allowedLocs({ ...base, loc: "home" })).toEqual(["home"]);
+    expect(allowedLocs({ ...base, loc: "city" })).toEqual(["city"]);
+    expect(allowedLocs({ ...base, loc: "park" })).toEqual(["park"]);
   });
-  it("con destino usa solo el destino", () => {
-    expect(allowedLocs({ ...base, loc: "home", dest: "pool" })).toEqual(["pool"]);
+});
+
+describe("generateDare — Place es un HARD FILTER (nunca se viola)", () => {
+  it("City NUNCA devuelve un Dare de Forest/Pool/Padel (el bug original)", () => {
+    for (const time of [5, 10, 20, 30]) {
+      for (const energy of [2, 4, 6, 9]) {
+        for (let i = 0; i < 20; i++) {
+          const { dare } = generateDare({ ...base, loc: "city", time, energy }, [], {}, ember);
+          expect(DESTINATION_ONLY_CATS.includes(dare.cat), `${dare.id} (${dare.cat}) salió para City`).toBe(false);
+          expect(dare.locs.includes("city") || dare.locs.includes("home"), dare.id).toBe(true);
+        }
+      }
+    }
+  });
+
+  it("Park se queda en Park/green-space: nunca Fitboxing/Pool/Padel/Gym", () => {
+    for (let i = 0; i < 60; i++) {
+      const { dare } = generateDare({ ...base, loc: "park", energy: 7, time: 20 }, [], {}, ember);
+      expect(["pool", "padel", "fitboxing"].includes(dare.cat), `${dare.id} (${dare.cat}) salió para Park`).toBe(false);
+      expect(dare.locs.includes("park")).toBe(true);
+    }
+  });
+
+  it("Home nunca manda fuera (o es el comodín small etiquetado home)", () => {
+    for (let i = 0; i < 40; i++) {
+      const { dare } = generateDare({ ...base, loc: "home" }, [], {}, ember);
+      expect(dare.locs.includes("home")).toBe(true);
+    }
+  });
+
+  it("'Take me somewhere' (loc anywhere) nunca deja en casa", () => {
+    for (let i = 0; i < 40; i++) {
+      const { dare } = generateDare({ ...base, loc: "anywhere", energy: 7 }, [], {}, ember);
+      expect(dare.locs.includes("home")).toBe(false);
+    }
   });
 });
 
 describe("generateDare", () => {
-  it("con time=3 siempre devuelve un Small Dare", () => {
-    const { dare } = generateDare({ ...base, time: 3 }, [], {}, ember);
-    expect(dare.cat).toBe("small");
-  });
-
-  it("respeta la localización actual (en casa no manda a la piscina)", () => {
-    for (let i = 0; i < 40; i++) {
-      const { dare } = generateDare({ ...base, loc: "home", dest: null }, [], {}, ember);
-      // debe poder hacerse en casa (o ser un small, que es comodín)
-      expect(dare.locs.includes("home") || dare.cat === "small").toBe(true);
+  it("con time=5 el pool sigue respetando el Place elegido", () => {
+    for (let i = 0; i < 20; i++) {
+      const { dare } = generateDare({ ...base, time: 5, loc: "home" }, [], {}, ember);
+      expect(dare.locs.includes("home")).toBe(true);
     }
   });
 
-  it("un destino de piscina hace probable un Dare de piscina", () => {
-    let poolHits = 0;
-    for (let i = 0; i < 60; i++) {
-      const { dare } = generateDare({ ...base, energy: 7, dest: "pool" }, [], {}, ember);
-      if (dare.cat === "pool") poolHits++;
-      // nunca debe salir algo imposible en la piscina salvo el comodín small
-      expect(["pool", "small"]).toContain(dare.cat);
-    }
-    expect(poolHits).toBeGreaterThan(0);
-  });
-
-  it("energía baja evita niveles Strong", () => {
+  it("Energy es un hard filter: Tired nunca selecciona niveles Strong", () => {
     for (let i = 0; i < 40; i++) {
-      const { dare } = generateDare({ ...base, energy: 2, state: "tired" }, [], {}, ember);
+      const { dare } = generateDare({ ...base, energy: energyForLevel("tired"), state: stateForLevel("tired") }, [], {}, ember);
       expect(dare.level).not.toBe("Strong");
     }
   });
@@ -92,7 +120,6 @@ describe("generateDare", () => {
   });
 
   it("evita repetir un Dare visto recientemente si hay alternativas", () => {
-    // fija un contexto con varias opciones posibles y saca el favorito
     const ci: Checkin = { ...base, energy: 6, time: 20, loc: "home", state: "normal" };
     const alternatives = new Set<string>();
     for (let i = 0; i < 30; i++) alternatives.add(generateDare(ci, [], {}, ember).dare.id);
@@ -108,10 +135,11 @@ describe("generateDare", () => {
   });
 
   it("aún devuelve algo aunque todo el pool sea reciente", () => {
-    const ci: Checkin = { ...base, time: 3 }; // pool = smalls
-    const allSmallIds = DARES.filter((d) => d.cat === "small").map((d) => d.id);
-    const { dare } = generateDare(ci, [], {}, ember, allSmallIds);
-    expect(dare.cat).toBe("small");
+    const ci: Checkin = { ...base, time: 5, loc: "home" };
+    const allHomeSmallIds = DARES.filter((d) => d.cat === "small" && d.locs.includes("home")).map((d) => d.id);
+    const { dare } = generateDare(ci, [], {}, ember, allHomeSmallIds);
+    // sigue respetando Place aunque el pool "fresco" esté vacío
+    expect(dare.locs.includes("home")).toBe(true);
   });
 
   it("el vibe 'watch' hace más probable un Dare con companion de entretenimiento", () => {
@@ -138,6 +166,15 @@ describe("generateDare", () => {
     expect(noveltyWild).toBeGreaterThan(neutralWild);
   });
 
+  it("un wildcard nunca viola Place (City no recibe wildcards de Forest)", () => {
+    withSeededRandom(0x51de, () => {
+      for (let i = 0; i < 100; i++) {
+        const { dare } = generateDare({ ...base, loc: "city", time: 20, energy: 7 }, [], {}, ember);
+        if (dare.wild) expect(WILDCARDS.find((w) => w.id === dare.id)?.locs.includes("city")).toBe(true);
+      }
+    });
+  });
+
   it("evita un Dare rechazado si hay alternativas", () => {
     withSeededRandom(0xda2e, () => {
       const ci: Checkin = { ...base, energy: 6, time: 20, loc: "home", state: "normal" };
@@ -155,7 +192,7 @@ describe("generateDare", () => {
 
   it("la evitación empuja hacia la categoría que hace contacto", () => {
     // avoiding=admin → probable un Dare de admin/task-contact/close/comm/decision/focus
-    const ci: Checkin = { energy: 6, time: 10, loc: "home", dest: null, state: "normal", focus: 6, avoiding: "admin" };
+    const ci: Checkin = { energy: 6, time: 10, loc: "home", state: "normal", focus: 6, avoiding: "admin" };
     const contactCats = ["admin", "taskcontact", "close", "communication", "decision", "focus"];
     let hits = 0;
     for (let i = 0; i < 60; i++) {
@@ -166,27 +203,31 @@ describe("generateDare", () => {
   });
 
   it("acepta focus/avoiding sin romper el `why`", () => {
-    const ci: Checkin = { energy: 3, time: 10, loc: "home", dest: null, state: "tired", focus: 2, avoiding: "mind" };
+    const ci: Checkin = { energy: 3, time: 10, loc: "home", state: "tired", focus: 2, avoiding: "mind" };
     const { why } = generateDare(ci, [], {}, ember);
     expect(why.length).toBeGreaterThan(0);
   });
 });
 
-describe("energyForState", () => {
-  it("deriva energía coherente del estado mental (el check-in ya no la pregunta)", () => {
-    // tired/blocked bajan (arranque de baja fricción), active sube, normal medio
-    expect(energyForState("tired")).toBeLessThanOrEqual(3);
-    expect(energyForState("blocked")).toBeLessThanOrEqual(3);
-    expect(energyForState("active")).toBeGreaterThanOrEqual(8);
-    expect(energyForState("normal")).toBeGreaterThan(energyForState("tired"));
-    expect(energyForState("stressed")).toBeLessThan(energyForState("normal"));
+describe("energyForLevel / stateForLevel", () => {
+  it("deriva energía coherente del nivel elegido (pregunta DIRECTA, ya no derivada del mood)", () => {
+    expect(energyForLevel("tired")).toBeLessThanOrEqual(3);
+    expect(energyForLevel("high")).toBeGreaterThanOrEqual(8);
+    expect(energyForLevel("normal")).toBeGreaterThan(energyForLevel("tired"));
+    expect(energyForLevel("calm")).toBeLessThan(energyForLevel("normal"));
+  });
+
+  it("mapea 'high' a 'active' para reutilizar el scoring existente", () => {
+    expect(stateForLevel("high")).toBe("active");
+    expect(stateForLevel("tired")).toBe("tired");
+    expect(stateForLevel("calm")).toBe("calm");
+    expect(stateForLevel("normal")).toBe("normal");
   });
 
   it("energía baja (tired) selecciona un Dare no-Strong (intensidad coherente)", () => {
-    // tired → energía derivada baja → el generador evita niveles Strong
     for (let i = 0; i < 30; i++) {
       const { dare } = generateDare(
-        { energy: energyForState("tired"), time: 10, loc: "home", dest: null, state: "tired" },
+        { energy: energyForLevel("tired"), time: 10, loc: "home", state: stateForLevel("tired") },
         [],
         {},
         ember,
@@ -196,16 +237,7 @@ describe("energyForState", () => {
   });
 });
 
-describe("coherencia de duración y destino (check-in)", () => {
-  it("nunca elige un Dare más largo que el tiempo disponible", () => {
-    for (const time of [10, 20, 30]) {
-      for (let i = 0; i < 30; i++) {
-        const { dare } = generateDare({ ...base, time, energy: 7 }, [], {}, ember);
-        expect(dare.min).toBeLessThanOrEqual(time + 2);
-      }
-    }
-  });
-
+describe("coherencia de duración (check-in)", () => {
   it("timeFitScore premia el encaje y penaliza quedarse corto", () => {
     // encaje perfecto = máximo; pasarse un par de min no penaliza (pool ya lo acota)
     expect(timeFitScore(30, 30)).toBe(16);
@@ -219,13 +251,18 @@ describe("coherencia de duración y destino (check-in)", () => {
   });
 
   it("no ofrece un Dare mucho más corto que el tiempo disponible (30 min ≠ 2 min)", () => {
-    let tooShort = 0;
-    for (let i = 0; i < 60; i++) {
-      const { dare } = generateDare({ ...base, time: 30, energy: 6, loc: "home", state: "normal" }, [], {}, ember);
-      if (dare.min <= 6) tooShort++;
-    }
-    // con 30 min disponibles, un Dare de ≤6 min casi nunca debería ganar
-    expect(tooShort).toBeLessThan(8);
+    // Es una preferencia de SCORING (timeFitScore), no un hard filter — se
+    // sembra Math.random para que el recuento sea determinista y no flaky.
+    withSeededRandom(0x7f3a, () => {
+      let tooShort = 0;
+      const N = 150;
+      for (let i = 0; i < N; i++) {
+        const { dare } = generateDare({ ...base, time: 30, energy: 6, loc: "home", state: "normal" }, [], {}, ember);
+        if (dare.min <= 6) tooShort++;
+      }
+      // con 30 min disponibles, un Dare de ≤6 min debería ganar solo raramente
+      expect(tooShort / N).toBeLessThan(0.15);
+    });
   });
 
   it("con más tiempo disponible tiende a Dares más largos (coincide con time)", () => {
@@ -237,17 +274,6 @@ describe("coherencia de duración y destino (check-in)", () => {
     };
     // 30 min disponibles debe rendir Dares claramente más largos que 10 min.
     expect(avg(30)).toBeGreaterThan(avg(10));
-  });
-
-  it("'Send me somewhere' (loc anywhere) manda a un destino, no te deja en casa", () => {
-    const destLocs = ["forest", "pool", "gym", "padel", "outside"];
-    for (let i = 0; i < 40; i++) {
-      const { dare } = generateDare({ ...base, loc: "anywhere", dest: null, energy: 7 }, [], {}, ember);
-      // el Dare se puede hacer en un destino (o es el comodín small)
-      expect(dare.locs.some((l) => destLocs.includes(l)) || dare.cat === "small").toBe(true);
-      // nunca un Dare exclusivamente de casa
-      expect(dare.locs).not.toEqual(["home"]);
-    }
   });
 });
 

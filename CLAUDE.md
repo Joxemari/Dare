@@ -177,27 +177,50 @@ nuevo Today Dare siempre se ajusta a cómo/dónde estás. En el hook: `runChecki
 El "Another dare" del revelado del flujo rápido sigue siendo aleatorio
 (`anotherQuickDare`); `anotherDare` (rechazar + `Checkin`) queda disponible.
 
-**El check-in es CORTO a propósito** (TRES preguntas): **Time available** ·
-**Where are you right now?** · **Mental state**. **La energía ya NO se pregunta**:
-se **deriva del Mood** (`energyForState` en `generator.ts`: tired→2, blocked→3,
-stressed→4, normal→6, active→9) — el estado mental ya implica el nivel de energía,
-y así el check-in es más corto. Al abrir, la pantalla hace `scrollTo(top)` (sin
-router, el scroll no se resetea solo). La pregunta de ubicación incluye una última
-opción **"Send me somewhere ✦"** (loc `"anywhere"`): en vez de una segunda
-pregunta de destino, si la eliges el generador te **manda a un sitio** (piscina/
-gym/bosque/…, vía `currentToDareLocs("anywhere")`).
+**El check-in es CORTO a propósito** (TRES preguntas, todas HARD FILTERS del
+generador): **Time** (5 / 10 / 20 / 30+ min) · **Place** (Home / City / Park /
+"Take me somewhere ✦") · **Energy** (Tired / Calm / Normal / High). **Energy es
+ahora una pregunta DIRECTA** (`EnergyLevel` en `types.ts`; ya no se deriva del
+Mood): `energyForLevel` la traduce a un número 1–10 (tired→2, calm→4, normal→6,
+high→9) y `stateForLevel` la traduce a `MentalState` (high→"active"; "calm" es
+un `MentalState` nuevo) para reutilizar el scoring y las etiquetas `Dare.states`
+existentes. Sin opciones marcadas por defecto: el CTA ("Get my dare") queda
+atenuado hasta responder las tres. Al abrir, la pantalla hace `scrollTo(top)`
+(sin router, el scroll no se resetea solo). Place incluye una última opción
+**"Take me somewhere ✦"** (loc `"anywhere"`): en vez de fijar un lugar, el
+generador **elige el destino** (piscina/gym/bosque/padel/…, vía
+`placeToLocs("anywhere")`).
 
-**Mapeo directo check-in → Dare** (spec "sé muy customizado"): **Mood → energía
-→ intensidad** (`energyForState`; el generador cae a niveles Easy con energía ≤3 y
-sesga hacia categorías calmantes/energéticas según el estado) · **Time available →
-duración** (coherencia decisiva: `d.min ≈ time`, nunca mayor) · **Where →
-localización** (incl. destino con "anywhere") · y el **Companion** sale coherente
-con la categoría del Dare resultante (`resolveCompanion` filtra por categoría).
+**Place es el filtro MÁS FUERTE, y es un HARD FILTER real** (`placeToLocs` +
+`generateDare` en `lib/generator.ts`): salvo "Take me somewhere", un Dare
+**nunca** sale si no puede hacerse en el Place elegido — Home nunca manda
+fuera, City nunca da Forest/Pool/Gym/Padel/Fitboxing, Park se queda en
+park/green-space. Antes `Loc` mezclaba "outside" para paseos urbanos Y para
+bosque, así que un check-in de City podía devolver un Dare de Forest (el bug
+de origen); ahora `Loc` distingue `"city"`/`"park"` de los DESTINO puro
+(`"forest"`/`"pool"`/`"gym"`/`"padel"`, solo alcanzables vía "anywhere"). Time y
+Energy también son hard filters "cuando es posible": si el pool exacto
+(Place+Time+Energy) queda vacío, el generador relaja Time ±1 nivel (Place y
+Energy fijos); si sigue vacío, relaja Energy; Place **nunca** se relaja, en
+ningún escalón — el último recurso es un Dare `small` del propio Place. Dentro
+del pool ya filtrado, la selección sigue siendo scoring (variedad, Journey
+bias, anti-repetición, vibe…), no un mapeo fijo 1:1 — la misma combinación de
+check-in puede devolver Dares distintos en visitas distintas.
+
+**Mapeo directo check-in → Dare** (spec "sé muy customizado"): **Energy →
+intensidad** (hard filter sobre `Dare.energy`; el generador excluye niveles
+Strong con energía baja porque esos Dares ya llevan `energy[0]` alto) ·
+**Time → duración** (hard filter por bucket + coherencia decisiva de scoring:
+`d.min ≈ time`, nunca mayor) · **Place → localización** (hard filter, incl.
+destino con "anywhere") · y el **Companion** sale coherente con la categoría
+del Dare resultante (`resolveCompanion` filtra por categoría).
 **Notas:** el check-in "rápido" inline (`QuickCheckin`: Energy/Focus/Avoiding 1-5)
 se **eliminó** para tener uno solo; y la pregunta de **vibe/companion** y el módulo
 **"Plan a Dare this week"** también se retiraron para acortarlo (el generador aún
 soporta `vibe`/`focus`/`avoiding` en el scoring, hoy sin UI que los alimente; los
-companions siguen rotando por fecha).
+companions siguen rotando por fecha). El campo `dest` de `Checkin` (destino de
+una segunda pregunta ya retirada) queda opcional e IGNORADO por el generador —
+se conserva solo por compatibilidad de forma con check-ins antiguos guardados.
 
 Con **varios Journeys activos**, `ActiveJourneyList` prioriza el Journey
 recomendado por el check-in (`recommendJourney` en `lib/recommend.ts`: energía
@@ -686,7 +709,9 @@ que `index.html` enlaza manifest + apple-touch-icon.
   del día, daily card, proof library, momentum, badges (clave `traits`),
   `smallVersionUses`, identidades, milestones, companion shelf, boss playlist,
   planned dares (destinos) + Planned Dares (`darePlans`) + Dares rechazados
-  (`rejectedDares`), dates, historial de treats, feedback, las preferencias de
+  (`rejectedDares`; un rechazo se evita durante 7 días — `useDare.ts` filtra por
+  fecha antes de pasarlos al generador como exclusión dura), dates, historial de
+  treats, feedback, las preferencias de
   notificación (dos franjas), el estado del nudge de instalación (`install`:
   `dismissedAt`/`installedAt`) y `cardIntroDate` (día en que se resolvió el ritual
   de la Daily Card al abrir)). Los check-ins guardan también el **vibe** de

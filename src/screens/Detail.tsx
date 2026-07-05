@@ -16,7 +16,8 @@ import type { Dare, Loc } from "../types";
  *  casa, en el bosque, en la piscina…). */
 const PLACE_PHRASE: Record<Loc, string> = {
   home: "at home",
-  outside: "outside",
+  city: "around the city",
+  park: "at the park",
   forest: "in the forest",
   pool: "in the pool",
   gym: "at the gym",

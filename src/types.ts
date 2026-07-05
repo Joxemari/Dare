@@ -35,18 +35,32 @@ export type Cat =
 
 export type Level = "Easy" | "Medium" | "Strong";
 
-/** Dónde puede ejecutarse un Dare (locations físicas reales). */
-export type Loc = "home" | "outside" | "forest" | "pool" | "gym" | "padel";
+/** Dónde puede ejecutarse un Dare (locations físicas reales). "city" y "park"
+ *  son lugares directamente alcanzables desde el check-in; "forest"/"pool"/
+ *  "gym"/"padel" son DESTINO (solo alcanzables eligiendo "Take me somewhere"
+ *  — nunca se cuelan en City/Park, esa mezcla era el bug de origen). */
+export type Loc = "home" | "city" | "park" | "forest" | "pool" | "gym" | "padel";
 
 /** Contexto actual del usuario en el check-in (dónde está AHORA). "anywhere" =
- *  "Send me somewhere": no está fijo, acepta que DARE le mande a un sitio
- *  (piscina/gym/bosque/…). Reemplaza a la antigua segunda pregunta de destino. */
+ *  "Take me somewhere": no está fijo, acepta que DARE le mande a un sitio
+ *  (piscina/gym/bosque/…). Reemplaza a la antigua segunda pregunta de destino.
+ *  "office"/"travelling" son valores heredados (ya no los ofrece la UI, pero
+ *  siguen siendo check-ins guardados válidos). */
 export type CurrentLoc = "home" | "city" | "park" | "office" | "travelling" | "anywhere";
 
-/** Destino al que DARE puede empujar al usuario ahora mismo. */
+/** Destino al que DARE puede empujar al usuario ahora mismo (feature de
+ *  "Plan for later" — `togglePlanDare`/`plannedDares` —, NO del check-in de
+ *  Today: el check-in ya no pregunta un destino aparte). */
 export type Dest = "forest" | "pool" | "gym" | "padel" | "cafe";
 
-export type MentalState = "blocked" | "tired" | "normal" | "active" | "stressed";
+/** "calm" es nuevo (mapea la opción "Calm" del check-in de Energy); el resto
+ *  son heredados de check-ins guardados y de `Dare.states`. */
+export type MentalState = "blocked" | "tired" | "normal" | "active" | "stressed" | "calm";
+
+/** Lo que pregunta el check-in de Today: Energy es ahora una pregunta DIRECTA
+ *  (ya no se deriva del estado mental). "high" mapea internamente a "active"
+ *  (`MentalState`) para reutilizar el scoring existente de intensidad. */
+export type EnergyLevel = "tired" | "calm" | "normal" | "high";
 
 /** Qué está evitando el usuario (check-in rápido de Today). El Dare le ayuda
  *  a hacer contacto con lo evitado, sin exigirle terminarlo. */
@@ -161,10 +175,15 @@ export interface Dare {
 export interface Checkin {
   energy: number;
   time: number;
-  /** Dónde está el usuario ahora. */
+  /** Dónde está el usuario ahora — HARD FILTER del generador (ver
+   *  `placeToLocs`/`generateDare` en `lib/generator.ts`): salvo "anywhere",
+   *  nunca se genera un Dare fuera de este lugar. */
   loc: CurrentLoc;
-  /** A dónde acepta que DARE le mande (o null = "Not now"). */
-  dest: Dest | null;
+  /** Campo heredado de una pregunta de destino ya retirada del check-in de
+   *  Today (el check-in de 3 preguntas es Time/Place/Energy). Opcional y
+   *  IGNORADO por el generador; se conserva solo por compatibilidad de forma
+   *  con check-ins antiguos guardados. */
+  dest?: Dest | null;
   state: MentalState;
   /** "¿Qué lo haría menos aburrido hoy?" — sesga el companion del Dare.
       Opcional: los check-ins antiguos (pre-companions) no lo tienen → surprise. */

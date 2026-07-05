@@ -2,74 +2,83 @@ import { DARES } from "../data/dares";
 import { WILDCARDS } from "../data/wildcards";
 import { modeOfCat } from "../data/modes";
 import { vibeBonus, vibeConfig } from "./companions";
-import type { Avoid, Cat, Checkin, CurrentLoc, Dare, Dest, Journey, Loc, MentalState } from "../types";
+import type { Avoid, Cat, Checkin, CurrentLoc, Dare, EnergyLevel, Journey, Loc, MentalState } from "../types";
 
-/** Energía (1-10) DERIVADA del estado mental. El check-in ya no pregunta la
- *  energía por separado: el Mood la implica. Puro y testeable. tired/blocked
- *  bajan (arranque de baja fricción → el generador cae a Easy), active sube
- *  (permite Strong), stressed queda medio-bajo (empuja a calmar), normal medio. */
-export function energyForState(state: MentalState): number {
-  switch (state) {
-    case "tired":
-      return 2;
-    case "blocked":
-      return 3;
-    case "stressed":
-      return 4;
-    case "normal":
-      return 6;
-    case "active":
-      return 9;
-  }
+/** Energía (1-10) DERIVADA del nivel de Energy elegido en el check-in (ya no
+ *  se pregunta el estado mental: Energy es una pregunta directa). */
+const ENERGY_LEVEL_TO_NUMBER: Record<EnergyLevel, number> = { tired: 2, calm: 4, normal: 6, high: 9 };
+/** Nivel de Energy → `MentalState` equivalente, para reutilizar el scoring y
+ *  las etiquetas `Dare.states` existentes (p. ej. "high" ≈ "active"). */
+const ENERGY_LEVEL_TO_STATE: Record<EnergyLevel, MentalState> = { tired: "tired", calm: "calm", normal: "normal", high: "active" };
+
+export function energyForLevel(level: EnergyLevel): number {
+  return ENERGY_LEVEL_TO_NUMBER[level];
+}
+
+export function stateForLevel(level: EnergyLevel): MentalState {
+  return ENERGY_LEVEL_TO_STATE[level];
 }
 
 /* --------------------- DARE GENERATOR ---------------------
    Scoring, no cadena de if/else. Optimiza la probabilidad de
    EMPEZAR, no el entrenamiento perfecto.
 
-   Contexto (check-in): `loc` es dónde está el usuario ahora;
-   `dest` es a dónde acepta que DARE le mande (o null = "Not now").
-   - dest = null  → solo Dares compatibles con el contexto actual.
-   - dest fijado  → puede generar un Dare que exige ir allí. */
+   Contexto (check-in): Time / Place / Energy. PLACE ES UN HARD FILTER (salvo
+   "Take me somewhere"): un Dare nunca sale si no puede hacerse en el Place
+   elegido — antes "outside" se usaba tanto para paseos urbanos como para
+   bosque, y un check-in de City podía devolver un Dare de Forest. Ahora cada
+   Loc es explícito y "forest"/"pool"/"gym"/"padel" son DESTINO puro (solo
+   alcanzables vía "anywhere"). */
 
-/** Contexto actual → localizaciones de Dare admisibles. */
-export function currentToDareLocs(loc: CurrentLoc): Loc[] {
+/** Place del check-in → localizaciones de Dare admisibles (HARD FILTER). */
+export function placeToLocs(loc: CurrentLoc): Loc[] {
   switch (loc) {
     case "home":
       return ["home"];
     case "city":
-      return ["outside"];
+      return ["city"];
     case "park":
-      return ["outside", "forest"];
+      return ["park"];
+    // Heredados: la UI ya no los ofrece, pero un check-in guardado puede
+    // traerlos. Se tratan como equivalentes urbanos razonables.
     case "office":
-      return ["home", "outside"];
+      return ["home", "city"];
     case "travelling":
-      return ["outside", "home"];
-    // "Send me somewhere": DARE elige un DESTINO (no te quedas donde estás).
+      return ["city"];
+    // "Take me somewhere": DARE elige un DESTINO (no te quedas donde estás,
+    // nunca "home").
     case "anywhere":
-      return ["forest", "pool", "gym", "padel", "outside"];
+      return ["city", "park", "forest", "pool", "gym", "padel"];
   }
 }
 
-/** Destino elegido → localización de Dare. */
-export function destToDareLoc(dest: Dest): Loc {
-  switch (dest) {
-    case "forest":
-      return "forest";
-    case "pool":
-      return "pool";
-    case "gym":
-      return "gym";
-    case "padel":
-      return "padel";
-    case "cafe":
-      return "outside";
-  }
-}
-
-/** Localizaciones admisibles para el check-in. */
+/** Localizaciones admisibles para el check-in (hard filter de Place). */
 export function allowedLocs(ci: Checkin): Loc[] {
-  return ci.dest ? [destToDareLoc(ci.dest)] : currentToDareLocs(ci.loc);
+  return placeToLocs(ci.loc);
+}
+
+/** Bucket de Time del check-in: 5 / 10 / 20 / 30 (30 = "30+", sin techo). */
+const TIME_LEVELS = [5, 10, 20, 30] as const;
+
+function timeLevelIndex(time: number): number {
+  const idx = TIME_LEVELS.indexOf(time as (typeof TIME_LEVELS)[number]);
+  return idx === -1 ? 1 : idx;
+}
+
+/** Minutos máximos de Dare admisibles para un bucket de Time (con un poco de
+ *  margen; 30 = "30+" queda abierto). */
+function ceilingForLevel(idx: number): number {
+  const t = TIME_LEVELS[Math.max(0, Math.min(TIME_LEVELS.length - 1, idx))];
+  switch (t) {
+    case 5:
+      return 7;
+    case 10:
+      return 13;
+    case 20:
+      return 23;
+    default:
+      return 999;
+  }
 }
 
 /**
@@ -130,8 +139,13 @@ export function generateDare(
   recentIds: string[] = [],
   rejectedIds: string[] = [],
 ): { dare: Dare; why: string } {
+  // PLACE es un hard filter SIEMPRE (salvo "anywhere", que ya admite destino).
+  // Nunca se relaja, ni siquiera en el último recurso: por eso el fallback de
+  // más abajo, al no encontrar nada, sigue filtrando por `inPlace`.
   const locs = allowedLocs(ci);
-  const at = (d: Dare) => d.locs.some((l) => locs.includes(l));
+  const inPlace = (d: Dare) => d.locs.some((l) => locs.includes(l));
+  const idx = timeLevelIndex(ci.time);
+  const inEnergy = (d: Dare) => ci.energy >= d.energy[0] && ci.energy <= d.energy[1];
 
   // wildcard chance — la anticipación vive aquí. Los vibes que buscan
   // novedad ("Go somewhere different" / "Surprise me") suben la probabilidad.
@@ -141,7 +155,9 @@ export function generateDare(
     // pool de wildcards antes de comprobar si queda alguno, para no devolverlo
     // ni siquiera como último recurso (si es el único wildcard de la zona,
     // cae al scoring en vez de volver a ofrecerlo). "Reciente" sí es blando.
-    const wpool = WILDCARDS.filter((w) => w.min <= ci.time + 2 && at(w) && !rejectedIds.includes(w.id));
+    const wpool = WILDCARDS.filter(
+      (w) => w.min <= ceilingForLevel(idx) && inPlace(w) && inEnergy(w) && !rejectedIds.includes(w.id),
+    );
     if (wpool.length) {
       // no repitas el último wildcard si hay alternativas frescas
       const fresh = wpool.filter((w) => !recentIds.includes(w.id));
@@ -154,37 +170,43 @@ export function generateDare(
     }
   }
 
-  let pool: Dare[];
-  if (ci.time === 3) {
-    pool = DARES.filter((d) => d.cat === "small");
-  } else {
-    pool = DARES.filter((d) => d.cat !== "small" && d.min <= ci.time + 2 && at(d));
-    if (ci.energy <= 3 || ci.state === "blocked" || ci.state === "tired") {
-      const easy = pool.filter((d) => d.level === "Easy" && d.min <= 12);
-      pool = easy.length ? easy : DARES.filter((d) => d.cat === "small");
+  // Selección: 1. Place (hard, fijo) → 2. Time+Energy exactos → 3. si vacío,
+  // relaja Time ±1 nivel (Place y Energy siguen fijos) → 4. si sigue vacío,
+  // relaja Energy (Place sigue fijo) → 5. último recurso: cualquier Dare del
+  // Place elegido. Place NUNCA se viola, en ningún escalón.
+  // "small" (2-4 min) solo compite en el bucket de 5 min: en un hueco de 20/30
+  // min ofrecer un Dare de 3 min no respeta el tiempo disponible, aunque
+  // técnicamente "encaje" (min <= techo). Queda como comodín universal solo
+  // en el último recurso (siempre respetando Place).
+  const fitsTime = (d: Dare, timeIdx: number) => (d.cat !== "small" || timeIdx === 0) && d.min <= ceilingForLevel(timeIdx);
+  const exact = (timeIdx: number) => DARES.filter((d) => inPlace(d) && inEnergy(d) && fitsTime(d, timeIdx));
+  let pool: Dare[] = exact(idx);
+  if (!pool.length) {
+    for (const alt of [idx - 1, idx + 1]) {
+      if (alt < 0 || alt >= TIME_LEVELS.length) continue;
+      pool = exact(alt);
+      if (pool.length) break;
     }
   }
-  if (!pool.length) pool = DARES.filter((d) => d.cat === "small");
+  if (!pool.length) pool = DARES.filter((d) => inPlace(d) && fitsTime(d, idx));
+  if (!pool.length) pool = DARES.filter((d) => inPlace(d) && d.cat !== "small");
+  if (!pool.length) pool = DARES.filter((d) => inPlace(d));
 
   const strengthCats: Cat[] = ["dumbbells", "carry", "tabata", "fitboxing"];
   const scored = pool.map((d) => {
     let s = 0;
-    if (ci.energy >= d.energy[0] && ci.energy <= d.energy[1]) s += 30;
+    if (inEnergy(d)) s += 30;
     else s -= 8 * Math.min(Math.abs(ci.energy - d.energy[0]), Math.abs(ci.energy - d.energy[1]));
     if (d.states && d.states.includes(ci.state)) s += 15;
     if ((ci.state === "blocked" || ci.state === "tired") && ["small", "recovery", "walk", "forest", "focus"].includes(d.cat)) s += 12;
     if (ci.state === "stressed" && ["forest", "recovery", "pool", "walk"].includes(d.cat)) s += 12;
+    if (ci.state === "calm" && ["recovery", "focus", "emotion", "environment", "decision", "bodyreset"].includes(d.cat)) s += 12;
     if (ci.state === "active" && [...strengthCats, "padel", "pool", "forest"].includes(d.cat)) s += 10;
     // Coherencia de DURACIÓN: el Dare debe durar ~lo que el usuario tiene. Se
     // aplica siempre (no solo con energía alta), con peso decisivo: premia el
     // encaje y PENALIZA quedarse corto (un Dare de 2 min no gana un hueco de 30).
     s += timeFitScore(ci.time, d.min);
     if (journey.bias.includes(d.cat)) s += 10; // el Journey tira hacia lo suyo
-    // el destino elegido empuja hacia su tipo de Dare
-    if (ci.dest === "pool" && d.cat === "pool") s += 20;
-    if (ci.dest === "gym" && d.cat === "fitboxing") s += 20;
-    if (ci.dest === "padel" && d.cat === "padel") s += 20;
-    if (ci.dest === "forest" && d.cat === "forest") s += 20;
     // ---- evitación (check-in rápido): empuja hacia lo que hace contacto ----
     if (ci.avoiding && ci.avoiding !== "none" && AVOID_CATS[ci.avoiding].includes(d.cat)) s += 22;
     // ---- foco (check-in rápido): baja fricción si el foco está bajo ----
@@ -256,11 +278,13 @@ export function generateJourneyDayDare(
 export function buildWhy(ci: Checkin, d: Dare): string {
   const e = ci.energy;
   const opener =
-    e <= 3
-      ? "Energy is low today — so the bar is on the floor."
-      : e <= 6
-        ? "Medium energy: you need movement, not pressure."
-        : "You have fuel today — we're spending it well.";
+    ci.state === "calm"
+      ? "Calm energy — this is about regulation, not intensity."
+      : e <= 3
+        ? "Energy is low today — so the bar is on the floor."
+        : e <= 6
+          ? "Medium energy: you need movement, not pressure."
+          : "You have fuel today — we're spending it well.";
   const catLine: Partial<Record<Cat, string>> = {
     forest: "The pines do half the work.",
     walk: "Music first. Movement follows.",
@@ -290,7 +314,9 @@ export function buildWhy(ci: Checkin, d: Dare): string {
       ? " Designed to be almost impossible to refuse."
       : ci.state === "stressed"
         ? " Chosen to lower the noise."
-        : "";
+        : ci.state === "calm"
+          ? " Nothing to push against, just something to settle into."
+          : "";
   const line = catLine[d.cat] ?? "The smallest step still counts.";
   return opener + " " + line + stateLine;
 }

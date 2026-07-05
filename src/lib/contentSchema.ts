@@ -23,13 +23,13 @@ export const CATS_VALID: readonly Cat[] = [
   "admin", "communication", "bodyreset", "environment", "creative",
   "social", "decision", "emotion", "phone", "taskcontact", "close",
 ];
-export const LOCS_VALID: readonly Loc[] = ["home", "outside", "forest", "pool", "gym", "padel"];
+export const LOCS_VALID: readonly Loc[] = ["home", "city", "park", "forest", "pool", "gym", "padel"];
 export const LEVELS_VALID: readonly Level[] = ["Easy", "Medium", "Strong"];
 export const EFFECTS_VALID: readonly Effect[] = [
   "Energy", "Focus", "Mood", "Calm", "Strength", "Confidence", "Recovery",
   "Clarity", "Stress", "Sleep", "Momentum",
 ];
-export const STATES_VALID: readonly MentalState[] = ["blocked", "tired", "normal", "active", "stressed"];
+export const STATES_VALID: readonly MentalState[] = ["blocked", "tired", "normal", "active", "stressed", "calm"];
 
 /* Regla dura del producto: nunca trabajo de suelo con manos apoyadas. */
 export const BANNED_EXERCISES = ["push-up", "push up", "plank", "burpee", "mountain climber"];

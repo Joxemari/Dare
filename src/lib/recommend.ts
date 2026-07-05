@@ -39,6 +39,8 @@ function preferenceOrder(state: MentalState, energy: number, returning: boolean)
   switch (state) {
     case "tired":
       return ["water", "wild", "iron", "pulse"];
+    case "calm": // regulación, no empuje → recuperación primero
+      return ["water", "wild", "iron", "pulse"];
     case "stressed": // overwhelmed → bajar el ruido
       return ["water", "wild", "pulse", "iron"];
     case "blocked": // aburrido / atascado → cambiar de sitio o subir el pulso
