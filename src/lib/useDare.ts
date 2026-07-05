@@ -15,7 +15,7 @@ import { DARES } from "../data/dares";
 import { TAROT } from "../data/tarot";
 import { TRAITS } from "../data/traits";
 import { CATS } from "../data/colors";
-import { JOURNEYS, MVP_JOURNEYS, journeyById, currentChapter, SPRINT_DAYS } from "../data/journeys";
+import { JOURNEYS, MVP_JOURNEYS, journeyById, currentChapter, journeyMilestoneIds, todaysDayPlan, SPRINT_DAYS } from "../data/journeys";
 import { generateDare, recentDareIds } from "./generator";
 import { recommendJourney } from "./recommend";
 import { rollTreat, sample } from "./random";
@@ -329,6 +329,84 @@ export function useDare() {
     setDreamReward(id);
     activateJourney(store.journeyId);
     setScreen("journey");
+  }
+
+  /** Pausa un Journey: sale de los activos pero CONSERVA su progreso,
+   *  milestones y Dream Reward. Reanudable sin perder nada. */
+  function pauseJourney(id: JourneyId) {
+    setStore((s) => ({ ...s, activeJourneyIds: s.activeJourneyIds.filter((j) => j !== id) }));
+  }
+
+  /** Reanuda un Journey pausado: vuelve a los activos sin tocar su progreso.
+   *  Mantiene su `journeyStartedAt` si ya existía. */
+  function resumeJourney(id: JourneyId) {
+    setStore((s) =>
+      s.activeJourneyIds.includes(id)
+        ? s
+        : {
+            ...s,
+            activeJourneyIds: [...s.activeJourneyIds, id],
+            journeyStartedAt: s.journeyStartedAt[id]
+              ? s.journeyStartedAt
+              : { ...s.journeyStartedAt, [id]: todayStr() },
+          },
+    );
+  }
+
+  /** Cancela un Journey: lo saca de activos y RESETEA su sprint — progreso a 0,
+   *  sus milestones borrados, fuera de completados y sin fecha de inicio. El
+   *  Dream Reward elegido se conserva (para reempezar sin re-configurar). */
+  function cancelJourney(id: JourneyId) {
+    const msIds = journeyMilestoneIds(journeyById(id));
+    setStore((s) => {
+      const milestones = { ...s.milestones };
+      for (const mid of msIds) delete milestones[mid];
+      const journeyStartedAt = { ...s.journeyStartedAt };
+      delete journeyStartedAt[id];
+      return {
+        ...s,
+        activeJourneyIds: s.activeJourneyIds.filter((j) => j !== id),
+        journeyProgress: { ...s.journeyProgress, [id]: 0 },
+        journeysCompleted: s.journeysCompleted.filter((j) => j !== id),
+        milestones,
+        journeyStartedAt,
+      };
+    });
+  }
+
+  /** Today's Body Dare de un Journey activo: lanza el Dare PRESCRITO del día
+   *  que toca (plan[daysDone]) directamente al Detail. Si el día no fija un
+   *  dareId concreto, cae al check-in de ese Journey. Pone el Journey en foco
+   *  para que completar avance SU sprint. */
+  function startJourneyDay(id: JourneyId) {
+    const j = journeyById(id);
+    const prog = store.journeyProgress[id] ?? 0;
+    const day = todaysDayPlan(j, prog);
+    patch({ journeyId: id });
+    const dare = day?.dareId ? findDare(day.dareId) : null;
+    if (day && dare) {
+      const t = todayStr();
+      setStore((s) => ({
+        ...s,
+        journeyId: id,
+        todaysDares: [
+          ...s.todaysDares.filter((e) => !(e.date === t && e.completedAt === null)),
+          {
+            dareId: dare.id,
+            date: t,
+            wild: false,
+            revealed: true,
+            why: `${j.name} · Day ${prog + 1}: ${day.title}. Today's action from your journey.`,
+            startedAt: null,
+            completedAt: null,
+          },
+        ],
+      }));
+      setScreen("detail");
+    } else {
+      // Sin dareId fijo (p. ej. días de recuperación abiertos) → check-in del Journey.
+      setScreen("checkin");
+    }
   }
 
   function pickCard(cardId: string) {
@@ -701,6 +779,10 @@ export function useDare() {
     confirmDreamReward,
     startJourney,
     activateJourney,
+    pauseJourney,
+    resumeJourney,
+    cancelJourney,
+    startJourneyDay,
     pickCard,
     runCheckin,
     justDareMe,

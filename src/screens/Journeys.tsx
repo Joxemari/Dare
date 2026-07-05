@@ -34,12 +34,14 @@ export function Journeys({ app }: { app: DareApp }) {
             const dream = store.dreamRewards[j.id];
             const remaining = Math.max(0, SPRINT_DAYS - p);
 
-            const recommended = j.id === store_recommended && !active && !completed;
+            const started = !active && !completed && !placeholder && !!store.journeyStartedAt[j.id];
+            const recommended = j.id === store_recommended && !active && !completed && !started;
             let status: string;
             if (placeholder) status = "Coming soon";
             else if (completed) status = "Completed";
             else if (active && p > 0) status = `In progress · ${remaining} ${remaining === 1 ? "day" : "days"} remaining`;
             else if (active) status = "Started";
+            else if (started) status = `Paused · Day ${Math.min(SPRINT_DAYS, p + 1)} of ${SPRINT_DAYS}`;
             else if (recommended) status = "Recommended today";
             else status = "Not started";
 

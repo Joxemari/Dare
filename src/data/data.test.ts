@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { DARES } from "./dares";
 import { WILDCARDS } from "./wildcards";
-import { JOURNEYS, MVP_JOURNEYS, MVP_JOURNEY_IDS, isMvpJourney, totalMilestones, chapterCompleted, unlockedChapterCount, currentChapter, nextAction, SPRINT_DAYS } from "./journeys";
+import { JOURNEYS, MVP_JOURNEYS, MVP_JOURNEY_IDS, isMvpJourney, totalMilestones, journeyMilestoneIds, todaysDayPlan, chapterCompleted, unlockedChapterCount, currentChapter, nextAction, SPRINT_DAYS } from "./journeys";
 import { SCIENCE, findScience } from "./science";
 import { TRAITS, findTrait } from "./traits";
 import { SYMBOLS, JOURNEY_SYM } from "./symbols";
@@ -251,6 +251,29 @@ describe("MVP — solo 4 Journeys ofrecibles", () => {
     expect(pulse.identity.id).toBe("bright-mover");
     expect(findTrait("bright-mover")).toBeTruthy();
     expect(SYMBOLS[pulse.sym]).toBe("◆");
+  });
+});
+
+describe("plan diario por Journey (Today's plan)", () => {
+  it("todaysDayPlan devuelve el día que toca según el progreso", () => {
+    const iron = JOURNEYS.find((j) => j.id === "iron")!;
+    expect(todaysDayPlan(iron, 0)).toBe(iron.plan[0]); // 0 hechos → Day 1
+    expect(todaysDayPlan(iron, 2)).toBe(iron.plan[2]); // 2 hechos → Day 3
+  });
+
+  it("todaysDayPlan es null cuando el sprint está completo", () => {
+    const iron = JOURNEYS.find((j) => j.id === "iron")!;
+    expect(todaysDayPlan(iron, SPRINT_DAYS)).toBeNull();
+    expect(todaysDayPlan(iron, SPRINT_DAYS + 3)).toBeNull();
+  });
+
+  it("journeyMilestoneIds lista TODOS los ids de milestone del Journey (para cancelar)", () => {
+    const iron = JOURNEYS.find((j) => j.id === "iron")!;
+    const ids = journeyMilestoneIds(iron);
+    const expected = iron.chapters.flatMap((c) => c.milestones.map((m) => m.id));
+    expect(ids).toEqual(expected);
+    expect(ids).toContain("iq-1-letter");
+    expect(new Set(ids).size).toBe(ids.length); // sin duplicados
   });
 });
 

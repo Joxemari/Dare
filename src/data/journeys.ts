@@ -138,12 +138,12 @@ export const JOURNEYS: Journey[] = [
     color: JOURNEY_COLOR.iron,
     tag: "Strength without noise.",
     problem: "I want to feel stronger, but exercise feels boring and mentally heavy.",
-    promise: "Build strength without turning it into another obligation.",
+    promise: "Build real strength in twelve minutes, without the gym or the drama.",
     lesson: "Strength gives your energy somewhere to live.",
-    bias: ["dumbbells", "carry", "tabata", "fitboxing", "padel", "pool"],
+    bias: ["dumbbells", "carry", "tabata", "walk"],
     identity: { id: "quiet-builder", name: "Quiet Builder", line: "Uses strength to create energy." },
     completionLine:
-      "You did not become stronger by doing more. You became stronger by making strength easier to start.",
+      "You didn't get stronger by doing more. You got stronger by making it easy to start, attractive to repeat, and a little harder each time.",
     dreamPrompt: "What would feeling stronger be worth?",
     dreamOptions: [
       { id: "top", emoji: "🎽", label: "New training top" },
@@ -157,74 +157,78 @@ export const JOURNEYS: Journey[] = [
     ],
     chapters: [
       {
-        n: "I", name: "First Weight", sym: "strength", goal: "Remove dumbbell friction.", days: [1, 1],
+        n: "I", name: "The First Two Reps", sym: "strength", goal: "Make starting impossible to refuse.", days: [1, 1],
         milestones: [
-          { id: "iq-1-letter", t: "letter", title: "Strength is not a workout. It is a signal.", body: "Every time you lift, your body gets a message: this system is worth maintaining. You're not chasing a look or burning anything. You're telling your body to keep the lights on. Twelve minutes is enough to send the signal." },
-          { id: "iq-1-action", t: "action", title: "Put your dumbbells where you can see them", action: "text", body: "Out of the cupboard, into the room you live in. Visible weights get lifted. Hidden ones don't." },
-          { id: "iq-1-goal", t: "goal", title: "Complete one 12-minute strength Dare", goalHint: "Check in at home — we'll give you a standing dumbbell Dare." },
-          { id: "iq-1-science", t: "science", title: "Why muscle supports long-term energy", scienceId: "muscle-energy" },
-          { id: "iq-1-proof", t: "proof", title: "I chose strength without drama." },
+          { id: "iq-1-letter", t: "letter", title: "You don't have a discipline problem.", body: "You have a starting problem — and starting is a design problem, not a character flaw. BJ Fogg, who runs Stanford's Behavior Design Lab, built a life-changing habit from two push-ups after each toilet break; the trick was making the action so small refusal made no sense. Wendy Wood's research on habit says the same from the other side: durable behaviour runs on cues in your environment, not daily willpower. So we stop relying on motivation. We shrink the first move until it's laughable, and we let the room do the reminding. Twelve minutes is the session. Two reps is the door." },
+          { id: "iq-1-action", t: "action", title: "Put your weights where you live", action: "text", body: "Out of the cupboard, into the room you actually sit in — beside the sofa, under the TV. A visible weight is a silent cue; a hidden one is a decision you'll keep postponing. Name where they'll live now." },
+          { id: "iq-1-action2", t: "action", title: "Set your two-rep minimum", action: "text", body: "Decide the smallest version that still counts on your worst day: two goblet squats, one carry across the room. This floor never moves and never resets. On good days you'll do far more — but the streak you're protecting is 'I showed up', not 'I crushed it'. Write your minimum." },
+          { id: "iq-1-goal", t: "goal", title: "Complete one 12-minute strength Dare", goalHint: "Check in at home — we'll give you a standing dumbbell Dare. If today is a bad day, your two-rep minimum still closes it." },
+          { id: "iq-1-science", t: "science", title: "How habits actually form", scienceId: "habit-automaticity" },
+          { id: "iq-1-proof", t: "proof", title: "I made strength a decision, not a mood." },
         ],
       },
       {
-        n: "II", name: "Make It Yours", sym: "strong", goal: "Make strength less boring.", days: [2, 3],
+        n: "II", name: "Make It Attractive", sym: "strong", goal: "Bundle strength with something you love.", days: [2, 3],
         milestones: [
-          { id: "iq-2-letter", t: "letter", title: "Strength you'd do anyway", body: "The best training is the kind you'd do anyway. A show you love, a playlist that makes you feel unstoppable, weights within reach. If it doesn't feel like homework, you'll come back. That's the whole strategy." },
-          { id: "iq-2-action", t: "action", title: "Create your Boss Playlist", action: "bossPlaylist", body: "The one that makes you feel unstoppable. Name it, pick the platform, choose the first song. It's the soundtrack to your sets." },
-          { id: "iq-2-goal", t: "goal", title: "Complete one loaded carry Dare", goalHint: "Pick things up and carry them — farmer carries, laps or stairs." },
-          { id: "iq-2-goal2", t: "goal", title: "Complete one strength Dare with your Boss Playlist", goalHint: "Same weights, better soundtrack. Dumbbells or kettlebell at home." },
-          { id: "iq-2-science", t: "science", title: "Why carries build real strength", scienceId: "carries" },
+          { id: "iq-2-letter", t: "letter", title: "Trick yourself on purpose.", body: "James Clear's second law of behaviour change is 'make it attractive'. The cleanest way to do that is temptation bundling: pair the thing you should do with the thing you want. Behavioural economist Katy Milkman tested this by letting people hear page-turner audiobooks only at the gym — attendance jumped. So don't fight the pull of your favourite series. Use it. The next episode is the reward you lift for; the weights are the price of admission. This is why 'Netflix & Iron' beats a grim workout every time — you'll come back for the story." },
+          { id: "iq-2-action", t: "action", title: "Create your Boss Playlist", action: "bossPlaylist", body: "The one that makes you feel unstoppable. Name it, pick the platform, choose the first song. Music you love is shown to lower how hard effort feels — this is the soundtrack that makes a set fly by." },
+          { id: "iq-2-action2", t: "action", title: "Name your temptation bundle", action: "text", body: "Choose one show, podcast or album you'll allow yourself ONLY while training. Guard it — don't watch it on the sofa. Write the title. It becomes the reason you look forward to lifting." },
+          { id: "iq-2-goal", t: "goal", title: "Complete one loaded carry Dare", goalHint: "Pick things up and carry them — farmer carries, laps or stairs. Grip and posture, no floor work." },
+          { id: "iq-2-goal2", t: "goal", title: "Lift once with your bundle running", goalHint: "Same weights, but only press play on your bundled show while you move." },
+          { id: "iq-2-science", t: "science", title: "Bundle the boring with the good", scienceId: "temptation-bundling" },
         ],
       },
       {
-        n: "III", name: "Load the Body", sym: "forge", goal: "Add real stimulus without overwhelm.", days: [4, 5],
+        n: "III", name: "A Little More", sym: "forge", goal: "Add a little more than last time.", days: [4, 5],
         milestones: [
-          { id: "iq-3-letter", t: "letter", title: "Muscle is not a look. It is capacity.", body: "Forget the mirror. Muscle is active tissue that stores energy, supports steady glucose and holds your posture. You're building capacity, not decorating a shelf." },
-          { id: "iq-3-goal", t: "goal", title: "Complete two strength Dares", goalHint: "Two strength or carry Dares this chapter." },
-          { id: "iq-3-goal2", t: "goal", title: "Complete one Strong Dare", goalHint: "When energy is high, take a Strong-level Dare." },
-          { id: "iq-3-motivator", t: "motivator", title: "Strong does not need to be loud", body: "You don't have to grunt, post, or suffer. Quiet, consistent strength outlasts the loud kind every time." },
-          { id: "iq-3-proof", t: "proof", title: "I can carry more than I think." },
+          { id: "iq-3-letter", t: "letter", title: "Muscle is an account you fund now.", body: "Forget the mirror. Dr Gabrielle Lyon calls muscle 'the organ of longevity' — active tissue that holds your posture and plays a role in how steadily you handle glucose. Peter Attia frames it as an account: the strength and muscle you build in your prime is what protects your mobility and independence decades from now. And the mechanism for building it is almost boringly simple — progressive overload, first formalised by physician Thomas DeLorme in 1940s rehab wards: do a little more than last time. One more rep. A slightly heavier weight. A cleaner set. You're not decorating a shelf. You're making deposits." },
+          { id: "iq-3-action", t: "action", title: "Start a lift log", action: "text", body: "One note on your phone: date, move, weight, reps. That's it. What gets measured moves — a log turns 'I should push a bit' into an obvious next number. Write today's lifts down the moment you finish." },
+          { id: "iq-3-goal", t: "goal", title: "Complete two strength Dares this chapter", goalHint: "Two strength or carry Dares — log both." },
+          { id: "iq-3-goal2", t: "goal", title: "Beat your last number by a little", goalHint: "One more rep, a slightly heavier weight, or one cleaner set than your log shows." },
+          { id: "iq-3-motivator", t: "motivator", title: "Strong doesn't need to be loud", body: "No grunting, no posting, no suffering for an audience. Quiet, consistent, progressive strength outlasts the loud kind — because it's built on a system, not a mood. The person who adds one rep a week for a year is unrecognisable. Nobody watched them do it." },
+          { id: "iq-3-science", t: "science", title: "Why grip strength keeps coming up", scienceId: "grip-longevity" },
+          { id: "iq-3-proof", t: "proof", title: "I lifted more than the version of me who started." },
         ],
       },
       {
-        n: "IV", name: "Quiet Power", sym: "dream", goal: "Convert strength into identity.", days: [6, 7],
+        n: "IV", name: "Quiet Power", sym: "dream", goal: "Turn strength into identity.", days: [6, 7],
         milestones: [
-          { id: "iq-4-letter", t: "letter", title: "Quiet power is still power", body: "You didn't become stronger by doing more. You became stronger by making it easier to start. That's a skill that outlasts any program." },
-          { id: "iq-4-goal", t: "goal", title: "Complete your favourite strength-related Dare", goalHint: "Pick the one that gave you the most energy and repeat it." },
-          { id: "iq-4-reflection", t: "reflection", title: "Write one line: what felt stronger?", body: "One line. What feels stronger than a week ago — body, or the ease of starting?" },
+          { id: "iq-4-letter", t: "letter", title: "Every set is a vote.", body: "James Clear's sharpest idea: every action is a vote for the type of person you're becoming. You didn't spend this week chasing a number — you cast six or seven votes for 'someone who trains'. That's identity, and psychologist Albert Bandura showed why it lasts: doing the hard thing and finishing builds self-efficacy, the quiet belief that you can. That belief, not willpower, is what carries a habit through the flat weeks. You're not someone trying to get strong anymore. You're someone who lifts — and has the log to prove it." },
+          { id: "iq-4-goal", t: "goal", title: "Complete your strongest session of the week", goalHint: "Pick the lift that felt best and repeat it — beat one number if you can." },
+          { id: "iq-4-reflection", t: "reflection", title: "Write one line: what got easier?", body: "One line. What's easier than seven days ago — a weight, a rep, or the moment of starting itself? Save it. It's the first entry in who you're becoming." },
           { id: "iq-4-badge", t: "badge", title: "△ Quiet Builder", body: "Uses strength to create energy." },
         ],
       },
     ],
     plan: [
       { day: 1, title: "First Weight", cat: "dumbbells", dareId: "iron-first-weight",
-        dare: "12 min dumbbells: goblet squat, dumbbell row, shoulder press, farmer hold.", soft: "One round only.", bold: "Three full rounds.",
-        trigger: "No gym. Just two weights.", companion: "Netflix.", treat: "Hot shower.", proof: "Chose strength without drama.",
-        scienceTitle: "Muscle tissue and neuromuscular coordination", scienceBody: "Lifting recruits muscle tissue and trains neuromuscular coordination. Regular loading is associated with steadier energy and everyday strength over time." },
+        dare: "12 min dumbbells: goblet squat, dumbbell row, shoulder press, farmer hold.", soft: "Your two-rep minimum only.", bold: "Three full rounds.",
+        trigger: "No gym. Just two weights.", companion: "The show you only watch while lifting.", treat: "Hot shower.", proof: "Made strength a decision, not a mood.",
+        scienceTitle: "Why muscle is the organ of longevity", scienceBody: "Muscle is active tissue, not decoration: it holds your posture and plays a role in how steadily your body handles glucose. Dr Gabrielle Lyon calls it 'the organ of longevity'. Regular loading — even 12 minutes — signals the body to keep it, and is associated with steadier energy and better mobility as you age." },
       { day: 2, title: "Carry Strength", cat: "carry", dareId: "carry-strength",
         dare: "Farmer carry + squats + presses, 12–15 min.", soft: "Carry bags or dumbbells for 3 short rounds.", bold: "Heavier carries, longer distance.",
-        trigger: "Pick things up. Carry them.", companion: "A short podcast.", treat: "Big glass of cold water.", proof: "Carried more than I thought.",
-        scienceTitle: "Grip strength and loaded movement", scienceBody: "Carrying load trains grip and whole-body strength. Grip strength is associated with overall resilience and healthy ageing." },
+        trigger: "Pick things up. Carry them.", companion: "A short podcast.", treat: "Big glass of cold water.", proof: "Carried more than I thought I could.",
+        scienceTitle: "Grip strength and healthy ageing", scienceBody: "Carries train grip, posture and core with no floor work. Grip strength is cheap to measure and, in large cohort studies like the international PURE study, is associated with overall muscular strength and healthier ageing — a marker of the account you're funding now." },
       { day: 3, title: "Boss Playlist Sets", cat: "tabata", dareId: "sweat-eight",
         dare: "8 min standing intervals, 20s on / 10s off, to your Boss Playlist.", soft: "4 min, one move.", bold: "12 min, two-move rounds.",
-        trigger: "Boss playlist. Eight minutes.", companion: "Your Boss Playlist.", treat: "Cold drink.", proof: "Trained with intensity, not boredom.",
-        scienceTitle: "Music and perceived effort", scienceBody: "Music you love can lower perceived effort, so a hard set feels more doable. The effort is the same; the brain just negotiates less." },
+        trigger: "Boss playlist. Eight minutes.", companion: "Your Boss Playlist.", treat: "Cold drink.", proof: "Let the music carry the hard part.",
+        scienceTitle: "Music, effort and temptation bundling", scienceBody: "Music you love is shown to lower perceived effort — a hard set feels more doable, though the physical work is the same. Pair that with temptation bundling (Katy Milkman's research): reserving a favourite playlist for training is associated with showing up more often." },
       { day: 4, title: "One Weight Flow", cat: "dumbbells", dareId: "kettlebell-flow",
-        dare: "14 min flow: swings, goblet squats, presses with one weight.", soft: "Two easy rounds.", bold: "Four rounds, heavier.",
-        trigger: "No gym. Just one weight.", companion: "Podcast or playlist.", treat: "Protein-rich snack.", proof: "Moved one weight with control.",
-        scienceTitle: "Loaded hinge and full-body strength", scienceBody: "Hip-hinge movements like swings train the strong muscles of the back and legs, and loaded full-body work is associated with steadier everyday energy over time." },
+        dare: "14 min flow: swings, goblet squats, presses with one weight. Log it.", soft: "Two easy rounds.", bold: "Four rounds, heavier.",
+        trigger: "No gym. Just one weight.", companion: "Podcast or playlist.", treat: "Protein-rich snack.", proof: "Added a little more than last time.",
+        scienceTitle: "Progressive overload — a little more than last time", scienceBody: "Getting stronger runs on one principle: progressive overload, formalised by physician Thomas DeLorme in the 1940s. Adding a rep, a little load, or a cleaner set over weeks is associated with steady gains and is gentler on motivation than big jumps. A quick lift log makes the next small step obvious." },
       { day: 5, title: "Loaded Walk", cat: "walk", dareId: "stair-climb",
         dare: "12 min: stairs or a brisk walk carrying something with intent.", soft: "One steady climb, then home.", bold: "Add a loaded backpack.",
-        trigger: "Take the stairs on purpose.", companion: "One driving song.", treat: "Coffee in the sun.", proof: "Used the climb as fuel.",
-        scienceTitle: "Everyday load and energy", scienceBody: "Climbing and carrying use large muscle groups and raise heart rate gently — a low-friction way to build capacity that carries into daily life." },
+        trigger: "Take the stairs on purpose.", companion: "One driving song.", treat: "Coffee in the sun.", proof: "Turned an ordinary climb into training.",
+        scienceTitle: "Everyday load beats the elevator", scienceBody: "Climbing and loaded walking recruit the large muscles of the legs and hips and raise heart rate gently — a near-frictionless way to add strength and capacity that transfers straight into daily life. The best training is often the kind you barely schedule." },
       { day: 6, title: "Active Recovery", cat: "recovery",
         dare: "10 min standing mobility, or light dumbbells with no intensity.", soft: "7 min neck, shoulders, hips.", bold: "Full mobility flow.",
-        trigger: "Recovery is still training.", companion: "Soft playlist.", treat: "Early night ritual.", proof: "Recovered without stopping.",
-        scienceTitle: "HRV and nervous system recovery", scienceBody: "Easy movement and rest support heart rate variability, a marker associated with a well-recovered nervous system." },
+        trigger: "Recovery is still training.", companion: "Soft playlist.", treat: "Early night ritual.", proof: "Let the strength settle in.",
+        scienceTitle: "You get stronger between sessions", scienceBody: "Muscle adapts during recovery, not only during effort. Easy movement and genuine rest support heart rate variability, a marker associated with a well-recovered nervous system — and a recovered body is one that shows up again tomorrow." },
       { day: 7, title: "Quiet Power", cat: "dumbbells", chapter: true, dream: true,
-        dare: "Your strongest session of the week: dumbbells, kettlebell or carries.", soft: "The easiest version of it.", bold: "The strongest version you've done.",
-        trigger: "Choose your strongest proof.", companion: "Best companion.", treat: "Dream Reward unlock.", proof: "Became someone who trains strength.",
-        scienceTitle: "Self-efficacy", scienceBody: "Choosing and completing your own strength Dare builds self-efficacy, which is associated with continuing a habit long after a program ends." },
+        dare: "Your strongest session of the week: dumbbells, kettlebell or carries. Beat one number.", soft: "The easiest version of it.", bold: "The strongest version you've done.",
+        trigger: "Cast one more vote.", companion: "Best companion.", treat: "Dream Reward unlock.", proof: "Became someone who lifts — and has the log to prove it.",
+        scienceTitle: "Identity and self-efficacy", scienceBody: "James Clear frames every rep as a vote for who you're becoming; Albert Bandura's work on self-efficacy explains why it sticks — doing the hard thing and finishing builds the quiet belief that you can, and that belief carries a habit long after any plan ends." },
     ],
   },
 
@@ -893,6 +897,21 @@ export function nextAction(j: Journey, done: Record<string, boolean>): string {
 /** Total de milestones de un Journey (para el % de completion). */
 export function totalMilestones(j: Journey): number {
   return j.chapters.reduce((n, c) => n + c.milestones.length, 0);
+}
+
+/** Todos los ids de milestone de un Journey (para limpiar al cancelar). Puro. */
+export function journeyMilestoneIds(j: Journey): string[] {
+  return j.chapters.flatMap((c) => c.milestones.map((m) => m.id));
+}
+
+/**
+ * El día del plan que toca HOY según los días completados (`daysDone`). Puro.
+ * `daysDone` es el índice 0-based del progreso: con 0 hechos, hoy es plan[0]
+ * (Day 1). Si el sprint está completo (daysDone >= 7), devuelve null.
+ */
+export function todaysDayPlan(j: Journey, daysDone: number): DayPlan | null {
+  if (daysDone >= j.plan.length) return null;
+  return j.plan[daysDone] ?? null;
 }
 
 /* ---- Variantes de dificultad de un día (spec: ◌ Soft / ◆ Real / ⟁ Bold) ---- */

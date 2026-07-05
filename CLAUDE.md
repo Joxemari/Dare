@@ -224,9 +224,29 @@ ficha de ciencia del día a Today.
 onboarding lleva a Today sin activar nada. Un Journey se empieza pulsando
 "Begin Journey" en la pestaña Journey (`startJourney` → si falta Dream Reward,
 su setup primero). Pueden estar **varios activos a la vez**
-(`store.activeJourneyIds`): arrancar uno no detiene otro; Today ofrece una lane
-("Choose your lane") si hay más de uno. El progreso/completion de un Journey
-solo cuenta si está activo.
+(`store.activeJourneyIds`): arrancar uno no detiene otro. El progreso/completion
+de un Journey solo cuenta si está activo.
+
+**Ciclo de vida: launch · pause · resume · cancel** (acciones del hook). *Begin*
+activa (`activateJourney`, sella `journeyStartedAt`). *Pause* (`pauseJourney`)
+lo saca de `activeJourneyIds` pero **conserva** progreso, milestones y Dream
+Reward → reanudable. *Resume* (`resumeJourney`) lo devuelve a activos sin tocar
+nada. *Cancel* (`cancelJourney`) **resetea el sprint**: progreso a 0, borra los
+milestones del Journey (`journeyMilestoneIds`), lo saca de completados y borra
+`journeyStartedAt` (conserva el Dream Reward). "Pausado" se distingue de "sin
+empezar" por la presencia de `journeyStartedAt`. Los controles viven en la
+pantalla Journey (Pause/Cancel activo; Resume/Cancel pausado, con confirmación
+inline para cancelar); el picker muestra el estado ("Paused · Day N of 7").
+
+**Today's plan (acción prescrita del día).** Con Journeys activos, Today lista
+para cada uno la **acción de HOY** del plan (`todaysDayPlan(j, daysDone)` →
+`plan[daysDone]`, o null si el sprint está completo): "Day N · título" + un botón
+que lanza el Dare prescrito de ese día directamente al Detail
+(`startJourneyDay`, pone el Journey en foco para que completar avance SU sprint;
+si el día no fija `dareId`, cae al check-in). Así se ve de un vistazo qué toca
+hoy de cada Journey en marcha (p. ej. fuerza de Iron Quiet + respiración de Still
+Water). Con más de uno, sube y marca (`· today`) el recomendado por el check-in
+("choose your lane").
 
 **Capítulos por COMPLETADO, no por calendario** (`chapterState` /
 `unlockedChapterCount` / `currentChapter` en `journeys.ts`): el capítulo I nace

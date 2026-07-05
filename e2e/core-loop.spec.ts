@@ -112,7 +112,7 @@ test("Journey: Begin explícito, milestones accionables + tabs Progress/You", as
   await page.getByRole("button", { name: "✕" }).click();
 
   // abrir un milestone (Letter) y completarlo — arregla el "Start" muerto
-  await page.getByText("Strength is not a workout. It is a signal.").click();
+  await page.getByText("You don't have a discipline problem.").click();
   await expect(page.getByRole("button", { name: "Mark as read" })).toBeVisible();
   await page.getByRole("button", { name: "Mark as read" }).click();
 

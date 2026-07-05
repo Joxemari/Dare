@@ -147,6 +147,41 @@ export const SCIENCE: Science[] = [
     evidence: "Moderate",
     effects: { Mood: 1, Confidence: 1 },
   },
+  {
+    id: "habit-automaticity",
+    category: "How habits form",
+    title: "How habits actually form",
+    text: "Habits form through repetition in a stable context, not through willpower. In a well-known University College London study (Lally et al., 2010), new daily behaviours took a median of about 66 days to feel automatic — and missing the occasional day did not break the process. Behavioural scientists like Wendy Wood argue that most durable habits run on cues in your environment, which is why a visible weight and a fixed anchor beat any burst of motivation.",
+    evidence: "Moderate",
+    effects: { Confidence: 2, Energy: 1 },
+    longTerm: "Anchoring a lift to an existing daily cue is associated with it surviving long after motivation fades.",
+  },
+  {
+    id: "temptation-bundling",
+    category: "Making it attractive",
+    title: "Bundle the boring with the good",
+    text: "Temptation bundling pairs something you should do with something you want. In a study led by behavioural economist Katy Milkman, people who could only listen to gripping audiobooks while at the gym went noticeably more often. Linking your strength minutes to a show, podcast or playlist you genuinely enjoy is associated with showing up more — the effort feels borrowed against a reward you already like.",
+    evidence: "Moderate",
+    effects: { Mood: 2, Energy: 1 },
+  },
+  {
+    id: "progressive-overload",
+    category: "Progressive overload",
+    title: "A little more than last time",
+    text: "Muscle adapts to demand. Progressive overload — adding a little load, a rep, or a set over weeks — is the core principle behind getting stronger, first described in rehab work with Thomas DeLorme in the 1940s. Small, trackable increases are associated with steady progress and are far gentler on motivation than big jumps. What gets measured tends to move: a simple lift log makes the next small step obvious.",
+    evidence: "Strong",
+    effects: { Strength: 3, Confidence: 1, Energy: 1 },
+    longTerm: "Gradual, recorded increases in load are associated with lasting gains in strength and muscle.",
+  },
+  {
+    id: "grip-longevity",
+    category: "Strength and healthy ageing",
+    title: "Why grip strength keeps coming up",
+    text: "Grip strength is cheap to measure and, in large cohort studies (including the international PURE study), is associated with overall muscular strength and healthier ageing. It is a marker, not a magic cause — but carries, rows and holds build it almost for free. Physicians like Peter Attia frame strength and muscle as a long-term 'account' you fund now: what you build in your prime is what protects mobility and independence decades later.",
+    evidence: "Moderate",
+    effects: { Strength: 3, Confidence: 2 },
+    longTerm: "Higher strength in midlife is associated with better mobility and independence in later life.",
+  },
 ];
 
 export function findScience(id: string | undefined | null): Science | undefined {
