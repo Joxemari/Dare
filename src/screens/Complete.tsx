@@ -81,29 +81,17 @@ export function Complete({ app }: { app: DareApp }) {
                   <p className="lbl" style={{ color: t.color, marginBottom: 10 }}>
                     {SYMBOLS.treat} {t.label}
                   </p>
-                  <p className="serif" style={{ fontSize: 22, lineHeight: 1.3 }}>
+                  <p className="serif" style={{ fontSize: 22, lineHeight: 1.3, marginBottom: 12 }}>
                     {treat.text}
+                  </p>
+                  {/* celebración + qué es el treat: se ganó al terminar el Dare */}
+                  <p style={{ fontSize: 12.5, lineHeight: 1.55, color: C.dim }}>
+                    You earned this. A small, real reward for finishing today's dare — enjoy it
+                    {golden ? ", this one's rare." : " without guilt."}
                   </p>
                 </div>
               )
             )}
-
-            {/* energy feedback */}
-            {treatFlipped &&
-              (app.showPendingFb ? null : app.fbNote ? (
-                <p style={{ fontSize: 12.5, color: C.dim, marginBottom: 22 }}>Noted. This shapes tomorrow's dare.</p>
-              ) : (
-                <div className="card" style={{ padding: 18, marginBottom: 24, maxWidth: 320, margin: "0 auto 24px" }}>
-                  <p style={{ fontSize: 14.5, marginBottom: 12 }}>More energy than before?</p>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                    {([["Much more", 2], ["A little more", 1], ["Same", 0], ["Less", -1]] as const).map(([lbl, v]) => (
-                      <button key={lbl} className="pill" onClick={() => app.giveFeedback(v)}>
-                        {lbl}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
 
             <button className="btn btn-ghost" onClick={() => app.setScreen("home")}>
               Back home

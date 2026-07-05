@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { C } from "../data/colors";
 import { SYMBOLS } from "../data/symbols";
-import { MS_T, chapterState, milestoneProgress, nextMilestone, SPRINT_DAYS } from "../data/journeys";
+import { MS_T, chapterState, milestoneProgress, nextMilestone, milestoneUnlocked, SPRINT_DAYS } from "../data/journeys";
 import { Ico } from "../components/Ico";
 import { Nav } from "../components/Nav";
 import { MilestoneModal } from "../components/MilestoneModal";
@@ -53,7 +53,11 @@ export function Journey({ app }: { app: DareApp }) {
               <p className="serif" style={{ fontStyle: "italic", fontSize: 16, color: C.dim, marginBottom: 18 }}>
                 "{journey.lesson}"
               </p>
-              <button className="btn btn-green" onClick={() => app.startJourney(journey.id)}>
+              <button
+                className="btn"
+                style={{ background: journey.color, color: "#111" }}
+                onClick={() => app.startJourney(journey.id)}
+              >
                 Begin Journey {SYMBOLS.spark}
               </button>
               <p style={{ fontSize: 11.5, color: C.faint, marginTop: 10, textAlign: "center" }}>
@@ -69,7 +73,11 @@ export function Journey({ app }: { app: DareApp }) {
               <p style={{ fontSize: 14, lineHeight: 1.55, color: C.dim, marginBottom: 18 }}>
                 Your progress is saved. Pick up exactly where you left off.
               </p>
-              <button className="btn btn-green" onClick={() => app.resumeJourney(journey.id)}>
+              <button
+                className="btn"
+                style={{ background: journey.color, color: "#111" }}
+                onClick={() => app.resumeJourney(journey.id)}
+              >
                 Resume Journey {SYMBOLS.spark}
               </button>
               {confirmCancel ? (
@@ -268,10 +276,16 @@ export function Journey({ app }: { app: DareApp }) {
                   <div className="rise" style={{ margin: "12px 0 4px 76px" }}>
                     {marks.map((m, k) => {
                       const isDone = !!store.milestones[m.id];
+                      // Progresión secuencial: un milestone solo se activa cuando
+                      // todos los anteriores del capítulo están hechos.
+                      const unlocked = milestoneUnlocked(c, k, store.milestones);
+                      const clickable = isDone || unlocked;
                       return (
                         <button
                           key={m.id}
-                          onClick={() => setModal(m)}
+                          onClick={() => clickable && setModal(m)}
+                          disabled={!clickable}
+                          aria-disabled={!clickable}
                           className="card"
                           style={{
                             padding: "12px 14px",
@@ -283,11 +297,12 @@ export function Journey({ app }: { app: DareApp }) {
                             textAlign: "left",
                             fontFamily: "inherit",
                             color: C.text,
-                            cursor: "pointer",
-                            borderColor: isDone ? C.line : journey.color + "44",
+                            cursor: clickable ? "pointer" : "default",
+                            opacity: clickable ? 1 : 0.5,
+                            borderColor: isDone || !unlocked ? C.line : journey.color + "44",
                           }}
                         >
-                          <Ico name={MS_T[m.t].ico} size={16} color={isDone ? C.dim : journey.color} sw={1.4} />
+                          <Ico name={MS_T[m.t].ico} size={16} color={isDone ? C.dim : unlocked ? journey.color : C.faint} sw={1.4} />
                           <div style={{ flex: 1 }}>
                             <p className="lbl" style={{ fontSize: 8, marginBottom: 2 }}>
                               {MS_T[m.t].label} · {k + 1}/{marks.length}
@@ -296,8 +311,10 @@ export function Journey({ app }: { app: DareApp }) {
                           </div>
                           {isDone ? (
                             <Ico name="check" size={14} color={C.green} sw={2} />
-                          ) : (
+                          ) : unlocked ? (
                             <span style={{ fontSize: 12, color: C.coral }}>Start</span>
+                          ) : (
+                            <span style={{ fontSize: 12, color: C.faint }} aria-label="Locked">🔒</span>
                           )}
                         </button>
                       );

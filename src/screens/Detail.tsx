@@ -18,12 +18,6 @@ function dareSummary(d: Dare): string {
   return `A ${d.min}-minute ${CATS[d.cat].label.toLowerCase()} dare — small enough to start now, with no need to finish it perfectly.`;
 }
 
-/** Primera frase de un texto (para mantener corto el "Why this works"). */
-function firstSentence(text: string): string {
-  const i = text.indexOf(". ");
-  return i === -1 ? text : text.slice(0, i + 1);
-}
-
 function Section({ symKey, title, color, children }: { symKey: keyof typeof SECTION_SYM; title: string; color?: string; children: ReactNode }) {
   const glyph = SYMBOLS[SECTION_SYM[symKey]];
   return (
@@ -91,27 +85,15 @@ export function Detail({ app }: { app: DareApp }) {
             <Meta dare={d} />
           </div>
 
-          {/* 1 · What this is — un resumen corto de qué es el Dare (antes: Trigger) */}
+          {/* Orden (spec de review): 1 What this is · 2 Steps · 3 Companion ·
+              4 Why this works · 5 Expected Effect · 6 CTAs. */}
+
+          {/* 1 · What this is — un resumen corto de qué es el Dare */}
           <Section symKey="trigger" title="What this is" color={C.green}>
             <p style={{ fontSize: 14.5, lineHeight: 1.55, color: C.text }}>{dareSummary(d)}</p>
           </Section>
 
-          {/* 2 · Companion — recompensa CONCRETA y DURANTE la acción (temptation
-              bundling): resolveCompanion elige uno concreto rotado por fecha. */}
-          <Section symKey="companion" title={`Companion · ${comp.word}`} color={C.purple}>
-            <p className="serif" style={{ fontSize: 16, color: C.text, marginBottom: 6 }}>{comp.label}</p>
-            <p style={{ fontSize: 13, lineHeight: 1.55, color: C.dim, marginBottom: 8 }}>{comp.note}</p>
-            <p className="lbl" style={{ fontSize: 9, color: C.gold }}>
-              {SYMBOLS.spark} During the dare only — that's the hook.
-            </p>
-          </Section>
-
-          {/* 3 · Expected Effect */}
-          <Section symKey="effect" title="Expected Effect" color={C.green}>
-            <Effects effects={d.effects} />
-          </Section>
-
-          {/* 4 · Steps — el Trigger es el primer paso práctico */}
+          {/* 2 · Steps — el Trigger es el primer paso práctico */}
           <Section symKey="steps" title="Steps">
             {steps.map((s, i) => (
               <div
@@ -130,19 +112,35 @@ export function Detail({ app }: { app: DareApp }) {
             ))}
           </Section>
 
-          {/* 5 · Why this works — ciencia + porqué, fusionados y cortos. Es la
-                última explicación antes de comprometerse: va justo encima de
-                "Start dare" (cumple el spec: primero la acción, luego el porqué). */}
+          {/* 3 · Companion — recompensa CONCRETA y DURANTE la acción (temptation
+              bundling): resolveCompanion elige uno concreto y coherente con la
+              actividad (filtra por la categoría del Dare), rotado por fecha. */}
+          <Section symKey="companion" title={`Companion · ${comp.word}`} color={C.purple}>
+            <p className="serif" style={{ fontSize: 16, color: C.text, marginBottom: 6 }}>{comp.label}</p>
+            <p style={{ fontSize: 13, lineHeight: 1.55, color: C.dim }}>{comp.note}</p>
+          </Section>
+
+          {/* 4 · Why this works — el porqué + la ciencia COMPLETA (química,
+                comportamiento, efecto a largo plazo): es la explicación de peso
+                antes de comprometerse. Lenguaje prudente (ver science.ts). */}
           <Section symKey="why" title="Why this works" color={C.gold}>
             <p style={{ fontSize: 14, lineHeight: 1.55, color: C.text }}>{why}</p>
             {science && (
-              <p style={{ fontSize: 13, lineHeight: 1.55, color: C.dim, marginTop: 8 }}>
-                {firstSentence(science.text)}
-              </p>
+              <>
+                <p style={{ fontSize: 13.5, lineHeight: 1.6, color: C.dim, marginTop: 10 }}>{science.text}</p>
+                {science.longTerm && (
+                  <p style={{ fontSize: 13, lineHeight: 1.6, color: C.faint, marginTop: 8 }}>{science.longTerm}</p>
+                )}
+              </>
             )}
           </Section>
 
-          {/* 6 · Start dare — inmediatamente después de "Why this works". */}
+          {/* 5 · Expected Effect */}
+          <Section symKey="effect" title="Expected Effect" color={C.green}>
+            <Effects effects={d.effects} />
+          </Section>
+
+          {/* 6 · Start dare — CTA principal, tras el porqué. */}
           <button className="btn btn-green" style={{ marginTop: 6 }} onClick={() => app.startDare()}>
             Start dare
           </button>

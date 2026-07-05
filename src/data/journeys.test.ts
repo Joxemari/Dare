@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { dayVariants, defaultVariant, VARIANT_SYM } from "./journeys";
+import { dayVariants, defaultVariant, VARIANT_SYM, milestoneUnlocked } from "./journeys";
 import { SYMBOLS } from "./symbols";
-import type { DayPlan } from "../types";
+import type { Chapter, DayPlan } from "../types";
 
 const base: DayPlan = { day: 1, title: "T", cat: "walk" };
 
@@ -30,5 +30,31 @@ describe("dayVariants / defaultVariant", () => {
     expect(defaultVariant({ ...base, soft: "s", dare: "r", bold: "b" })).toBe("real");
     expect(defaultVariant({ ...base, soft: "s", bold: "b" })).toBe("soft");
     expect(defaultVariant({ ...base, bold: "b" })).toBe("bold");
+  });
+});
+
+describe("milestoneUnlocked (progresión secuencial dentro del capítulo)", () => {
+  const ch: Chapter = {
+    n: "I",
+    name: "C",
+    sym: "spark",
+    goal: "g",
+    days: [1, 1],
+    milestones: [
+      { id: "m1", t: "letter", title: "1" },
+      { id: "m2", t: "goal", title: "2" },
+      { id: "m3", t: "goal", title: "3" },
+    ],
+  };
+
+  it("el primer milestone siempre está desbloqueado", () => {
+    expect(milestoneUnlocked(ch, 0, {})).toBe(true);
+  });
+
+  it("un milestone está bloqueado hasta completar TODOS los anteriores", () => {
+    expect(milestoneUnlocked(ch, 1, {})).toBe(false);
+    expect(milestoneUnlocked(ch, 1, { m1: true })).toBe(true);
+    expect(milestoneUnlocked(ch, 2, { m1: true })).toBe(false);
+    expect(milestoneUnlocked(ch, 2, { m1: true, m2: true })).toBe(true);
   });
 });

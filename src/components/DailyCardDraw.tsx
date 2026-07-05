@@ -24,7 +24,7 @@ export function DailyCardDraw({ app }: { app: DareApp }) {
           TODAY'S CARD
         </p>
         <button
-          onClick={() => app.setScreen("card")}
+          onClick={() => app.openSavedCard()}
           aria-label={`View today's card: ${card.name}`}
           style={{
             display: "flex",
@@ -70,6 +70,8 @@ export function DailyCardDraw({ app }: { app: DareApp }) {
             style={{ aspectRatio: "5 / 8.5", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}
             onClick={() => {
               cardRevealFeedback();
+              // Sacada desde You → al continuar vuelve a You (no a Home).
+              app.setCardReturn("you");
               app.pickCard(c.id);
             }}
             aria-label="Face-down daily card"

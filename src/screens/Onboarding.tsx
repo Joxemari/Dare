@@ -1,6 +1,7 @@
 import { C } from "../data/colors";
 import { SYMBOLS } from "../data/symbols";
 import { wrap } from "../components/layout";
+import { Wordmark } from "../components/Wordmark";
 import type { DareApp } from "../lib/useDare";
 
 /* Onboarding — 2 pantallas visuales (antes 4). Entrar en un ritual,
@@ -11,21 +12,21 @@ function Screen1({ app }: { app: DareApp }) {
     <div
       style={{ ...wrap, justifyContent: "space-between", padding: "72px 32px 48px", textAlign: "center" }}
     >
-      {/* símbolo grande con glow verde / horizonte */}
+      {/* marca DARE (logo + wordmark + eslogan) con glow verde / horizonte */}
       <div style={{ position: "relative", display: "flex", justifyContent: "center", marginTop: 20 }}>
         <div
           style={{
             position: "absolute",
-            width: 220,
-            height: 220,
+            width: 240,
+            height: 240,
             borderRadius: "50%",
             background: `radial-gradient(circle, ${C.green}22 0%, transparent 70%)`,
-            top: -70,
+            top: -60,
           }}
         />
-        <span className="pulse" style={{ color: C.green, fontSize: 64, position: "relative" }}>
-          {SYMBOLS.spark}
-        </span>
+        <div className="pulse" style={{ position: "relative" }}>
+          <Wordmark size="lg" />
+        </div>
       </div>
 
       <div className="rise">

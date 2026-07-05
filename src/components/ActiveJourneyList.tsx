@@ -78,7 +78,7 @@ function ActiveJourneyRow({ app, journey, recommended }: { app: DareApp; journey
           style={{ width: "auto", padding: "8px 16px", fontSize: 12.5, flexShrink: 0, borderColor: journey.color + "66", color: journey.color }}
           onClick={() => app.startJourneyDay(journey.id)}
         >
-          Start
+          Continue
         </button>
       )}
     </div>
@@ -86,18 +86,13 @@ function ActiveJourneyRow({ app, journey, recommended }: { app: DareApp; journey
 }
 
 export function ActiveJourneyList({ app }: { app: DareApp }) {
-  const { activeJourneys, recommendedJourneyId } = app;
-  const multiple = activeJourneys.length > 1;
-  // Con varios Journeys activos, sube el recomendado de hoy al principio ("Choose your lane").
-  const ordered = multiple
-    ? [...activeJourneys].sort((a, b) =>
-        a.id === recommendedJourneyId ? -1 : b.id === recommendedJourneyId ? 1 : 0,
-      )
-    : activeJourneys;
+  const { activeJourneys } = app;
+  // Con varios Journeys activos NO se destaca ni preselecciona ninguno: cada
+  // uno lista su propia acción de hoy y el usuario elige (sin "· today").
   return (
     <div style={{ marginTop: 26 }}>
       <p className="lbl" style={{ marginBottom: 12, color: C.dim }}>
-        {activeJourneys.length === 0 ? "Active Journeys" : multiple ? "Today's plan · choose your lane" : "Today's plan"}
+        {activeJourneys.length === 0 ? "Active Journeys" : "Today's plan"}
       </p>
       {activeJourneys.length === 0 ? (
         <div className="card" style={{ padding: 20, textAlign: "center" }}>
@@ -107,9 +102,7 @@ export function ActiveJourneyList({ app }: { app: DareApp }) {
           </button>
         </div>
       ) : (
-        ordered.map((j) => (
-          <ActiveJourneyRow key={j.id} app={app} journey={j} recommended={multiple && j.id === recommendedJourneyId} />
-        ))
+        activeJourneys.map((j) => <ActiveJourneyRow key={j.id} app={app} journey={j} />)
       )}
     </div>
   );

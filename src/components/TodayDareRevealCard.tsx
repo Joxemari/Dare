@@ -27,7 +27,7 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
         <p className="serif" style={{ fontSize: 22, marginBottom: 16 }}>
           Done for today.
         </p>
-        <button className="link" onClick={() => app.setScreen("checkin")}>
+        <button className="link" onClick={() => app.anotherQuickDare()}>
           Another dare {SYMBOLS.spark}
         </button>
       </div>
@@ -54,7 +54,7 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
           Start now
         </button>
         <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 14 }}>
-          <button className="link" onClick={() => app.anotherDare()}>
+          <button className="link" onClick={() => app.anotherQuickDare()}>
             Another dare
           </button>
           <button className="link" style={{ color: C.faint }} onClick={() => app.setScreen("detail")}>

@@ -1,0 +1,60 @@
+import { C } from "../data/colors";
+import { SYMBOLS } from "../data/symbols";
+
+/* ============================================================
+   Wordmark — la marca de DARE: el glifo sparkle ✦ sobre el
+   logotipo "DARE" (muy espaciado) y, opcional, el eslogan
+   "Daily Actions. Real Energy.". Presentacional puro; se reutiliza
+   en el Splash de apertura, en el Onboarding y en el masthead de
+   Today. El glifo es decorativo (aria-hidden); el logotipo lleva
+   role/aria-label para lectores.
+   ============================================================ */
+export function Wordmark({
+  size = "md",
+  tagline = true,
+  glyphColor = C.green,
+}: {
+  size?: "sm" | "md" | "lg";
+  tagline?: boolean;
+  glyphColor?: string;
+}) {
+  const glyph = size === "lg" ? 46 : size === "sm" ? 22 : 32;
+  const word = size === "lg" ? 30 : size === "sm" ? 15 : 21;
+  const gap = size === "lg" ? "0.42em" : "0.34em";
+
+  return (
+    <div style={{ textAlign: "center", lineHeight: 1 }}>
+      <div aria-hidden="true" style={{ color: glyphColor, fontSize: glyph, marginBottom: size === "lg" ? 14 : 8 }}>
+        {SYMBOLS.spark}
+      </div>
+      <div
+        role="img"
+        aria-label="DARE"
+        style={{
+          fontFamily: "var(--font-sans)",
+          fontWeight: 400,
+          fontSize: word,
+          letterSpacing: gap,
+          // El tracking añade espacio a la derecha de la última letra: lo
+          // compensamos para que el bloque quede ópticamente centrado.
+          textIndent: gap,
+          color: C.text,
+        }}
+      >
+        DARE
+      </div>
+      {tagline && (
+        <p
+          style={{
+            fontSize: size === "lg" ? 12.5 : 11,
+            color: C.green,
+            marginTop: size === "lg" ? 14 : 10,
+            letterSpacing: "0.02em",
+          }}
+        >
+          Daily Actions. Real Energy.
+        </p>
+      )}
+    </div>
+  );
+}

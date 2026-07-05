@@ -117,13 +117,19 @@ src/
                                service worker. Impuro; no se testea.
   components/  Presentacionales: Ico, TarotArt, Dots, Nav, Meta, Effects,
                MilestoneModal, ShareCardButton, PlanForLater, layout;
-               DailyCardDraw (card pull del día, vive en You); y los de Today:
-               TodayHeader (masthead: fecha+saludo+capítulo), TodayDareRevealCard,
+               Wordmark (la marca: glifo ✦ + "DARE" + eslogan; se reutiliza en
+               Splash, Onboarding y el masthead de Today); DailyCardDraw (card
+               pull del día, vive en You); y los de Today: TodayHeader (masthead:
+               marca + fecha + saludo inspirador con glow), TodayDareRevealCard,
                PlannedDueList, ActiveJourneyList.
-  screens/     Pantallas (Onboarding, Dream, Reentry, Home, Card, Checkin,
+  screens/     Pantallas (Splash, Onboarding, Dream, Reentry, Home, Card, Checkin,
                Detail, Timer, Complete, JourneyComplete, Journey, Journeys,
                Progress, You). Consumen el hook.
-  App.tsx      "Router" por estado: decide qué pantalla mostrar.
+               Splash: pantalla oscura de apertura con la marca (crece + shine),
+               transitoria (~1.7s) SOLO tras el onboarding y con motion normal;
+               el gate (showSplash) vive en App.tsx, no se persiste y respeta
+               prefers-reduced-motion.
+  App.tsx      "Router" por estado: decide qué pantalla mostrar (+ gate del Splash).
 ```
 
 ### Today — ritual diario mínimo (no dashboard)
@@ -133,14 +139,16 @@ acción en las esquinas** (el perfil vive en la pestaña **You** del nav inferio
 Principio: **UNA acción evidente al abrir**, cero adornos compitiendo arriba (el
 manifiesto es *"one decision removed, one action begun"*). De arriba a abajo:
 
-1. **Masthead** (`TodayHeader`): un encabezado de CONTEXTO, no una acción —
-   **fecha** ("SUNDAY 5 JULY", `formatDayLabel`), **saludo** por franja horaria
-   ("Good morning/afternoon/evening", `greetingFor(hour)`, ambos puros en
-   `lib/date.ts`) + *"One dare today."*, y —SOLO si estás **embarcado** en un
-   Journey (`isJourneyActive`)— la línea del **capítulo en curso** ("THE EMBER ·
-   CHAPTER II — …", en el color del Journey). El único glifo es decorativo
-   (`aria-hidden`), no un icono-acción. Da calidez/orientación sin competir con
-   el Dare (por eso vuelve, a diferencia de la carta/briefing que sí eran CTAs).
+1. **Masthead** (`TodayHeader`): un encabezado de CONTEXTO, no una acción, pero
+   **inspirador** — la **marca** (`Wordmark`: glifo + "DARE" + *"Daily Actions.
+   Real Energy."*), un pequeño **hero con glow de horizonte** (glifo decorativo,
+   `aria-hidden`), la **fecha** ("SUNDAY 5 JULY", `formatDayLabel`) y un titular
+   serif: **saludo** por franja horaria ("Good morning/afternoon/evening",
+   `greetingFor(hour)`, ambos puros en `lib/date.ts`) + *"Today is yours."* +
+   *"Small steps. Real energy."*. Ya **NO** muestra la línea del capítulo del
+   Journey: el estado de cada Journey vive abajo, en *"Today's plan"*
+   (`ActiveJourneyList`), para no duplicarlo. Da calidez/orientación sin competir
+   con el Dare.
 2. **Your Dare** como HÉROE (`TodayDareRevealCard`).
 3. La lista de **Planned Dares vencidos** (`PlannedDueList`) y `ActiveJourneyList`.
 
@@ -157,8 +165,10 @@ entrar en la pantalla del Dare; ayuda: *"Skips the questions. Uses what we
 know."*). Flujo afinado: Your Dare → *Start check-in* → `Checkin` → *Get my dare*
 → Detail → Start. Flujo rápido: Your Dare → *Just dare me* → Dare revelado inline
 → Start. En el hook: `runCheckin` (desde `Checkin`, navega a Detail) y
-`quickDareMe` (aleatorio, `navigate:"home"` → inline); `anotherDare` **rechaza**
-el actual (no repetir pronto) y abre el `Checkin`.
+`quickDareMe` (aleatorio, `navigate:"home"` → inline). **"Another dare" en el
+flujo rápido es IGUAL de aleatorio** (`anotherQuickDare`: rechaza el actual —si
+no está completado— y vuelve a generar al instante SIN check-in); `anotherDare`
+(rechazar + abrir `Checkin`) queda disponible pero ya sin UI que lo invoque.
 
 **El check-in es CORTO a propósito** (tres preguntas + una): **Energy** (1-10) ·
 **Time available** · **Where are you right now?** · **Mental state**. La pregunta
@@ -265,8 +275,20 @@ nuevo), *identity* ("Hot Walk Mode", "Strong Woman Mode", "Boxing Girl Mode").
 Reparto (regla del repo): el **catálogo** y la config de vibes viven en
 `data/companions.ts`; la **lógica** (clasificar, resolver, ROTAR por fecha, sesgar
 el generador) en `lib/companions.ts` (puro, testeado); la **UI** (chip + label +
-nota + regla "during only") solo presenta. `resolveCompanion` elige un companion
-concreto y accionable rotándolo por fecha para no aburrir.
+nota) solo presenta. `resolveCompanion` elige un companion concreto y accionable
+(coherente con la actividad: filtra por la categoría del Dare) rotándolo por
+fecha para no aburrir.
+
+**Orden del detalle del Dare** (`screens/Detail.tsx`): **What this is → Steps →
+Companion → Why this works → Expected Effect → CTAs**. El Companion ya **no**
+lleva la línea "during only — that's the hook" (se retiró por ruido); *"Why this
+works"* muestra el porqué **+ la ficha de ciencia COMPLETA** (`science.text` +
+`longTerm`, química/comportamiento/largo plazo), no solo la primera frase. En el
+Timer (*"On the move"*) el companion tampoco lleva esa línea, y se listan
+**todos** los pasos (no solo el primero), cabiendo en una pantalla sin scroll.
+La completion (`Complete`) ya **no** pregunta "More energy than before?" (se
+retiró; el Treat revelado añade un texto de celebración). "Plan for later" ya no
+ofrece "Add to Journey".
 
 **Vibe del check-in** (`CompanionVibe`, watch/listen/talk/elsewhere/aesthetic/
 social/brutal/surprise): `vibeBonus` sesga el generador hacia esa familia de
@@ -295,7 +317,14 @@ Cada Journey es un sprint de 7 días con un `plan` (día 1..7) y 4 chapters, cad
 chapter con `days:[from,to]` y `milestones` tipados de **id estable**. Tipos de
 milestone: `letter/goal/action/motivator/science/proof/reflection/badge`. Los
 milestones son accionables (modal `MilestoneModal`): cada tipo tiene su CTA real
-y persiste en `store.milestones`.
+y persiste en `store.milestones`. **Cada chapter de los 4 Journeys del MVP tiene
+al menos 2 `goal` (Dares)** — se hacen dos activaciones por capítulo, no una.
+Los milestones de un chapter se completan **en orden** (`milestoneUnlocked(c,
+index, done)` en `journeys.ts`, puro y testeado): un milestone solo se activa
+("Start") cuando TODOS los anteriores del mismo chapter están hechos; los
+posteriores aparecen bloqueados (🔒). El CTA **"Take me to my Dare"** de un
+milestone `goal` lanza un Dare **concreto del Journey en foco**
+(`startJourneyDay`, coherente con el journey), **sin pedir check-in**.
 
 **MVP: 4 Journeys ofrecibles** — DARE es **physical-energy-first**: el objetivo
 es ayudar a construir el hábito de moverse (fuerza, cardio, aire libre,
@@ -512,8 +541,10 @@ del repo (puro vs. frontera):
   minuto mientras la app está viva**; al disparar, construye el recordatorio con
   `buildReminder` y sella **solo** el `lastShown` de la franja avisada (dedupe
   diario por franja). Ya NO expone un `briefing` derivado (no hay widget).
-- **`src/screens/You.tsx`** — la sección **"Daily reminder"** (toggle + **dos
-  horas**, mañana/tarde + estado del permiso).
+- **`src/screens/You.tsx`** — la sección **"Daily notification"** (toggle + **dos
+  horas**, mañana/tarde + estado del permiso). La nota de límite honesto
+  ("Delivered while DARE is open… needs a server — coming later") se retiró de la
+  UI (queda documentada aquí abajo); se reintroducirá al lanzar con backend.
 
 **Límite honesto (sin backend):** es un recordatorio **LOCAL**, fiable mientras la
 pestaña vive. El **push con la app cerrada** exige servidor push + VAPID → queda

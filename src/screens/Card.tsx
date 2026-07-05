@@ -19,15 +19,17 @@ const prefersReducedMotion = () =>
        entera (marco, número, nombre, arte y texto), así que no se añade texto.
        Un tap continúa a Today. */
 export function Card({ app }: { app: DareApp }) {
-  const { card, cardOptions } = app;
-  const go = () => app.setScreen("home");
+  const { card, cardOptions, cardReturn } = app;
+  const go = () => app.setScreen(cardReturn);
   // Al continuar desde el revelado, la carta "viaja" hacia la esquina de You
   // (abajo-derecha, donde vive el icono You en Today) para que se entienda que
   // NO se pierde: queda guardada en You. Respeta prefers-reduced-motion.
+  // Si YA venimos de You (cardReturn === "you"), volvemos directos a la MISMA
+  // pantalla sin el "viaje" (no tiene sentido animar hacia donde ya estás).
   const [tucking, setTucking] = useState(false);
   const continueToYou = () => {
     if (tucking) return;
-    if (prefersReducedMotion()) return go();
+    if (cardReturn === "you" || prefersReducedMotion()) return go();
     setTucking(true);
     setTimeout(go, 520);
   };
