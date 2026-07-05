@@ -45,7 +45,7 @@ export function DailyCardDraw({ app }: { app: DareApp }) {
             <TarotArt id={card.id} width="100%" radius={7} alt={`${card.num} · ${card.name}`} />
           </div>
           <div>
-            <p className="serif" style={{ fontSize: 18 }}>
+            <p className="serif t-subhead">
               {card.name}
             </p>
             <p style={{ fontSize: 12, color: C.dim, marginTop: 2 }}>{card.msg}</p>

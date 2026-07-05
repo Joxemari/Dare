@@ -77,7 +77,7 @@ export function Detail({ app }: { app: DareApp }) {
             <p className="lbl" style={{ color: col, marginBottom: 8 }}>
               {d.level} · {CATS[d.cat].label}
             </p>
-            <h2 className="serif" style={{ fontSize: 34, marginBottom: 8 }}>
+            <h2 className="serif t-title" style={{ marginBottom: 8 }}>
               {d.title}
             </h2>
             <p style={{ color: C.dim, fontSize: 13.5 }}>{d.min} minutes</p>
@@ -115,7 +115,7 @@ export function Detail({ app }: { app: DareApp }) {
               bundling): resolveCompanion elige uno concreto y coherente con la
               actividad (filtra por la categoría del Dare), rotado por fecha. */}
           <Section symKey="companion" title={`Companion · ${comp.word}`} color={C.purple}>
-            <p className="serif" style={{ fontSize: 16, color: C.text, marginBottom: 6 }}>{comp.label}</p>
+            <p className="serif t-quote" style={{ color: C.text, marginBottom: 6 }}>{comp.label}</p>
             <p style={{ fontSize: 13, lineHeight: 1.55, color: C.dim }}>{comp.note}</p>
           </Section>
 

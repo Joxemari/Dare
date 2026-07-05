@@ -41,7 +41,7 @@ export function Journey({ app }: { app: DareApp }) {
               {isJourneyActive ? "Change journey" : "All journeys"}
             </button>
           </div>
-          <h2 className="serif" style={{ fontSize: 34, marginBottom: 2, color: journey.color }}>
+          <h2 className="serif t-title" style={{ marginBottom: 2, color: journey.color }}>
             {SYMBOLS[journey.sym]} {journey.name}
           </h2>
           <p style={{ color: C.dim, fontSize: 13.5, marginBottom: 14 }}>{journey.tag}</p>
@@ -50,7 +50,7 @@ export function Journey({ app }: { app: DareApp }) {
           {!isPlaceholder && !isJourneyActive && !paused && (
             <div className="card rise" style={{ padding: 22, marginBottom: 22, borderColor: journey.color + "55" }}>
               <p style={{ fontSize: 14.5, lineHeight: 1.55, marginBottom: 10 }}>{journey.promise}</p>
-              <p className="serif" style={{ fontStyle: "italic", fontSize: 16, color: C.dim, marginBottom: 18 }}>
+              <p className="serif t-quote" style={{ fontStyle: "italic", color: C.dim, marginBottom: 18 }}>
                 "{journey.lesson}"
               </p>
               <button
@@ -103,19 +103,19 @@ export function Journey({ app }: { app: DareApp }) {
               style={{ padding: "14px 18px", marginBottom: 22, borderColor: journey.color + "44", display: "flex", justifyContent: "space-around", textAlign: "center" }}
             >
               <div>
-                <p className="serif" style={{ fontSize: 26, color: journey.color }}>
+                <p className="serif t-heading" style={{ color: journey.color }}>
                   {mp.pct}%
                 </p>
-                <p className="lbl" style={{ fontSize: 8.5 }}>
+                <p className="lbl-sm">
                   completion
                 </p>
               </div>
               <div style={{ width: 1, background: C.line }} />
               <div>
-                <p className="serif" style={{ fontSize: 26 }}>
+                <p className="serif t-heading">
                   {mp.done}/{mp.total}
                 </p>
-                <p className="lbl" style={{ fontSize: 8.5 }}>
+                <p className="lbl-sm">
                   milestones completed
                 </p>
               </div>
@@ -126,7 +126,7 @@ export function Journey({ app }: { app: DareApp }) {
           {!isPlaceholder && isJourneyActive && isComplete && (
             <div className="card rise" style={{ padding: 20, marginBottom: 22, borderColor: C.gold + "55", textAlign: "center" }}>
               <p style={{ fontSize: 24, color: C.gold, marginBottom: 6 }}>{SYMBOLS.dream}</p>
-              <p className="serif" style={{ fontSize: 22, marginBottom: 4 }}>
+              <p className="serif t-heading" style={{ marginBottom: 4 }}>
                 Journey complete.
               </p>
               {dreamReward && (
@@ -159,7 +159,7 @@ export function Journey({ app }: { app: DareApp }) {
             >
               <Ico name={MS_T[next.t].ico} size={18} color={journey.color} sw={1.5} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p className="lbl" style={{ fontSize: 8, color: journey.color, marginBottom: 3 }}>
+                <p className="lbl-sm" style={{ color: journey.color, marginBottom: 3 }}>
                   Next step · {MS_T[next.t].label}
                 </p>
                 <p style={{ fontSize: 14, lineHeight: 1.3 }}>{next.title}</p>
@@ -176,7 +176,7 @@ export function Journey({ app }: { app: DareApp }) {
             <div className="card" style={{ padding: "12px 16px", marginBottom: 22, borderColor: C.gold + "33", display: "flex", gap: 10, alignItems: "center" }}>
               <span style={{ color: C.gold, fontSize: 18 }}>{SYMBOLS.dream}</span>
               <div>
-                <p className="lbl" style={{ fontSize: 8, color: C.gold, marginBottom: 2 }}>
+                <p className="lbl-sm" style={{ color: C.gold, marginBottom: 2 }}>
                   Dream Reward
                 </p>
                 <p style={{ fontSize: 13.5 }}>{dreamReward}</p>
@@ -260,7 +260,7 @@ export function Journey({ app }: { app: DareApp }) {
                     <p className="lbl" style={{ marginBottom: 3 }}>
                       Chapter {c.n}
                     </p>
-                    <p className="serif" style={{ fontSize: 20 }}>
+                    <p className="serif t-subhead">
                       {c.name}
                     </p>
                     <p style={{ fontSize: 12, color: C.dim, marginTop: 2 }}>
@@ -302,7 +302,7 @@ export function Journey({ app }: { app: DareApp }) {
                         >
                           <Ico name={MS_T[m.t].ico} size={16} color={isDone ? C.dim : unlocked ? journey.color : C.faint} sw={1.4} />
                           <div style={{ flex: 1 }}>
-                            <p className="lbl" style={{ fontSize: 8, marginBottom: 2 }}>
+                            <p className="lbl-sm" style={{ marginBottom: 2 }}>
                               {MS_T[m.t].label} · {k + 1}/{marks.length}
                             </p>
                             <p style={{ fontSize: 13, lineHeight: 1.35 }}>{m.title}</p>

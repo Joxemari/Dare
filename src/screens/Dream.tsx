@@ -23,7 +23,7 @@ export function Dream({ app }: { app: DareApp }) {
           <p className="lbl" style={{ textAlign: "center", color: journey.color, marginBottom: 10 }}>
             {SYMBOLS[journey.sym]} {journey.name} · 7-day sprint
           </p>
-          <h2 className="serif" style={{ fontSize: 28, lineHeight: 1.2, textAlign: "center", marginBottom: 10 }}>
+          <h2 className="serif t-title" style={{ lineHeight: 1.2, textAlign: "center", marginBottom: 10 }}>
             {journey.dreamPrompt}
           </h2>
           <p style={{ color: C.dim, fontSize: 13.5, textAlign: "center", marginBottom: 24, lineHeight: 1.5 }}>

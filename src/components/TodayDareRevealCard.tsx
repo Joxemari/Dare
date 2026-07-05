@@ -24,7 +24,7 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
         <p className="lbl" style={{ marginBottom: 6, color: C.dim }}>
           {LABEL}
         </p>
-        <p className="serif" style={{ fontSize: 22, marginBottom: 16 }}>
+        <p className="serif t-heading" style={{ marginBottom: 16 }}>
           Done for today.
         </p>
         <button className="link" onClick={() => app.anotherQuickDare()}>
@@ -43,7 +43,7 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
         <p className="lbl" style={{ marginBottom: 12, color: col }}>
           {d.wild ? "WILDCARD" : LABEL}
         </p>
-        <p className="serif" style={{ fontSize: 26, lineHeight: 1.2, marginBottom: 8 }}>
+        <p className="serif t-heading" style={{ lineHeight: 1.2, marginBottom: 8 }}>
           {d.title}
         </p>
         <p style={{ fontSize: 14, color: C.dim, lineHeight: 1.5, marginBottom: 14 }}>{d.summary ?? d.trigger}</p>
@@ -72,7 +72,7 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
         <p className="lbl" style={{ marginBottom: 8, color: C.dim }}>
           {LABEL}
         </p>
-        <p className="serif" style={{ fontSize: 24, marginBottom: 22 }}>
+        <p className="serif t-heading" style={{ marginBottom: 22 }}>
           One dare is waiting.
         </p>
         <button className="btn btn-green" onClick={() => app.revealTodayDare()}>

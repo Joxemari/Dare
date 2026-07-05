@@ -43,7 +43,7 @@ export function Complete({ app }: { app: DareApp }) {
               {SYMBOLS.spark} {SYMBOLS.treat} {SYMBOLS.dream}
             </p>
 
-            <h2 className="serif" style={{ fontSize: 38, marginBottom: 6 }}>
+            <h2 className="serif t-display" style={{ marginBottom: 6 }}>
               Dare completed.
             </h2>
             <p style={{ color: C.gold, fontSize: 17, marginBottom: 28 }}>
@@ -81,7 +81,7 @@ export function Complete({ app }: { app: DareApp }) {
                   <p className="lbl" style={{ color: t.color, marginBottom: 10 }}>
                     {SYMBOLS.treat} {t.label}
                   </p>
-                  <p className="serif" style={{ fontSize: 22, lineHeight: 1.3, marginBottom: 12 }}>
+                  <p className="serif t-heading" style={{ lineHeight: 1.3, marginBottom: 12 }}>
                     {treat.text}
                   </p>
                   {/* celebración + qué es el treat: se ganó al terminar el Dare */}
@@ -98,7 +98,7 @@ export function Complete({ app }: { app: DareApp }) {
             </button>
 
             {/* pie sutil — la evidencia queda guardada, sin gritarlo */}
-            <p className="lbl" style={{ fontSize: 8.5, marginTop: 18, color: C.faint }}>
+            <p className="lbl-sm" style={{ marginTop: 18, color: C.faint }}>
               {SYMBOLS.spark} Saved to Proof Library
             </p>
           </div>

@@ -64,7 +64,7 @@ export function InstallBanner({
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p className="serif" style={{ fontSize: 16, color: C.text, marginBottom: 3 }}>
+        <p className="serif t-quote" style={{ color: C.text, marginBottom: 3 }}>
           Keep DARE close
         </p>
         <p style={{ fontSize: 12.5, color: C.dim, lineHeight: 1.5 }}>{line}</p>

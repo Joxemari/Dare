@@ -54,16 +54,16 @@ export function You({ app }: { app: DareApp }) {
                 />
               </svg>
               <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                <span className="serif" style={{ fontSize: 26, lineHeight: 1, color: journey.color }}>
+                <span className="serif t-heading" style={{ lineHeight: 1, color: journey.color }}>
                   {identity ? SYMBOLS[identity.sym] : SYMBOLS.spark}
                 </span>
-                <span className="lbl" style={{ fontSize: 7.5 }}>
+                <span className="lbl-sm">
                   Identity
                 </span>
               </div>
             </div>
             <div>
-              <h2 className="serif" style={{ fontSize: 26, lineHeight: 1.15 }}>
+              <h2 className="serif t-heading" style={{ lineHeight: 1.15 }}>
                 Someone who
                 <br />
                 moves daily.
@@ -79,10 +79,10 @@ export function You({ app }: { app: DareApp }) {
             {([[done, "dares", C.green], [store.momentum.count, "momentum", C.coral], [store.traits.length, "badges", C.gold]] as const).map(
               ([v, k, col], i) => (
                 <div key={i} className="card" style={{ padding: "14px 8px", textAlign: "center" }}>
-                  <p className="serif" style={{ fontSize: 28, color: col }}>
+                  <p className="serif t-title" style={{ color: col }}>
                     {v}
                   </p>
-                  <p className="lbl" style={{ fontSize: 8.5, marginTop: 2 }}>
+                  <p className="lbl-sm" style={{ marginTop: 2 }}>
                     {k}
                   </p>
                 </div>
@@ -133,7 +133,7 @@ export function You({ app }: { app: DareApp }) {
                 const mp = milestoneProgress(j, store.milestones);
                 return (
                   <div key={j.id} style={{ marginTop: i > 0 ? 14 : 0 }}>
-                    <p className="serif" style={{ fontSize: 19, color: j.color }}>
+                    <p className="serif t-subhead" style={{ color: j.color }}>
                       {SYMBOLS[j.sym]} {j.name}
                     </p>
                     <p style={{ fontSize: 12.5, color: C.dim, marginTop: 3 }}>

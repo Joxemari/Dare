@@ -22,7 +22,7 @@ export function Journeys({ app }: { app: DareApp }) {
             <span className="lbl">Choose a journey</span>
             <span style={{ width: 16 }} />
           </div>
-          <p className="serif" style={{ fontStyle: "italic", fontSize: 18, color: C.dim, marginBottom: 24, textAlign: "center" }}>
+          <p className="serif t-subhead" style={{ fontStyle: "italic", color: C.dim, marginBottom: 24, textAlign: "center" }}>
             Every journey is a 7-day sprint.
             <br />
             Run one or several at once.
@@ -67,7 +67,7 @@ export function Journeys({ app }: { app: DareApp }) {
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
-                    <p className="serif" style={{ fontSize: 24, color: cur ? j.color : C.text }}>
+                    <p className="serif t-heading" style={{ color: cur ? j.color : C.text }}>
                       {SYMBOLS[j.sym]} &nbsp;{j.name}
                     </p>
                     <p style={{ fontSize: 13, color: C.dim, marginTop: 4 }}>{j.tag}</p>
@@ -101,14 +101,14 @@ export function Journeys({ app }: { app: DareApp }) {
               aria-label={`${j.name} — coming soon`}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                <p className="serif" style={{ fontSize: 20, color: C.text }}>
+                <p className="serif t-subhead" style={{ color: C.text }}>
                   {SYMBOLS[j.sym]} &nbsp;{j.name}
                 </p>
-                <span className="lbl" style={{ fontSize: 8.5, color: C.faint }}>Soon</span>
+                <span className="lbl-sm" style={{ color: C.faint }}>Soon</span>
               </div>
               <p style={{ fontSize: 12.5, color: C.dim, marginTop: 4 }}>{j.tag}</p>
               <p style={{ fontSize: 12, color: C.faint, marginTop: 6, lineHeight: 1.5 }}>{j.promise}</p>
-              <p className="lbl" style={{ marginTop: 10, fontSize: 8, color: C.faint, lineHeight: 1.8 }}>
+              <p className="lbl-sm" style={{ marginTop: 10, color: C.faint, lineHeight: 1.8 }}>
                 {j.chapters.map((c) => c.name).join(" · ")}
               </p>
             </div>
