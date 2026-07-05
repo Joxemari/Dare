@@ -8,7 +8,10 @@
 @theme {
   --color-bg: #111111;
   --color-card: #1c1c1c;
-  --color-card2: #191917;
+  /* card2 = superficie RECESIVA (secundaria/apoyo): más cerca del fondo #111
+     que `card`, para que las cards primarias destaquen y haya capas reales
+     (antes #191917 era casi idéntico a `card` → todo se leía como un gris). */
+  --color-card2: #141412;
   --color-text: #f6f6f3;
   --color-dim: #8b8b85;
   --color-faint: #5a5a55;

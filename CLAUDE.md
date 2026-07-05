@@ -255,6 +255,16 @@ se mantiene (identidad propia). Cuerpo en **weight 400** (antes 300) para más p
 editorial sobre `#111`. Al añadir un `box-shadow`/glow o una animación de "magia"
 nueva, pregúntate si estás en uno de los 3 momentos; si no, va sobrio.
 
+**Capas de superficie.** Tres niveles: fondo `#111`, `card` (#1C1C1C, superficie
+PRIMARIA/elevada) y `card2` (#141412, superficie RECESIVA de apoyo — más cerca del
+fondo, para que las primarias destaquen; antes era #191917, casi idéntica a
+`card`, y todo se leía como un gris). Las completions (`Complete`,
+`JourneyComplete`) mantienen su calor pero con decoración **contenida** (3 glifos
+flotando, no una lluvia). El **emoji** solo vive en las opciones de Dream Reward
+(`Dream`): ahí es contenido con significado (🎨 clase, 💆 masaje, 👟 zapatillas…),
+no decoración — un glifo abstracto no distinguiría "masaje" de "libro", así que se
+mantiene a propósito (excepción consciente al sistema de glifos).
+
 **Escala tipográfica (tokens en `index.css`).** Los títulos serif usan **5 pasos**
 únicos (no tamaños inline sueltos): `.t-display` (40, marca/celebración) ·
 `.t-title` (32, título de pantalla) · `.t-heading` (24, título de card) ·
