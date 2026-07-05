@@ -27,7 +27,9 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
         <p className="serif t-heading" style={{ marginBottom: 16 }}>
           Done for today.
         </p>
-        <button className="link" onClick={() => app.anotherQuickDare()}>
+        {/* Otro Today Dare SIEMPRE pasa por el check-in (ajusta a cómo/dónde
+            estás ahora), no por el atajo aleatorio. */}
+        <button className="link" onClick={() => app.setScreen("checkin")}>
           Another dare {SYMBOLS.spark}
         </button>
       </div>
@@ -50,15 +52,15 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
         <p className="lbl" style={{ fontSize: 9, color: C.faint, marginBottom: 20 }}>
           {d.min} min · {CATS[d.cat].label}
         </p>
-        <button className="btn btn-green" onClick={() => app.startDare()}>
+        {/* "Start now" abre SIEMPRE la pantalla del Dare (Your Dare) para
+            explicar en qué consiste antes de empezar; no salta al timer. Como
+            los detalles se ven ahí, ya no hace falta "View details". */}
+        <button className="btn btn-green" onClick={() => app.setScreen("detail")}>
           Start now
         </button>
-        <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 14 }}>
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 14 }}>
           <button className="link" onClick={() => app.anotherQuickDare()}>
             Another dare
-          </button>
-          <button className="link" style={{ color: C.faint }} onClick={() => app.setScreen("detail")}>
-            View details
           </button>
         </div>
       </div>
@@ -85,10 +87,9 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
   // ---- Cerrado: un toque genera el Dare; el check-in queda opcional ----
   return (
     <div className="card rise" style={{ padding: 30, textAlign: "center" }}>
-      <p className="lbl" style={{ marginBottom: 8, color: C.dim }}>
+      <p className="lbl" style={{ marginBottom: 18, color: C.dim }}>
         YOUR DARE OF THE DAY
       </p>
-      <p style={{ fontSize: 15, color: C.dim, marginBottom: 22 }}>20 seconds. Then we choose for you.</p>
       <button className="btn btn-green" onClick={() => app.setScreen("checkin")}>
         Start check-in
       </button>

@@ -164,11 +164,15 @@ la MISMA card, **"Just dare me ✦"** (`quickDareMe`: rápido y aleatorio con el
 entrar en la pantalla del Dare; ayuda: *"Skips the questions. Uses what we
 know."*). Flujo afinado: Your Dare → *Start check-in* → `Checkin` → *Get my dare*
 → Detail → Start. Flujo rápido: Your Dare → *Just dare me* → Dare revelado inline
-→ Start. En el hook: `runCheckin` (desde `Checkin`, navega a Detail) y
-`quickDareMe` (aleatorio, `navigate:"home"` → inline). **"Another dare" en el
-flujo rápido es IGUAL de aleatorio** (`anotherQuickDare`: rechaza el actual —si
-no está completado— y vuelve a generar al instante SIN check-in); `anotherDare`
-(rechazar + abrir `Checkin`) queda disponible pero ya sin UI que lo invoque.
+→ *Start now* → **Detail** (Your Dare, explica el Dare) → *Start dare* → timer.
+Regla de flujos (dura): **Today Dare = SIEMPRE check-in · Just Dare Me = random
+sin check-in · Journey Dare = preseleccionado**. Por eso, tras completar, el
+"Another dare" del estado *Done* abre el `Checkin` (`setScreen("checkin")`) — un
+nuevo Today Dare siempre se ajusta a cómo/dónde estás. En el hook: `runCheckin`
+(desde `Checkin`, navega a Detail) y `quickDareMe` (aleatorio, `navigate:"home"`
+→ inline; el "Start now" del revelado inline abre **Detail**, no salta al timer).
+El "Another dare" del revelado del flujo rápido sigue siendo aleatorio
+(`anotherQuickDare`); `anotherDare` (rechazar + `Checkin`) queda disponible.
 
 **El check-in es CORTO a propósito** (tres preguntas + una): **Energy** (1-10) ·
 **Time available** · **Where are you right now?** · **Mental state**. La pregunta
