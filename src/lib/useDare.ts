@@ -172,6 +172,10 @@ export function useDare() {
   const [secs, setSecs] = useState(0);
   const [paused, setPaused] = useState(false);
   const [usedSmall, setUsedSmall] = useState(false);
+  // A qué pantalla vuelve el revelado de la carta al continuar: por defecto
+  // Home (ritual de apertura), pero "you" cuando se abre desde la pestaña You,
+  // para volver a la MISMA pantalla y no perder el contexto.
+  const [cardReturn, setCardReturn] = useState<Screen>("home");
 
   useEffect(() => {
     save(store);
@@ -503,8 +507,14 @@ export function useDare() {
     setStore((s) =>
       s.dailyCard ? { ...s, dailyCard: { ...s.dailyCard, cardId }, cardIntroDate: todayStr() } : s,
     );
-    // Al elegir carta se revela a pantalla completa (screen "card"); desde el
-    // recap de You se puede reabrir con setScreen("card").
+    // Al elegir carta se revela a pantalla completa (screen "card").
+    setScreen("card");
+  }
+
+  /** Abre la carta YA elegida desde la pestaña You (miniatura o sacarla ahí):
+   *  al continuar debe volver a You, no a Home. */
+  function openSavedCard() {
+    setCardReturn("you");
     setScreen("card");
   }
 
@@ -589,6 +599,14 @@ export function useDare() {
   function anotherDare() {
     if (currentEntry) rejectDare(currentEntry.dareId);
     setScreen("checkin");
+  }
+
+  /** "Another dare" dentro del flujo "Just dare me" (revelado inline): igual de
+   *  aleatorio — rechaza el actual (si no está completado) y genera otro al
+   *  instante con el último check-in (o el default seguro), SIN pedir check-in. */
+  function anotherQuickDare() {
+    if (currentEntry && currentEntry.completedAt === null) rejectDare(currentEntry.dareId);
+    quickDareMe();
   }
 
   function revealDare() {
@@ -1046,6 +1064,9 @@ export function useDare() {
     cancelJourney,
     startJourneyDay,
     pickCard,
+    openSavedCard,
+    cardReturn,
+    setCardReturn,
     skipCardIntro,
     runCheckin,
     justDareMe,
@@ -1053,6 +1074,7 @@ export function useDare() {
     revealTodayDare,
     rejectDare,
     anotherDare,
+    anotherQuickDare,
     planDare,
     planCurrentForLater,
     removeDarePlan,

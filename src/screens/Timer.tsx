@@ -17,7 +17,7 @@ export function Timer({ app }: { app: DareApp }) {
   });
   const total = d.min * 60;
   const frac = app.secs / total;
-  const R = 96;
+  const R = 82;
   const CIRC = 2 * Math.PI * R;
   const mm = String(Math.floor(app.secs / 60)).padStart(2, "0");
   const ss = String(app.secs % 60).padStart(2, "0");
@@ -33,23 +33,20 @@ export function Timer({ app }: { app: DareApp }) {
 
           {/* Companion resuelto: la recompensa DURANTE (temptation bundling).
               Se recuerda aquí porque es el momento en que ocurre de verdad. */}
-          <div style={{ marginBottom: 26 }}>
+          <div style={{ marginBottom: 18 }}>
             <p className="lbl" style={{ color: C.purple, marginBottom: 4 }}>
               {SYMBOLS.rhythm} Companion · {comp.word}
             </p>
-            <p className="serif" style={{ fontSize: 17, color: C.text }}>
+            <p className="serif" style={{ fontSize: 16, color: C.text }}>
               {comp.label}
             </p>
-            <p className="lbl" style={{ fontSize: 8.5, color: C.gold, marginTop: 6 }}>
-              {SYMBOLS.spark} During this only — that's the hook
-            </p>
           </div>
-          <div style={{ position: "relative", width: 220, height: 220, margin: "0 auto 30px" }}>
-            <svg width="220" height="220" style={{ transform: "rotate(-90deg)" }}>
-              <circle cx="110" cy="110" r={R} fill="none" stroke={C.line} strokeWidth="3" />
+          <div style={{ position: "relative", width: 190, height: 190, margin: "0 auto 20px" }}>
+            <svg width="190" height="190" style={{ transform: "rotate(-90deg)" }}>
+              <circle cx="95" cy="95" r={R} fill="none" stroke={C.line} strokeWidth="3" />
               <circle
-                cx="110"
-                cy="110"
+                cx="95"
+                cy="95"
                 r={R}
                 fill="none"
                 stroke={col}
@@ -70,10 +67,10 @@ export function Timer({ app }: { app: DareApp }) {
                 justifyContent: "center",
               }}
             >
-              <span className="lbl" style={{ marginBottom: 6 }}>
+              <span className="lbl" style={{ marginBottom: 4 }}>
                 Time left
               </span>
-              <span className="serif" style={{ fontSize: 46 }}>
+              <span className="serif" style={{ fontSize: 40 }}>
                 {mm}:{ss}
               </span>
               <button
@@ -86,7 +83,15 @@ export function Timer({ app }: { app: DareApp }) {
               </button>
             </div>
           </div>
-          <p style={{ fontSize: 13, color: C.dim, marginBottom: 30 }}>Step 1 — {d.steps[0]}</p>
+          {/* Todos los pasos (no solo el primero), compactos para caber sin scroll. */}
+          <div style={{ textAlign: "left", maxWidth: 300, margin: "0 auto 20px" }}>
+            {d.steps.map((s, i) => (
+              <div key={i} style={{ display: "flex", gap: 10, alignItems: "baseline", padding: "4px 0" }}>
+                <span style={{ color: col, fontSize: 10, minWidth: 14 }}>{i + 1}</span>
+                <span style={{ fontSize: 12.5, lineHeight: 1.4, color: C.dim }}>{s}</span>
+              </div>
+            ))}
+          </div>
           <button className="btn btn-ghost" onClick={() => app.finishDare()}>
             Finish dare
           </button>

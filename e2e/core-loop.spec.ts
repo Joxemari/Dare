@@ -24,9 +24,9 @@ async function enterApp(page: Page) {
   await expect(page.getByText("You don't need")).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("button", { name: "Enter DARE" }).click();
-  // Today mínimo: masthead de contexto ("One dare today.") + el Dare como
-  // héroe. Sin carta, sin puerta/briefing, sin arrancar Journey.
-  await expect(page.getByText("One dare today.")).toBeVisible();
+  // Today mínimo: masthead de contexto (marca + "Today is yours.") + el Dare
+  // como héroe. Sin carta, sin puerta/briefing, sin arrancar Journey.
+  await expect(page.getByText("Today is yours.")).toBeVisible();
   await expect(page.getByText("YOUR DARE OF THE DAY")).toBeVisible();
 }
 
@@ -54,7 +54,7 @@ test("Today: mínimo (solo Dare) + 'Just dare me' un toque, loop sin errores", a
   await expect(page.getByText("Dare completed.")).toBeVisible();
   await expect(page.getByText("Treat unlocked.")).toBeVisible();
 
-  // el Treat es el héroe: se revela de un toque; la feedback aparece tras revelar.
+  // el Treat es el héroe: se revela de un toque (celebración + texto del treat).
   // La tarjeta tiene animación `pulse` (nunca "stable"): forzamos el click.
   await page.getByText("Tap to reveal").click({ force: true });
 
@@ -62,8 +62,7 @@ test("Today: mínimo (solo Dare) + 'Just dare me' un toque, loop sin errores", a
   const body = (await page.locator("body").innerText()).toLowerCase();
   expect(body).not.toMatch(/\bxp\b/);
 
-  // energy feedback + volver a Today (Dare de hoy ya hecho)
-  await page.getByRole("button", { name: "A little more" }).click();
+  // volver a Today (Dare de hoy ya hecho) — la pregunta de energía se retiró
   await page.getByRole("button", { name: "Back home" }).click();
   await expect(page.getByText("Done for today.", { exact: true })).toBeVisible();
 
@@ -77,7 +76,7 @@ test("Dare page: What this is / Why this works, sin Treat Locked + Plan for late
   // "Start check-in" abre el ÚNICO check-in: la pantalla completa "How are you today?"
   await page.getByRole("button", { name: "Start check-in" }).click();
   await expect(page.getByText("How are you today?")).toBeVisible();
-  await page.getByRole("button", { name: "3", exact: true }).click(); // energy (1-10)
+  await page.getByRole("button", { name: "Energy 3 of 10" }).click(); // energy (1-10)
   await page.getByRole("button", { name: "10 min", exact: true }).click(); // time
   await page.getByRole("button", { name: "Home", exact: true }).click(); // location
   await page.getByRole("button", { name: "Normal", exact: true }).click(); // mental state
@@ -184,9 +183,9 @@ test("Journey day sin dareId: Start lanza un Dare del Journey, no el check-in", 
   });
   await page.goto("/Dare/");
 
-  // Today abre directo (sin ritual) y el Journey activo ofrece un "Start"
-  await expect(page.getByText("One dare today.")).toBeVisible();
-  await page.getByRole("button", { name: "Start", exact: true }).click();
+  // Today abre directo (sin ritual) y el Journey activo ofrece un "Continue"
+  await expect(page.getByText("Today is yours.")).toBeVisible();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
 
   // Debe caer en el Dare (Detail), NUNCA en el check-in "How are you today?"
   await expect(page.getByText("What this is")).toBeVisible();

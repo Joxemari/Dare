@@ -149,7 +149,10 @@ export function MilestoneModal({
             className="btn btn-line"
             style={{ marginBottom: 10 }}
             onClick={() => {
-              app.setScreen("checkin");
+              // Lanza el Dare CONCRETO del Journey en foco (coherente con el
+              // journey), sin pedir check-in: resuelve el día dentro del Journey.
+              onClose();
+              app.startJourneyDay(app.store.journeyId);
             }}
           >
             Take me to my Dare {SYMBOLS.spark}

@@ -19,22 +19,18 @@ import type { DareApp } from "../lib/useDare";
    métricas. El perfil vive en la pestaña You (nav inferior).
    ============================================================ */
 export function Home({ app }: { app: DareApp }) {
-  const { journey, chapter, isJourneyActive } = app;
-  // Línea del Journey SOLO si estás embarcado (journey en foco activo).
-  // `chapter.n` ya es romano ("I".."IV"). `.lbl` lo pasa a mayúsculas.
-  const journeyLine = isJourneyActive
-    ? `${journey.name} · Chapter ${chapter.n} — ${chapter.name}`
-    : null;
+  const { journey, isJourneyActive } = app;
 
   return (
     <div className="dare-root">
       <div style={wrap}>
         <div style={{ ...pad, paddingBottom: 0 }}>
-          {/* Masthead: fecha + saludo + capítulo del Journey (contexto, no acción) */}
+          {/* Masthead: marca + fecha + saludo inspirador (contexto, no acción).
+              La línea del capítulo se retiró: el estado de cada Journey ya
+              aparece abajo en "Today's plan". */}
           <TodayHeader
             dayLabel={formatDayLabel()}
             greeting={greetingFor(new Date().getHours())}
-            journeyLine={journeyLine}
             accent={isJourneyActive ? journey.color : undefined}
           />
 

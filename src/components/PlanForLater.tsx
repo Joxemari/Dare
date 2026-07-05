@@ -14,7 +14,6 @@ const OPTIONS: [PlanWhen, string][] = [
   ["tomorrow-am", "Tomorrow morning"],
   ["tomorrow-pm", "Tomorrow evening"],
   ["weekend", "This weekend"],
-  ["journey", "Add to Journey"],
 ];
 
 export function PlanForLater({ app }: { app: DareApp }) {

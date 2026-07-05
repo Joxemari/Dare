@@ -2,7 +2,7 @@ import { C, CATS } from "../data/colors";
 import { CAT_ICO } from "../data/icons";
 import { SYMBOLS } from "../data/symbols";
 import { findTrait } from "../data/traits";
-import { SPRINT_DAYS } from "../data/journeys";
+import { SPRINT_DAYS, currentChapter, milestoneProgress } from "../data/journeys";
 import { Ico } from "../components/Ico";
 import { DailyCardDraw } from "../components/DailyCardDraw";
 import { Nav } from "../components/Nav";
@@ -14,7 +14,7 @@ import type { DareApp } from "../lib/useDare";
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
 export function You({ app }: { app: DareApp }) {
-  const { store, journey, chapter, daysDone, catFeedback, proofCount, currentIdentity, notifyPermission } = app;
+  const { store, journey, daysDone, activeJourneys, catFeedback, proofCount, currentIdentity, notifyPermission } = app;
   const identity = findTrait(currentIdentity);
   const notif = store.notifications;
   const notifOn = notif.enabled && notifyPermission === "granted";
@@ -119,23 +119,36 @@ export function You({ app }: { app: DareApp }) {
           {/* today's card — el ritual de sacar carta vive aquí (antes en Today) */}
           <DailyCardDraw app={app} />
 
-          {/* current journey */}
+          {/* active journeys — pueden ser varios a la vez (multi-journey) */}
           <div className="card" style={{ padding: 18, marginBottom: 14 }}>
-            <p className="lbl" style={{ marginBottom: 6 }}>
-              Current journey
+            <p className="lbl" style={{ marginBottom: activeJourneys.length ? 12 : 6 }}>
+              {activeJourneys.length > 1 ? "Active journeys" : "Current journey"}
             </p>
-            <p className="serif" style={{ fontSize: 20, color: journey.color }}>
-              {SYMBOLS[journey.sym]} {journey.name}
-            </p>
-            <p style={{ fontSize: 12.5, color: C.dim, marginTop: 3 }}>
-              Chapter {chapter.n} — {chapter.name} · {daysDone} / {SPRINT_DAYS} days
-            </p>
+            {activeJourneys.length === 0 ? (
+              <p style={{ fontSize: 12.5, color: C.dim }}>No journey active. Begin one from the Journey tab.</p>
+            ) : (
+              activeJourneys.map((j, i) => {
+                const prog = store.journeyProgress[j.id] ?? 0;
+                const ch = currentChapter(j, store.milestones);
+                const mp = milestoneProgress(j, store.milestones);
+                return (
+                  <div key={j.id} style={{ marginTop: i > 0 ? 14 : 0 }}>
+                    <p className="serif" style={{ fontSize: 19, color: j.color }}>
+                      {SYMBOLS[j.sym]} {j.name}
+                    </p>
+                    <p style={{ fontSize: 12.5, color: C.dim, marginTop: 3 }}>
+                      Chapter {ch.n} — {ch.name} · {Math.min(SPRINT_DAYS, prog)} / {SPRINT_DAYS} days · {mp.pct}%
+                    </p>
+                  </div>
+                );
+              })
+            )}
           </div>
 
           {/* daily reminder */}
           <div className="card" style={{ padding: 18, marginBottom: 14 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-              <p className="lbl">Daily reminder</p>
+              <p className="lbl">Daily notification</p>
               {notifyPermission === "unsupported" ? (
                 <span style={{ fontSize: 11, color: C.faint }}>Not supported</span>
               ) : notifOn ? (
@@ -193,10 +206,6 @@ export function You({ app }: { app: DareApp }) {
                 Notifications are blocked. Enable them for DARE in your browser or system settings.
               </p>
             )}
-            <p style={{ fontSize: 11, color: C.faint, marginTop: 10, lineHeight: 1.5 }}>
-              Delivered while DARE is open or in the background where your device allows. Reliable
-              background delivery needs a server — coming later.
-            </p>
           </div>
 
           {/* añadir a inicio (PWA) — protege el localStorage en iOS */}
@@ -211,14 +220,7 @@ export function You({ app }: { app: DareApp }) {
             </div>
           )}
 
-          {/* manifesto */}
-          <div className="card" style={{ padding: 18, marginBottom: 26, background: C.card2 }}>
-            <p className="serif" style={{ fontStyle: "italic", fontSize: 17, lineHeight: 1.55, color: C.dim }}>
-              DARE is not a trainer. It is a Chief Energy Officer: one decision removed, one action begun, every day.
-            </p>
-          </div>
-
-          <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: 12, marginTop: 26 }}>
             <button className="link" onClick={() => app.replayOnboarding()}>
               Replay onboarding
             </button>

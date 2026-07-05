@@ -163,6 +163,7 @@ export const JOURNEYS: Journey[] = [
           { id: "iq-1-action", t: "action", title: "Put your weights where you live", action: "text", body: "Out of the cupboard, into the room you actually sit in — beside the sofa, under the TV. A visible weight is a silent cue; a hidden one is a decision you'll keep postponing. Name where they'll live now." },
           { id: "iq-1-action2", t: "action", title: "Set your two-rep minimum", action: "text", body: "Decide the smallest version that still counts on your worst day: two goblet squats, one carry across the room. This floor never moves and never resets. On good days you'll do far more — but the streak you're protecting is 'I showed up', not 'I crushed it'. Write your minimum." },
           { id: "iq-1-goal", t: "goal", title: "Complete one 12-minute strength Dare", goalHint: "Check in at home — we'll give you a standing dumbbell Dare. If today is a bad day, your two-rep minimum still closes it." },
+          { id: "iq-1-goal2", t: "goal", title: "Show up a second time", goalHint: "Even your two-rep minimum counts. Prove the floor holds twice — that's the habit, not the heroics." },
           { id: "iq-1-science", t: "science", title: "How habits actually form", scienceId: "habit-automaticity" },
           { id: "iq-1-proof", t: "proof", title: "I made strength a decision, not a mood." },
         ],
@@ -195,6 +196,7 @@ export const JOURNEYS: Journey[] = [
         milestones: [
           { id: "iq-4-letter", t: "letter", title: "Every set is a vote.", body: "James Clear's sharpest idea: every action is a vote for the type of person you're becoming. You didn't spend this week chasing a number — you cast six or seven votes for 'someone who trains'. That's identity, and psychologist Albert Bandura showed why it lasts: doing the hard thing and finishing builds self-efficacy, the quiet belief that you can. That belief, not willpower, is what carries a habit through the flat weeks. You're not someone trying to get strong anymore. You're someone who lifts — and has the log to prove it." },
           { id: "iq-4-goal", t: "goal", title: "Complete your strongest session of the week", goalHint: "Pick the lift that felt best and repeat it — beat one number if you can." },
+          { id: "iq-4-goal2", t: "goal", title: "Beat one number in your log", goalHint: "Open your lift log and beat a single number — one more rep or a little more weight. One deposit." },
           { id: "iq-4-reflection", t: "reflection", title: "Write one line: what got easier?", body: "One line. What's easier than seven days ago — a weight, a rep, or the moment of starting itself? Save it. It's the first entry in who you're becoming." },
           { id: "iq-4-badge", t: "badge", title: "△ Quiet Builder", body: "Uses strength to create energy." },
         ],
@@ -265,6 +267,7 @@ export const JOURNEYS: Journey[] = [
           { id: "bp-1-action", t: "action", title: "Create your Boss Playlist", action: "bossPlaylist", body: "Three to five songs that make you feel unstoppable. Name it, pick the platform, choose the first track. Music you love is shown to lower how hard effort feels — this playlist is equipment, not decoration." },
           { id: "bp-1-action2", t: "action", title: "Anchor your eight minutes", action: "text", body: "Decide when the eight minutes live: after the first coffee, right after work, before the shower. Psychologists call this an implementation intention — deciding when-and-where in advance is associated with far higher follow-through than 'sometime today'. Write your anchor." },
           { id: "bp-1-goal", t: "goal", title: "Complete one 8-minute intensity Dare", goalHint: "Standing intervals or dance cardio at home — energy 5+. Your anchor moment is the cue." },
+          { id: "bp-1-goal2", t: "goal", title: "Repeat your eight minutes once more", goalHint: "Same anchor, a second day. Prove it wasn't a fluke — the dial is yours." },
           { id: "bp-1-science", t: "science", title: "Minutes count more than you think", scienceId: "exercise-snacks" },
           { id: "bp-1-proof", t: "proof", title: "I proved eight minutes is enough." },
         ],
@@ -286,6 +289,7 @@ export const JOURNEYS: Journey[] = [
           { id: "bp-3-letter", t: "letter", title: "The rower's high is real.", body: "In 2010, Oxford researchers found that rowers training in sync could tolerate noticeably more discomfort than rowers training alone — moving together raises the body's natural painkillers. And psychiatrist Stuart Brown, who founded the National Institute for Play after studying thousands of life histories, argues adults don't quit movement because it's hard; they quit because it stops being play. A padel match is an interval session wearing a costume: you'll push harder, feel it less, and want to come back. Which is the entire game." },
           { id: "bp-3-action", t: "action", title: "Send the invite now", action: "text", body: "Text one person and propose a game or a fast walk this week — before this feeling cools. A sent invitation is a commitment device: future-you shows up because someone is waiting. Write who you asked." },
           { id: "bp-3-goal", t: "goal", title: "Complete one play or padel Dare", goalHint: "Book a court, rally against a wall, or race someone up a hill — it counts." },
+          { id: "bp-3-goal2", t: "goal", title: "Move with someone once", goalHint: "A fast walk, a rally, a dance — anyone alongside you. Moving together makes hard feel lighter." },
           { id: "bp-3-motivator", t: "motivator", title: "Chase the buzz, not the exhaustion", body: "You don't have to suffer to get a real lift. The best sessions leave you brighter, not wrecked — and 'brighter' is the metric this journey actually tracks." },
           { id: "bp-3-proof", t: "proof", title: "I got a real lift from playing." },
         ],
@@ -295,6 +299,7 @@ export const JOURNEYS: Journey[] = [
         milestones: [
           { id: "bp-4-letter", t: "letter", title: "You own the dial now.", body: "William James suspected it over a century ago: 'We don't sing because we're happy; we're happy because we sing.' Modern behavioural activation research agrees — action changes state faster than waiting for the state to change you. You now have a week of your own evidence: eight minutes and one loud song, and the day tilts. That's not a workout plan. That's a switch you carry everywhere. Use it on the grey days especially — that's what it's for." },
           { id: "bp-4-goal", t: "goal", title: "Complete your favourite Pulse Dare", goalHint: "The session that gave you the biggest lift — repeat it, one notch brighter." },
+          { id: "bp-4-goal2", t: "goal", title: "Use the switch on a grey day", goalHint: "Next flat moment, run eight minutes instead of scrolling. That's the rep that counts double." },
           { id: "bp-4-reflection", t: "reflection", title: "What flips your switch fastest?", body: "One line. Which session changed your state quickest this week — the intervals, the punches, the dance, the game? Keep it. That's your reset button, in writing." },
           { id: "bp-4-badge", t: "badge", title: "◆ Bright Mover", body: "Turns energy up on purpose." },
         ],
@@ -364,6 +369,7 @@ export const JOURNEYS: Journey[] = [
           { id: "sw-1-letter", t: "letter", title: "The off-switch is trainable.", body: "In 1975 a Harvard cardiologist, Herbert Benson, showed that the body has a built-in 'relaxation response' — an off-switch that can be trained like a muscle, not a personality trait you either have or don't. Fifty years later, a Stanford trial (Balban, 2023) got specific about the fastest way in: five minutes a day of 'cyclic sighing' — two inhales through the nose, one long exhale — improved mood and lowered resting breathing rate over a month, edging out meditation. Wired-and-tired isn't a flaw in you. It's a nervous system that never gets the signal the day is over. This week, you learn to send the signal." },
           { id: "sw-1-action", t: "action", title: "Choose your calm signal", action: "text", body: "Pick the one cue that tells your body it's safe to come down — a candle, a song, the long exhale itself. Used consistently, a cue becomes a conditioned off-ramp: the body starts the descent before you've finished asking. Name yours." },
           { id: "sw-1-goal", t: "goal", title: "Complete one 5-minute downshift", goalHint: "Check in tired or stressed — we'll give you a 5-minute calm Dare. Two inhales, one long exhale." },
+          { id: "sw-1-goal2", t: "goal", title: "Run your calm signal once more", goalHint: "Use your chosen cue a second time today or tomorrow — repetition trains the off-switch." },
           { id: "sw-1-science", t: "science", title: "The long exhale, measured", scienceId: "cyclic-sighing" },
           { id: "sw-1-proof", t: "proof", title: "I sent the off signal myself." },
         ],
@@ -385,6 +391,7 @@ export const JOURNEYS: Journey[] = [
           { id: "sw-3-letter", t: "letter", title: "Say the day is closed.", body: "Cal Newport ends every workday with the same small ceremony: open loops written down, a plan for each, then a phrase that means it's over. It sounds precious until you see the evidence — Masicampo and Baumeister found that unfinished tasks stop intruding on the mind once you've written a concrete plan for them. You don't have to finish the day's work; you have to park it. Add what sleep scientist Matthew Walker keeps repeating in Why We Sleep — dim, regular, unstimulating evenings — and you get a real ending instead of a slow fade into your phone." },
           { id: "sw-3-action", t: "action", title: "Create a 20-minute shutdown shelf", action: "text", body: "Line up what a soft ending looks like: loops written down, dim light, a candle, tea, a book. Twenty minutes, same order, most nights — the sameness is the signal. Write your sequence." },
           { id: "sw-3-goal", t: "goal", title: "Complete one screen-light reduction", goalHint: "Dim or drop screens for the last stretch of the evening. Park tomorrow's loops on paper first." },
+          { id: "sw-3-goal2", t: "goal", title: "Run your shutdown shelf once", goalHint: "Do the full 20-minute wind-down in order, one night: loops parked, dim light, tea, book." },
           { id: "sw-3-science", t: "science", title: "Why a shutdown ritual works", scienceId: "shutdown-ritual" },
         ],
       },
@@ -393,6 +400,7 @@ export const JOURNEYS: Journey[] = [
         milestones: [
           { id: "sw-4-letter", t: "letter", title: "Calm is a skill, not weather.", body: "The people who look unshakeable aren't luckier — they've practised the return trip. Heart-rate variability, the metric recovery science leans on, is essentially the fitness of your braking system; like any fitness, it responds to training. This week you built the brake: a breath that works in minutes, water that works without effort, an evening that actually ends. You're not someone who hopes to feel calm anymore. You're someone who knows the way back." },
           { id: "sw-4-goal", t: "goal", title: "Complete one calm Dare when restless", goalHint: "Next time you feel restless, run your calm signal instead of scrolling. That's the rep that counts double." },
+          { id: "sw-4-goal2", t: "goal", title: "End one day on purpose", goalHint: "Choose water or the long exhale as tonight's ending — your fastest way down, used deliberately." },
           { id: "sw-4-reflection", t: "reflection", title: "What brings me back?", body: "One line. Which signal worked fastest this week — the exhale, the water, the ending? Write it down and keep it where the restless version of you will find it." },
           { id: "sw-4-badge", t: "badge", title: "☾ Regulator", body: "Knows how to lower the noise." },
         ],
@@ -657,6 +665,7 @@ export const JOURNEYS: Journey[] = [
           { id: "wg-1-action", t: "action", title: "Prepare your leave-the-house kit", action: "text", body: "Shoes, jacket, headphones — by the door tonight. BJ Fogg would call this shrinking the behaviour to its trigger: the fewer decisions between you and outside, the more often you'll go. Name what's in your kit and where it lives." },
           { id: "wg-1-action2", t: "action", title: "Claim your ten-minute slot", action: "text", body: "Pick the daily moment the outside gets: with the first coffee, after lunch, at the school run. Same slot every day — habits attach to anchors, not intentions. Write the slot." },
           { id: "wg-1-goal", t: "goal", title: "Complete one 5-minute outside Dare", goalHint: "Just cross the door and stay out five minutes. The door is the whole workout." },
+          { id: "wg-1-goal2", t: "goal", title: "Cross the door a second day", goalHint: "Same slot, same kit, one more day. The door gets lighter every time you use it." },
           { id: "wg-1-science", t: "science", title: "Daylight and circadian rhythm", scienceId: "daylight" },
           { id: "wg-1-proof", t: "proof", title: "I changed state by changing place." },
         ],
@@ -666,6 +675,7 @@ export const JOURNEYS: Journey[] = [
         milestones: [
           { id: "wg-2-letter", t: "letter", title: "Soft fascination.", body: "Psychologists Rachel and Stephen Kaplan spent their careers on one simple observation: focused attention is a muscle that tires, and nature restores it in a way streets and screens don't. They called the mechanism 'soft fascination' — leaves, water and light hold attention gently, without demanding it. In Japan the idea became practice: Dr Qing Li's research on shinrin-yoku, forest bathing, associates unhurried time among trees with lower stress markers. The trees aren't décor. They're doing something to you — you just have to stand under them long enough to collect it." },
           { id: "wg-2-goal", t: "goal", title: "Complete one park or tree-lined walk", goalHint: "Choose a route with trees, a park, or any green you can reach. Slow counts." },
+          { id: "wg-2-goal2", t: "goal", title: "Stand under trees for two slow minutes", goalHint: "No walking needed — just soft fascination: leaves, light, water. Let the green restore you." },
           { id: "wg-2-science", t: "science", title: "Green space and attention restoration", scienceId: "nature" },
           { id: "wg-2-proof", t: "proof", title: "I let the green do the restoring." },
         ],
@@ -685,6 +695,7 @@ export const JOURNEYS: Journey[] = [
         milestones: [
           { id: "wg-4-letter", t: "letter", title: "Attention is the beginning of devotion.", body: "That's Mary Oliver's line, and she wrote most of her poems on foot. Thoreau called an early-morning walk 'a blessing for the whole day'. After a week of doors, green routes and new streets, you know what they meant — not as poetry, but as procedure: you don't have to solve the mood before you move. When the head is stuck, the body knows the way out. Move first, and let the place do the arguing." },
           { id: "wg-4-goal", t: "goal", title: "Complete your favourite outside Dare", goalHint: "The outside Dare that gave you the most back — repeat it." },
+          { id: "wg-4-goal2", t: "goal", title: "Take one more new street", goalHint: "One route you've never walked — end the week with a little novelty on foot." },
           { id: "wg-4-reflection", t: "reflection", title: "Where do I feel most alive?", body: "One line. Which place gave you the most back this week — the pines, the new street, the bench in the sun? Name it. That's your reset, with an address." },
           { id: "wg-4-badge", t: "badge", title: "↟ Outwalker", body: "Changes state by changing place." },
         ],
@@ -901,6 +912,17 @@ export function currentChapter(j: Journey, done: Record<string, boolean>): Chapt
 export function nextMilestone(j: Journey, done: Record<string, boolean>): Milestone | null {
   const ch = currentChapter(j, done);
   return ch.milestones.find((m) => !done[m.id]) ?? null;
+}
+
+/** Dentro de un capítulo, un milestone se ACTIVA solo cuando todos los
+ *  anteriores del mismo capítulo están completados (progresión secuencial):
+ *  "Start" no se ofrece hasta terminar el milestone previo. Un milestone ya
+ *  completado siempre cuenta como desbloqueado (para poder revisarlo). Puro. */
+export function milestoneUnlocked(c: Chapter, index: number, done: Record<string, boolean>): boolean {
+  for (let i = 0; i < index; i++) {
+    if (!done[c.milestones[i].id]) return false;
+  }
+  return true;
 }
 
 /** Una sola "próxima acción" de un Journey para la lista de Today: el título del

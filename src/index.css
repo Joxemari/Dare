@@ -185,6 +185,43 @@ body {
     box-shadow: 0 0 30px -10px rgba(255, 200, 87, 0.55);
   }
 }
+/* Splash de apertura: el logo crece con un fade suave (splash-in) y un
+   destello "shine" cruza el wordmark una vez (splash-shine). */
+.splash-in {
+  animation: dareSplashIn 1.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes dareSplashIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.splash-shine {
+  position: relative;
+  -webkit-mask-image: linear-gradient(105deg, #000 40%, rgba(0, 0, 0, 0.55) 50%, #000 60%);
+  mask-image: linear-gradient(105deg, #000 40%, rgba(0, 0, 0, 0.55) 50%, #000 60%);
+  -webkit-mask-size: 260% 100%;
+  mask-size: 260% 100%;
+  animation: dareShine 1.7s ease-in-out 0.35s both;
+}
+@keyframes dareShine {
+  from {
+    -webkit-mask-position: 160% 0;
+    mask-position: 160% 0;
+  }
+  to {
+    -webkit-mask-position: -60% 0;
+    mask-position: -60% 0;
+  }
+}
 .tcard {
   background: linear-gradient(160deg, #1e1e1b, #171715);
   border: 1px solid #ffc85744;
@@ -231,7 +268,9 @@ button:focus-visible {
   .pulse,
   .rise,
   .flip,
-  .badge-reveal {
+  .badge-reveal,
+  .splash-in,
+  .splash-shine {
     animation: none;
   }
   .btn,
