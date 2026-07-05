@@ -72,13 +72,15 @@ test("Dare page: What this is / Why this works, sin Treat Locked + Plan for late
   const errors = guardPageErrors(page);
   await enterApp(page);
 
-  // check-in opcional ("Check in first") → Dare revelado → View details abre el Detail
+  // "Check in first" abre el ÚNICO check-in: la pantalla completa "How are you today?"
   await page.getByRole("button", { name: "Check in first" }).click();
-  await page.getByRole("button", { name: "3", exact: true }).nth(0).click(); // energy
-  await page.getByRole("button", { name: "3", exact: true }).nth(1).click(); // focus
-  await page.getByRole("button", { name: "Mind", exact: true }).click();
-  await page.getByRole("button", { name: "Get my Dare" }).click();
-  await page.getByRole("button", { name: "View details" }).click();
+  await expect(page.getByText("How are you today?")).toBeVisible();
+  await page.getByRole("button", { name: "3", exact: true }).click(); // energy (1-10)
+  await page.getByRole("button", { name: "10 min", exact: true }).click(); // time
+  await page.getByRole("button", { name: "Home", exact: true }).click(); // location
+  await page.getByRole("button", { name: "Normal", exact: true }).click(); // mental state
+  // "Get my dare" navega directo al Detail
+  await page.getByRole("button", { name: "Get my dare" }).click();
 
   // la primera sección es un resumen, no "Trigger"; y "Why this works" fusiona ciencia
   await expect(page.getByText("What this is")).toBeVisible();

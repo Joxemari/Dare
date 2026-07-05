@@ -1,13 +1,12 @@
 import { C, CATS, colorOf } from "../data/colors";
 import { SYMBOLS } from "../data/symbols";
-import { QuickCheckin } from "./QuickCheckin";
 import type { DareApp } from "../lib/useDare";
 
 /* ============================================================
-   TodayDareRevealCard — "Your Dare" en Today.
-   A diferencia de antes, generar un Dare EXIGE un check-in rápido
-   (energía · foco · qué evitas): tap en "Your Dare" → check-in →
-   Dare generado → Start. El Dare se revela INLINE (sin navegar).
+   TodayDareRevealCard — "Your Dare" en Today. Dos formas de
+   generar: "Just dare me" (aleatorio, un toque, revela INLINE) o
+   "Check in first" (abre el check-in completo "How are you today?"
+   — el ÚNICO check-in de la app). El Dare se revela inline.
    ============================================================ */
 
 const LABEL = "YOUR DARE";
@@ -16,11 +15,6 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
   const cd = app.currentDare;
   const revealed = !!cd && cd.revealed;
   const completed = !!cd && cd.completed;
-
-  // ---- Check-in rápido en curso: sustituye la tarjeta ----
-  if (app.checkingIn) {
-    return <QuickCheckin app={app} />;
-  }
 
   // ---- Completado hoy: estado mínimo y sereno ----
   if (cd && completed) {
@@ -33,7 +27,7 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
         <p className="serif" style={{ fontSize: 22, marginBottom: 16 }}>
           Done for today.
         </p>
-        <button className="link" onClick={() => app.startQuickCheckin()}>
+        <button className="link" onClick={() => app.setScreen("checkin")}>
           Another dare {SYMBOLS.spark}
         </button>
       </div>
@@ -104,7 +98,7 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
       <button className="btn btn-green" onClick={() => app.quickDareMe()}>
         Just dare me
       </button>
-      <button className="link" style={{ marginTop: 14 }} onClick={() => app.startQuickCheckin()}>
+      <button className="link" style={{ marginTop: 14 }} onClick={() => app.setScreen("checkin")}>
         Check in first
       </button>
     </div>
