@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validateDare, type ValidateCtx } from "./contentSchema";
+import { validateDare, validateWildcard, validateTreat, type ValidateCtx } from "./contentSchema";
 import type { Dare } from "../types";
 
 const CTX: ValidateCtx = {
@@ -78,5 +78,42 @@ describe("validateDare", () => {
   it("acumula varios errores a la vez", () => {
     const errs = validateDare({ id: "Bad Id", cat: "nope" }, CTX);
     expect(errs.length).toBeGreaterThan(3);
+  });
+});
+
+describe("validateWildcard", () => {
+  const wild: Dare = { ...base, id: "w-new", wild: true };
+  it("un wildcard válido (wild:true) no tiene errores", () => {
+    expect(validateWildcard(wild, CTX)).toEqual([]);
+  });
+  it("exige wild:true", () => {
+    expect(validateWildcard({ ...base, id: "w-new" }, CTX).join()).toMatch(/wild: true/);
+  });
+  it("hereda las reglas de Dare (p. ej. id aditivo)", () => {
+    expect(validateWildcard({ ...wild, id: "already-used" }, CTX).join()).toMatch(/ya existe/);
+  });
+});
+
+describe("validateTreat", () => {
+  it("un treat válido no tiene errores", () => {
+    expect(validateTreat({ tier: "common", text: "A cold drink you like." })).toEqual([]);
+    expect(validateTreat({ tier: "common", text: "Five more minutes outside.", fits: ["forest", "walk"] })).toEqual([]);
+  });
+  it("exige text y tier válido", () => {
+    expect(validateTreat({ tier: "common", text: "" }).join()).toMatch(/falta text/);
+    expect(validateTreat({ tier: "silver", text: "x" }).join()).toMatch(/tier inválido/);
+  });
+  it("valida fits/avoid como categorías reales", () => {
+    expect(validateTreat({ tier: "common", text: "x", fits: ["moon"] }).join()).toMatch(/cat inválida/);
+    expect(validateTreat({ tier: "rare", text: "x", avoid: "pool" }).join()).toMatch(/debe ser array/);
+  });
+  it("special solo en golden y de la lista", () => {
+    expect(validateTreat({ tier: "common", text: "x", special: "golden" }).join()).toMatch(/solo en treats golden/);
+    expect(validateTreat({ tier: "golden", text: "x", special: "mega" }).join()).toMatch(/special inválido/);
+    expect(validateTreat({ tier: "golden", text: "x", special: "golden" })).toEqual([]);
+  });
+  it("bloquea vocabulario prohibido y textos duplicados", () => {
+    expect(validateTreat({ tier: "common", text: "Burn 200 today." }).join()).toMatch(/vocabulario prohibido/);
+    expect(validateTreat({ tier: "common", text: "A nap." }, { existingTexts: ["A nap."] }).join()).toMatch(/duplicado/);
   });
 });

@@ -46,9 +46,18 @@ DARE_BATCH=5 ANTHROPIC_API_KEY=sk-... node scripts/generate-content.mjs
 
 ### 2. Validación automática (la compuerta)
 
-`src/lib/contentSchema.ts` expone `validateDare(dare, ctx)` — función **pura**
-que codifica las reglas duras del dominio (schema, rangos, ids únicos/aditivos,
-`scienceId` existente, ejercicios y vocabulario prohibidos). La usan:
+`src/lib/contentSchema.ts` expone validadores **puros** que codifican las reglas
+duras del dominio (schema, rangos, ids únicos/aditivos, `scienceId` existente,
+ejercicios y vocabulario prohibidos):
+
+- `validateDare` → `PROPOSED` (Dares).
+- `validateWildcard` → `PROPOSED_WILDCARDS` (Dare con `wild:true`).
+- `validateTreat` → `PROPOSED_TREATS` (`{ tier, text, fits?, avoid?, special? }`;
+  `special` solo en golden; sin duplicar texto).
+
+**Qué se auto-propone:** Dares, Wildcards y Treats. **Human-first** (la generación
+no los toca autónomamente): Journeys (columna vertebral) y fichas de Ciencia
+(claims de salud). Los validadores los usan:
 
 - `src/data/data.test.ts` sobre el **corpus vivo** (garantiza que las reglas
   reflejan la realidad), y
