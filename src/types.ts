@@ -38,8 +38,10 @@ export type Level = "Easy" | "Medium" | "Strong";
 /** Dónde puede ejecutarse un Dare (locations físicas reales). */
 export type Loc = "home" | "outside" | "forest" | "pool" | "gym" | "padel";
 
-/** Contexto actual del usuario en el check-in (dónde está AHORA). */
-export type CurrentLoc = "home" | "city" | "park" | "office" | "travelling";
+/** Contexto actual del usuario en el check-in (dónde está AHORA). "anywhere" =
+ *  "Send me somewhere": no está fijo, acepta que DARE le mande a un sitio
+ *  (piscina/gym/bosque/…). Reemplaza a la antigua segunda pregunta de destino. */
+export type CurrentLoc = "home" | "city" | "park" | "office" | "travelling" | "anywhere";
 
 /** Destino al que DARE puede empujar al usuario ahora mismo. */
 export type Dest = "forest" | "pool" | "gym" | "padel" | "cafe";

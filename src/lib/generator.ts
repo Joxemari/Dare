@@ -26,6 +26,9 @@ export function currentToDareLocs(loc: CurrentLoc): Loc[] {
       return ["home", "outside"];
     case "travelling":
       return ["outside", "home"];
+    // "Send me somewhere": DARE elige un DESTINO (no te quedas donde estás).
+    case "anywhere":
+      return ["forest", "pool", "gym", "padel", "outside"];
   }
 }
 
@@ -139,7 +142,10 @@ export function generateDare(
     if ((ci.state === "blocked" || ci.state === "tired") && ["small", "recovery", "walk", "forest", "focus"].includes(d.cat)) s += 12;
     if (ci.state === "stressed" && ["forest", "recovery", "pool", "walk"].includes(d.cat)) s += 12;
     if (ci.state === "active" && [...strengthCats, "padel", "pool", "forest"].includes(d.cat)) s += 10;
-    if (ci.energy >= 5) s += Math.max(0, 10 - Math.abs(ci.time - d.min) * 0.6);
+    // Coherencia de DURACIÓN: el Dare debe durar ~lo que el usuario tiene. Se
+    // aplica siempre (no solo con energía alta), con peso decisivo, para que el
+    // tiempo del Dare coincida con el "time available" del check-in.
+    s += Math.max(0, 16 - Math.abs(ci.time - d.min) * 1.4);
     if (journey.bias.includes(d.cat)) s += 10; // el Journey tira hacia lo suyo
     // el destino elegido empuja hacia su tipo de Dare
     if (ci.dest === "pool" && d.cat === "pool") s += 20;

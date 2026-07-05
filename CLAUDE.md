@@ -150,19 +150,30 @@ ciencia en **Progress**.
 
 **Your Dare: dos vías, AMBAS en la propia card.** El estado cerrado ofrece
 **"Start check-in"** (primario) que abre el **único check-in** de la app —la
-pantalla completa `Checkin` (*"How are you today?"* — Energy 1-10 · Time ·
-Location · Destination · Mental state · vibe/companion + "Plan a Dare this
-week")— y, como segunda opción en la MISMA card, **"Just dare me ✦"**
-(`quickDareMe`: rápido y aleatorio con el último check-in —o un default seguro—,
-se revela **INLINE en la card**, sin entrar en la pantalla del Dare; ayuda:
-*"Skips the questions. Uses what we know."*). Flujo afinado: Your Dare → *Start
-check-in* → `Checkin` → *Get my dare* → Detail → Start. Flujo rápido: Your Dare →
-*Just dare me* → Dare revelado inline → Start. En el hook: `runCheckin` (desde
-`Checkin`, navega a Detail) y `quickDareMe` (aleatorio, `navigate:"home"` →
-inline); `anotherDare` **rechaza** el actual (no repetir pronto) y abre el
-`Checkin`. **Nota:** existió un check-in "rápido" inline (`QuickCheckin`: Energy/
-Focus/Avoiding 1-5) que se **eliminó** para tener un solo check-in — el completo,
-que además rutea destinos (piscina/gym/bosque) y el vibe del companion.
+pantalla completa `Checkin` (*"How are you today?"*)— y, como segunda opción en
+la MISMA card, **"Just dare me ✦"** (`quickDareMe`: rápido y aleatorio con el
+último check-in —o un default seguro—, se revela **INLINE en la card**, sin
+entrar en la pantalla del Dare; ayuda: *"Skips the questions. Uses what we
+know."*). Flujo afinado: Your Dare → *Start check-in* → `Checkin` → *Get my dare*
+→ Detail → Start. Flujo rápido: Your Dare → *Just dare me* → Dare revelado inline
+→ Start. En el hook: `runCheckin` (desde `Checkin`, navega a Detail) y
+`quickDareMe` (aleatorio, `navigate:"home"` → inline); `anotherDare` **rechaza**
+el actual (no repetir pronto) y abre el `Checkin`.
+
+**El check-in es CORTO a propósito** (tres preguntas + una): **Energy** (1-10) ·
+**Time available** · **Where are you right now?** · **Mental state**. La pregunta
+de ubicación incluye una última opción **"Send me somewhere ✦"** (loc
+`"anywhere"`): en vez de una segunda pregunta de destino, si la eliges el
+generador te **manda a un sitio** (piscina/gym/bosque/…, vía
+`currentToDareLocs("anywhere")`). El Dare resultante es **coherente** con
+energía, tiempo, ubicación y estado mental, y su **duración (`min`) coincide con
+el "time available"** (peso decisivo en el scoring del generador; nunca elige un
+Dare más largo que el tiempo disponible). **Notas:** el check-in "rápido" inline
+(`QuickCheckin`: Energy/Focus/Avoiding 1-5) se **eliminó** para tener uno solo; y
+la pregunta de **vibe/companion** y el módulo **"Plan a Dare this week"** también
+se retiraron para acortarlo (el generador aún soporta `vibe`/`focus`/`avoiding`
+en el scoring, hoy sin UI que los alimente; los companions siguen rotando por
+fecha).
 
 Con **varios Journeys activos**, `ActiveJourneyList` prioriza el Journey
 recomendado por el check-in (`recommendJourney` en `lib/recommend.ts`: energía
@@ -254,11 +265,13 @@ el generador) en `lib/companions.ts` (puro, testeado); la **UI** (chip + label +
 nota + regla "during only") solo presenta. `resolveCompanion` elige un companion
 concreto y accionable rotándolo por fecha para no aburrir.
 
-**Vibe del check-in** (`CompanionVibe`): la pantalla de check-in pregunta *"What
-would make this less boring today?"* (watch/listen/talk/elsewhere/aesthetic/
-social/brutal/surprise). Es **opcional** (no bloquea "Get my dare"); `vibeBonus`
-sesga el generador hacia esa familia de companion y los vibes de novedad suben la
-tasa de wildcards. El vibe se persiste en el `Checkin` (campo opcional `vibe`).
+**Vibe del check-in** (`CompanionVibe`, watch/listen/talk/elsewhere/aesthetic/
+social/brutal/surprise): `vibeBonus` sesga el generador hacia esa familia de
+companion y los vibes de novedad suben la tasa de wildcards. El campo `vibe` sigue
+en `Checkin` (opcional) y el generador lo soporta, pero **ya no hay UI que lo
+pregunte**: la pregunta *"What would make this less boring today?"* se retiró del
+check-in para acortarlo (sin vibe = surprise; los companions siguen rotando por
+fecha). Queda disponible para reintroducirlo o alimentarlo desde otra superficie.
 
 **Variabilidad de la recompensa** (spec): el pool de Treats y Date ideas es amplio
 a propósito, y `rollTreat(boost)` **sesga** la tirada hacia mejores treats cuando
