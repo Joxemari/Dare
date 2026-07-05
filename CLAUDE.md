@@ -205,6 +205,17 @@ completa Journeys por contador de días. La pantalla `Complete` (fin de Dare) es
 independiente: Treat como héroe, sin badges ni cita de proof; los dos flujos no
 colisionan.
 
+**Progreso y próxima acción por MILESTONES (fuente única).** `milestoneProgress(j,
+done)` → `{done,total,pct}` es la MISMA base que dispara `journeyComplete`, así
+que la banda de completion de la pantalla Journey y la barra de Dream Reward de
+Progress miden lo mismo (milestones, no días). `nextMilestone(j, done)` devuelve
+el primer milestone pendiente del capítulo en curso (o null si está completo) y
+`nextAction` es su título (o la promesa del Journey como cierre). La pantalla
+Journey muestra una **"Next step" card** que abre ese milestone exacto de un
+toque, y un **banner de "Journey complete"** persistente (vía
+`journeysCompleted`) al revisitar un Journey ya terminado. Today reutiliza
+`nextAction` en `ActiveJourneyList`.
+
 Por qué así:
 
 - **`src/lib` puro = testeable sin DOM.** Los tests corren en entorno `node`

@@ -1,4 +1,4 @@
-import type { Chapter, DayPlan, Journey, MilestoneType } from "../types";
+import type { Chapter, DayPlan, Journey, Milestone, MilestoneType } from "../types";
 import type { SymbolKey } from "./symbols";
 import { JOURNEY_COLOR } from "./colors";
 
@@ -767,13 +767,28 @@ export function currentChapter(j: Journey, done: Record<string, boolean>): Chapt
   return { ...j.chapters[idx], idx };
 }
 
-/** Una sola "próxima acción" de un Journey para la lista de Today: el primer
- *  milestone sin completar del capítulo en curso; si no queda ninguno, la
- *  promesa del Journey como cierre. */
-export function nextAction(j: Journey, done: Record<string, boolean>): string {
+/** El primer milestone sin completar del capítulo en curso (la "próxima
+ *  acción" real y accionable), o null si el Journey no tiene pendientes. */
+export function nextMilestone(j: Journey, done: Record<string, boolean>): Milestone | null {
   const ch = currentChapter(j, done);
-  const pending = ch.milestones.find((m) => !done[m.id]);
-  return pending?.title ?? j.promise;
+  return ch.milestones.find((m) => !done[m.id]) ?? null;
+}
+
+/** Una sola "próxima acción" de un Journey para la lista de Today: el título del
+ *  primer milestone sin completar; si no queda ninguno, la promesa del Journey. */
+export function nextAction(j: Journey, done: Record<string, boolean>): string {
+  return nextMilestone(j, done)?.title ?? j.promise;
+}
+
+/** Progreso por milestones de un Journey: hechos / total / porcentaje (0..100).
+ *  Es la MISMA base que dispara la completion (`journeyComplete`), así que la
+ *  barra de Dream Reward y la banda de la pantalla Journey miden lo mismo:
+ *  milestones, no días de calendario. */
+export function milestoneProgress(j: Journey, done: Record<string, boolean>): { done: number; total: number; pct: number } {
+  const all = j.chapters.flatMap((c) => c.milestones);
+  const total = all.length;
+  const doneCount = all.filter((m) => done[m.id]).length;
+  return { done: doneCount, total, pct: total ? Math.round((doneCount / total) * 100) : 0 };
 }
 
 /** Total de milestones de un Journey (para el % de completion). */
