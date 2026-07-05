@@ -3,7 +3,6 @@ import { CAT_ICO } from "../data/icons";
 import { SYMBOLS } from "../data/symbols";
 import { TRAITS, findTrait } from "../data/traits";
 import { milestoneProgress } from "../data/journeys";
-import { findDare } from "../lib/lookup";
 import { todayStr } from "../lib/date";
 import { Ico } from "../components/Ico";
 import { Nav } from "../components/Nav";
@@ -233,45 +232,6 @@ export function Progress({ app }: { app: DareApp }) {
               );
             })}
           </div>
-
-          {/* proof library */}
-          <p className="lbl" style={{ marginBottom: 12 }}>
-            Proof Library
-          </p>
-          {store.proofLibrary.length === 0 ? (
-            <p style={{ fontSize: 13, color: C.faint, marginBottom: 8 }}>
-              Your proofs appear here. Complete your first Dare to start collecting.
-            </p>
-          ) : (
-            <div className="card" style={{ padding: 16 }}>
-              {[...store.proofLibrary].reverse().map((p, i) => {
-                const d = findDare(p.dareId);
-                return (
-                  <div
-                    key={i}
-                    style={{
-                      display: "flex",
-                      gap: 10,
-                      alignItems: "baseline",
-                      padding: "9px 0",
-                      borderBottom: i < store.proofLibrary.length - 1 ? `1px solid ${C.line}` : "none",
-                    }}
-                  >
-                    <span style={{ color: d ? CATS[d.cat].color : C.green, fontSize: 11 }}>{SYMBOLS.spark}</span>
-                    <div style={{ flex: 1 }}>
-                      <p className="serif t-quote" style={{ fontStyle: "italic", lineHeight: 1.35 }}>
-                        "{p.text}"
-                      </p>
-                      <p className="lbl-sm" style={{ marginTop: 3, color: C.faint }}>
-                        {p.date}
-                        {d ? ` · ${d.title}` : ""}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
 
           <div style={{ height: 12 }} />
           {/* small footnote of most-completed icon strip */}

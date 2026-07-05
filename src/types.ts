@@ -41,12 +41,13 @@ export type Level = "Easy" | "Medium" | "Strong";
  *  — nunca se cuelan en City/Park, esa mezcla era el bug de origen). */
 export type Loc = "home" | "city" | "park" | "forest" | "pool" | "gym" | "padel";
 
-/** Contexto actual del usuario en el check-in (dónde está AHORA). "anywhere" =
+/** Contexto actual del usuario en el check-in (dónde está AHORA). "mountain" =
+ *  monte/bosque/senderos (mapea a la loc de Dare `forest`). "anywhere" =
  *  "Take me somewhere": no está fijo, acepta que DARE le mande a un sitio
  *  (piscina/gym/bosque/…). Reemplaza a la antigua segunda pregunta de destino.
  *  "office"/"travelling" son valores heredados (ya no los ofrece la UI, pero
  *  siguen siendo check-ins guardados válidos). */
-export type CurrentLoc = "home" | "city" | "park" | "office" | "travelling" | "anywhere";
+export type CurrentLoc = "home" | "city" | "park" | "mountain" | "office" | "travelling" | "anywhere";
 
 /** Destino al que DARE puede empujar al usuario ahora mismo (feature de
  *  "Plan for later" — `togglePlanDare`/`plannedDares` —, NO del check-in de

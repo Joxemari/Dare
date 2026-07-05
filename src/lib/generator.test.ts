@@ -41,6 +41,16 @@ describe("placeToLocs", () => {
     expect(placeToLocs("home")).toEqual(["home"]);
     expect(placeToLocs("city")).toEqual(["city"]);
     expect(placeToLocs("park")).toEqual(["park"]);
+    // Mountain = monte/bosque/senderos → loc de Dare `forest`.
+    expect(placeToLocs("mountain")).toEqual(["forest"]);
+  });
+
+  it("Mountain solo devuelve Dares de bosque (nunca City/Park/Home)", () => {
+    for (let i = 0; i < 40; i++) {
+      const { dare } = generateDare({ ...base, loc: "mountain", energy: 6, time: 20 }, [], {}, ember);
+      expect(dare.locs.includes("forest"), `${dare.id} no es de bosque`).toBe(true);
+      expect(dare.locs.some((l) => l === "city" || l === "park" || l === "home")).toBe(false);
+    }
   });
 
   it("'Take me somewhere' (anywhere) admite destinos pero nunca 'home'", () => {

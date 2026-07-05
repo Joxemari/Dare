@@ -39,6 +39,10 @@ export function placeToLocs(loc: CurrentLoc): Loc[] {
       return ["city"];
     case "park":
       return ["park"];
+    // Monte/bosque/senderos: mapea a la loc de Dare `forest` (pinos, colinas,
+    // rutas). Es un Place directo, no un destino de "anywhere".
+    case "mountain":
+      return ["forest"];
     // Heredados: la UI ya no los ofrece, pero un check-in guardado puede
     // traerlos. Se tratan como equivalentes urbanos razonables.
     case "office":
