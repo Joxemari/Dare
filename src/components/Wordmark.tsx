@@ -11,24 +11,40 @@ import { SYMBOLS } from "../data/symbols";
    role/aria-label para lectores.
    ============================================================ */
 
-/** Logotipo "DARE" con un DETALLE de marca: la A es una A ABIERTA sin barra
- *  horizontal (dos diagonales en pico, tipo Λ), no una A normal ni el triángulo
- *  relleno △ (que quedaba desproporcionado dentro de la palabra). Se dibuja con
- *  un SVG a altura de mayúscula y con el grosor de trazo de D·R·E → proporcionado
- *  el color. La estrella ✦ va como glifo APARTE (encima/al lado). Se probó una A
- *  abierta (SVG Λ) pero rompía el layout del masthead (la palabra hacía wrap) →
- *  se vuelve a texto plano "DARE", con `white-space: nowrap` para que la marca
- *  NUNCA se parta en dos líneas. `aria-label="DARE"` para lectores. Fuente única
- *  de la marca escrita; se reutiliza en Wordmark, Splash, Onboarding y Today. */
+/** Logotipo "DARE" como UN ÚNICO SVG (traza aportada por diseño). La A es una A
+ *  ABIERTA sin barra horizontal (dos diagonales en pico). Al ser una sola pieza:
+ *  nunca se parte en dos líneas (el problema del intento anterior mezclando texto
+ *  + SVG inline), escala nítido a cualquier tamaño y hereda el color vía
+ *  `currentColor`. Se dimensiona por `fontSize` del contenedor (height ≈ altura de
+ *  mayúscula); `letterSpacing`/`textIndent` que pasan los llamadores se ignoran
+ *  (el tracking va horneado en la geometría). `viewBox` ajustado a la tinta.
+ *  `aria-label="DARE"` para lectores. Fuente única de la marca; se reutiliza en
+ *  Wordmark, Splash, Onboarding y el masthead de Today. */
 export function DareWord({ style }: { style?: CSSProperties }) {
   return (
-    <span
+    <svg
       role="img"
       aria-label="DARE"
-      style={{ fontFamily: "var(--font-sans)", fontWeight: 400, display: "inline-block", whiteSpace: "nowrap", color: C.text, ...style }}
+      viewBox="81 81 1298 238"
+      fill="none"
+      style={{ height: "0.78em", width: "auto", display: "inline-block", verticalAlign: "baseline", color: C.text, ...style }}
     >
-      DARE
-    </span>
+      <g stroke="currentColor" strokeWidth={18} strokeLinecap="round" strokeLinejoin="round">
+        {/* D */}
+        <path d="M90 90V310H205Q285 310 285 230V170Q285 90 205 90H90Z" />
+        {/* A — pico sin barra */}
+        <path d="M470 310L560 90L650 310" />
+        {/* R */}
+        <path d="M800 310V90" />
+        <path d="M800 90H925Q1005 90 1005 160Q1005 225 925 225H800" />
+        <path d="M905 225L1015 310" />
+        {/* E */}
+        <path d="M1160 90V310" />
+        <path d="M1160 90H1370" />
+        <path d="M1160 200H1330" />
+        <path d="M1160 310H1370" />
+      </g>
+    </svg>
   );
 }
 export function Wordmark({
