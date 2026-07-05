@@ -7,14 +7,16 @@ import type { CurrentLoc, EnergyLevel } from "../types";
 import type { DareApp } from "../lib/useDare";
 
 // Check-in de 3 preguntas (spec): Time / Place / Energy. Place es el filtro
-// más fuerte. Cuatro Places directos en una fila (como Time/Energy); "Take me
-// somewhere ✦" (loc "anywhere") va aparte, a todo el ancho: DARE elige el
-// destino en vez de quedarse donde estás.
+// más fuerte. Seis Places directos en un grid de 4 columnas (2 filas), y
+// "Take me somewhere ✦" (loc "anywhere") ocupa 2 columnas (1 alto × 2 ancho)
+// cerrando la segunda fila: DARE elige el destino en vez de quedarse donde estás.
 const places: [CurrentLoc, string][] = [
   ["home", "Home"],
   ["city", "City"],
   ["park", "Park"],
-  ["mountain", "Mountain"],
+  ["bed", "Bed"],
+  ["office", "Office"],
+  ["gym", "Gym"],
 ];
 const energyLevels: [EnergyLevel, string][] = [
   ["tired", "Tired"],
@@ -74,7 +76,9 @@ export function Checkin({ app }: { app: DareApp }) {
           <p className="lbl" style={{ marginBottom: 10 }}>
             Place
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 8 }}>
+          {/* Grid de 4 columnas: los 6 Places llenan las 6 primeras celdas y
+              "Take me somewhere" ocupa las 2 últimas (span 2 = 1 alto × 2 ancho). */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 22 }}>
             {places.map(([id, t]) => (
               <button
                 key={id}
@@ -86,16 +90,15 @@ export function Checkin({ app }: { app: DareApp }) {
                 {t}
               </button>
             ))}
+            <button
+              className={"pill" + (draft.loc === "anywhere" ? " on" : "")}
+              style={{ gridColumn: "span 2", fontSize: 12 }}
+              aria-pressed={draft.loc === "anywhere"}
+              onClick={() => setDraft({ ...draft, loc: "anywhere" })}
+            >
+              Take me somewhere {SYMBOLS.spark}
+            </button>
           </div>
-          {/* "Take me somewhere" a todo el ancho, en su propia fila. */}
-          <button
-            className={"pill" + (draft.loc === "anywhere" ? " on" : "")}
-            style={{ width: "100%", fontSize: 12, marginBottom: 22 }}
-            aria-pressed={draft.loc === "anywhere"}
-            onClick={() => setDraft({ ...draft, loc: "anywhere" })}
-          >
-            Take me somewhere {SYMBOLS.spark}
-          </button>
 
           <p className="lbl" style={{ marginBottom: 10 }}>
             Energy
