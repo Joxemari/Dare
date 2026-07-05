@@ -2,7 +2,7 @@ import { useState } from "react";
 import { C } from "../data/colors";
 import { TIER, DATE_IDEAS } from "../data/rewards";
 import { SYMBOLS } from "../data/symbols";
-import { TRAITS } from "../data/traits";
+import { TRAITS, findTrait } from "../data/traits";
 import { journeyById } from "../data/journeys";
 import { wrap, pad } from "../components/layout";
 import { cardRevealFeedback } from "../lib/feedback";
@@ -15,6 +15,10 @@ export function Complete({ app }: { app: DareApp }) {
   const badge = newTraits.length ? TRAITS.find((x) => x.id === newTraits[0]) : undefined;
   const [dateChosen, setDateChosen] = useState<string | null>(null);
   const completedJourney = justCompletedJourney ? journeyById(justCompletedJourney) : null;
+  // Símbolo propio del Badge (vía su Trait); si no, el símbolo del Journey.
+  const badgeSym = completedJourney
+    ? (findTrait(completedJourney.identity.id)?.sym ?? completedJourney.sym)
+    : "spark";
 
   return (
     <div className="dare-root">
@@ -119,17 +123,41 @@ export function Complete({ app }: { app: DareApp }) {
               </div>
             )}
 
-            {/* journey completion */}
+            {/* journey completion — Badge final con reveal premium */}
             {completedJourney && (
               <div className="card rise" style={{ padding: 22, marginBottom: 22, borderColor: C.gold + "55", boxShadow: `0 0 40px -16px ${C.gold}` }}>
-                <p style={{ fontSize: 26, color: C.gold, marginBottom: 8 }}>{SYMBOLS.dream}</p>
-                <p className="lbl" style={{ color: C.gold, marginBottom: 6 }}>
+                <p className="lbl" style={{ color: C.gold, marginBottom: 14 }}>
                   Journey complete
                 </p>
-                <p className="serif" style={{ fontSize: 22, marginBottom: 6 }}>
-                  Identity unlocked: {SYMBOLS[completedJourney.sym]} {completedJourney.identity.name}
+                <div
+                  className="badge-reveal"
+                  style={{
+                    width: 84,
+                    height: 84,
+                    borderRadius: 99,
+                    margin: "0 auto 14px",
+                    border: `1.5px solid ${completedJourney.color}`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 34,
+                    color: completedJourney.color,
+                  }}
+                >
+                  {SYMBOLS[badgeSym]}
+                </div>
+                <p className="lbl" style={{ color: C.gold, marginBottom: 6 }}>
+                  Badge unlocked
+                </p>
+                <p className="serif" style={{ fontSize: 24, marginBottom: 6 }}>
+                  {completedJourney.identity.name}
                 </p>
                 <p style={{ fontSize: 13, color: C.dim, marginBottom: 12 }}>{completedJourney.identity.line}</p>
+                {completedJourney.completionLine && (
+                  <p className="serif" style={{ fontStyle: "italic", fontSize: 15, lineHeight: 1.5, color: C.text, marginBottom: 14 }}>
+                    "{completedJourney.completionLine}"
+                  </p>
+                )}
                 {app.dreamReward && (
                   <p style={{ fontSize: 13.5, color: C.gold, marginBottom: 14 }}>
                     Dream Reward unlocked: {app.dreamReward}

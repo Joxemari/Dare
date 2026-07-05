@@ -118,7 +118,12 @@ significado, no premios por cada acción; en el store persisten bajo la clave
 **Companion** (recompensa durante el dare) · **Milestones** (no Marks) ·
 **Momentum** (no flexible streak). Los Badges se ganan raramente: la mayoría de
 Dares NO desbloquean ninguno, y la completion muestra COMO MUCHO uno (el más
-importante; el resto quedan en Progress). No mostrar XP,
+importante; el resto quedan en Progress). Dos vías, sin spam: **capstone** —
+al terminar un Journey se otorga UN badge deliberado (su `identity`: First
+Mover, Quiet Builder…), con reveal premium (`.badge-reveal`) en la completion;
+y **badges por umbral** (`achievements.ts`) que caen por hitos acumulados
+(3 del mismo tipo, 3 días distintos, un Strong…), nunca por cada Dare. Así un
+Journey deja más de un badge sin premiar cada acción. No mostrar XP,
 niveles, "streak failed", calorías ni "burn". El sistema de recompensas está
 separado a propósito: *Trigger* (antes) · *Companion* (durante) · *Treat*
 (después) · *Date* (semanal) · *Dream Reward* (al terminar el Journey).
