@@ -303,8 +303,14 @@ nota) solo presenta. `resolveCompanion` elige un companion concreto y accionable
 (coherente con la actividad: filtra por la categoría del Dare) rotándolo por
 fecha para no aburrir.
 
-**Orden del detalle del Dare** (`screens/Detail.tsx`): **What this is → Steps →
-Companion → Why this works → Expected Effect → CTAs**. El Companion ya **no**
+**Orden y jerarquía del detalle del Dare** (`screens/Detail.tsx`): **What this is
+→ Steps → Companion → Why this works → Expected Effect → CTAs**. Los headers de
+sección son **neutros** (sin arcoíris de acentos): la jerarquía se expresa con el
+prop `tone` de `Section`, no con color. *What this is* y *Steps* son `primary`
+(label `.lbl`); *Companion*, *Why this works* y *Expected Effect* son `muted`
+(label `.lbl-sm`, glifo y padding más contenidos) — apoyo, no protagonistas. El
+masthead de Today es **compacto** (marca con glow tenue detrás + fecha + titular;
+sin sparkle suelto extra) para que el Dare quede sobre el pliegue. El Companion ya **no**
 lleva la línea "during only — that's the hook" (se retiró por ruido); *"Why this
 works"* muestra el porqué **+ la ficha de ciencia COMPLETA** (`science.text` +
 `longTerm`, química/comportamiento/largo plazo), no solo la primera frase. En el

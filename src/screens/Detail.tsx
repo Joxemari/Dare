@@ -18,12 +18,27 @@ function dareSummary(d: Dare): string {
   return `A ${d.min}-minute ${CATS[d.cat].label.toLowerCase()} dare — small enough to start now, with no need to finish it perfectly.`;
 }
 
-function Section({ symKey, title, color, children }: { symKey: keyof typeof SECTION_SYM; title: string; color?: string; children: ReactNode }) {
+/* Sección del detalle. Headers NEUTROS (sin arcoíris de acentos): la jerarquía
+   se expresa con `tone`, no con color. `primary` (What this is / Steps) lidera;
+   `muted` (Companion / Why / Effect) queda como apoyo — label más pequeña,
+   glifo y padding más contenidos. */
+function Section({
+  symKey,
+  title,
+  tone = "primary",
+  children,
+}: {
+  symKey: keyof typeof SECTION_SYM;
+  title: string;
+  tone?: "primary" | "muted";
+  children: ReactNode;
+}) {
   const glyph = SYMBOLS[SECTION_SYM[symKey]];
+  const muted = tone === "muted";
   return (
-    <div className="card" style={{ padding: 18, marginBottom: 12, background: C.card2 }}>
-      <p className="lbl" style={{ color: color ?? C.dim, marginBottom: 8, display: "flex", gap: 8, alignItems: "center" }}>
-        <span style={{ color: color ?? C.gold }}>{glyph}</span> {title}
+    <div className="card" style={{ padding: muted ? 16 : 18, marginBottom: muted ? 10 : 12, background: C.card2 }}>
+      <p className={muted ? "lbl-sm" : "lbl"} style={{ color: C.dim, marginBottom: muted ? 6 : 8, display: "flex", gap: 8, alignItems: "center" }}>
+        <span style={{ color: C.faint }}>{glyph}</span> {title}
       </p>
       {children}
     </div>
@@ -87,8 +102,8 @@ export function Detail({ app }: { app: DareApp }) {
           {/* Orden (spec de review): 1 What this is · 2 Steps · 3 Companion ·
               4 Why this works · 5 Expected Effect · 6 CTAs. */}
 
-          {/* 1 · What this is — un resumen corto de qué es el Dare */}
-          <Section symKey="trigger" title="What this is" color={C.green}>
+          {/* 1 · What this is — un resumen corto de qué es el Dare (PRIMARIO) */}
+          <Section symKey="trigger" title="What this is">
             <p style={{ fontSize: 14.5, lineHeight: 1.55, color: C.text }}>{dareSummary(d)}</p>
           </Section>
 
@@ -114,7 +129,7 @@ export function Detail({ app }: { app: DareApp }) {
           {/* 3 · Companion — recompensa CONCRETA y DURANTE la acción (temptation
               bundling): resolveCompanion elige uno concreto y coherente con la
               actividad (filtra por la categoría del Dare), rotado por fecha. */}
-          <Section symKey="companion" title={`Companion · ${comp.word}`} color={C.purple}>
+          <Section symKey="companion" title={`Companion · ${comp.word}`} tone="muted">
             <p className="serif t-quote" style={{ color: C.text, marginBottom: 6 }}>{comp.label}</p>
             <p style={{ fontSize: 13, lineHeight: 1.55, color: C.dim }}>{comp.note}</p>
           </Section>
@@ -122,7 +137,7 @@ export function Detail({ app }: { app: DareApp }) {
           {/* 4 · Why this works — el porqué + la ciencia COMPLETA (química,
                 comportamiento, efecto a largo plazo): es la explicación de peso
                 antes de comprometerse. Lenguaje prudente (ver science.ts). */}
-          <Section symKey="why" title="Why this works" color={C.gold}>
+          <Section symKey="why" title="Why this works" tone="muted">
             <p style={{ fontSize: 14, lineHeight: 1.55, color: C.text }}>{why}</p>
             {science && (
               <>
@@ -134,8 +149,8 @@ export function Detail({ app }: { app: DareApp }) {
             )}
           </Section>
 
-          {/* 5 · Expected Effect */}
-          <Section symKey="effect" title="Expected Effect" color={C.green}>
+          {/* 5 · Expected Effect (apoyo) */}
+          <Section symKey="effect" title="Expected Effect" tone="muted">
             <Effects effects={d.effects} />
           </Section>
 
