@@ -11,10 +11,11 @@ import { SYMBOLS } from "../data/symbols";
    role/aria-label para lectores.
    ============================================================ */
 
-/** Logotipo "DARE" con la A convertida en TRIÁNGULO (△): "D△RE". El triángulo
- *  hereda tamaño y tracking del contenedor; `aria-label="DARE"` para lectores.
- *  Fuente única de la marca escrita — se reutiliza en Wordmark, Splash,
- *  Onboarding y el masthead de Today. */
+/** Logotipo "DARE": las cuatro letras, con A normal y tracking amplio (lo hereda
+ *  del `style` del contenedor). La estrella ✦ NO va DENTRO de la palabra —
+ *  sustituir la A por un triángulo quedaba desproporcionado— sino como glifo
+ *  aparte encima/al lado (ver Wordmark, Splash, Onboarding, masthead de Today).
+ *  Fuente única de la marca escrita. */
 export function DareWord({ style }: { style?: CSSProperties }) {
   return (
     <span
@@ -22,11 +23,7 @@ export function DareWord({ style }: { style?: CSSProperties }) {
       aria-label="DARE"
       style={{ fontFamily: "var(--font-sans)", fontWeight: 400, display: "inline-block", color: C.text, ...style }}
     >
-      D
-      <span aria-hidden="true" style={{ fontSize: "0.9em", display: "inline-block", transform: "translateY(-0.03em)" }}>
-        {SYMBOLS.strength}
-      </span>
-      RE
+      DARE
     </span>
   );
 }
