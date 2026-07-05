@@ -36,6 +36,7 @@ export const sym = (k: SymbolKey): string => SYMBOLS[k] ?? SYMBOLS.spark;
 export const JOURNEY_SYM: Record<string, SymbolKey> = {
   ember: "spark", // First Flame ✦
   iron: "strength", // Iron Quiet △
+  pulse: "strong", // Bright Pulse ◆
   water: "calm", // Still Water ☾
   clear: "focus", // Clear Signal ◇
   current: "momentum", // Steady Current ⌁

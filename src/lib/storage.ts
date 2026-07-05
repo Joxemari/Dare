@@ -11,10 +11,10 @@ export function defaultStore(): DareStore {
   return {
     version: 5,
     onboarded: false,
-    journeyId: "ember",
+    journeyId: "iron",
     activeJourneyIds: [],
     journeyStartedAt: {},
-    journeyProgress: { ember: 0, iron: 0, water: 0, clear: 0, current: 0, wild: 0, fire: 0 },
+    journeyProgress: { ember: 0, iron: 0, pulse: 0, water: 0, clear: 0, current: 0, wild: 0, fire: 0 },
     journeysCompleted: [],
     dreamRewards: {},
     checkins: [],

@@ -28,6 +28,7 @@ export const TRAITS: Trait[] = [
      findTrait como el anillo de identidad. ---- */
   { id: "first-mover", sym: "spark", name: "First Mover", line: "Starts before feeling ready.", how: "Complete First Flame" },
   { id: "quiet-builder", sym: "strength", name: "Quiet Builder", line: "Uses strength to create energy.", how: "Complete Iron Quiet" },
+  { id: "bright-mover", sym: "strong", name: "Bright Mover", line: "Turns energy up on purpose.", how: "Complete Bright Pulse" },
   { id: "regulator", sym: "calm", name: "Regulator", line: "Knows how to lower the noise.", how: "Complete Still Water" },
   { id: "clear-mind", sym: "focus", name: "Clear Mind", line: "Turns mental clutter into next actions.", how: "Complete Clear Signal" },
   { id: "returner", sym: "momentum", name: "Returner", line: "Comes back without making it dramatic.", how: "Complete Steady Current" },
