@@ -31,7 +31,7 @@ export function Checkin({ app }: { app: DareApp }) {
       <div style={wrap}>
         <div style={pad}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 26 }}>
-            <button className="link" style={{ textDecoration: "none", fontSize: 16 }} onClick={() => app.setScreen("home")}>
+            <button className="link" style={{ textDecoration: "none", fontSize: 16 }} aria-label="Back to Today" onClick={() => app.setScreen("home")}>
               ←
             </button>
             <span className="lbl">Quick check-in</span>
@@ -58,6 +58,8 @@ export function Checkin({ app }: { app: DareApp }) {
                 key={n}
                 className={"pill" + (draft.energy === n ? " on" : "")}
                 style={{ padding: "8px 0", fontSize: 12 }}
+                aria-label={`Energy ${n} of 10`}
+                aria-pressed={draft.energy === n}
                 onClick={() => setDraft({ ...draft, energy: n })}
               >
                 {n}
@@ -73,6 +75,7 @@ export function Checkin({ app }: { app: DareApp }) {
               <button
                 key={t}
                 className={"pill" + (draft.time === t ? " on" : "")}
+                aria-pressed={draft.time === t}
                 onClick={() => setDraft({ ...draft, time: t })}
               >
                 {t} min
@@ -89,6 +92,7 @@ export function Checkin({ app }: { app: DareApp }) {
                 key={id}
                 className={"pill" + (draft.loc === id ? " on" : "")}
                 style={{ fontSize: 12 }}
+                aria-pressed={draft.loc === id}
                 onClick={() => setDraft({ ...draft, loc: id })}
               >
                 {t}
@@ -104,6 +108,7 @@ export function Checkin({ app }: { app: DareApp }) {
               <button
                 key={id}
                 className={"pill" + (draft.state === id ? " on" : "")}
+                aria-pressed={draft.state === id}
                 onClick={() => setDraft({ ...draft, state: id })}
               >
                 {t}
@@ -130,6 +135,13 @@ export function Checkin({ app }: { app: DareApp }) {
           >
             Get my dare
           </button>
+          {/* El botón queda atenuado hasta completar las cuatro: una pista corta
+              evita la confusión de "por qué no puedo continuar". */}
+          {!ready && (
+            <p style={{ fontSize: 11.5, color: C.faint, textAlign: "center", marginTop: 10 }}>
+              Answer all four to continue.
+            </p>
+          )}
         </div>
       </div>
     </div>

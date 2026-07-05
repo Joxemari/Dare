@@ -29,6 +29,8 @@ export function Nav({ tab, go }: { tab: Screen; go: (s: Screen) => void }) {
           key={it.id}
           className="nav-b"
           onClick={() => go(it.id)}
+          aria-current={tab === it.id ? "page" : undefined}
+          aria-label={it.label}
           style={{ color: tab === it.id ? it.color : C.faint }}
         >
           <Ico name={it.ico} size={17} sw={1.6} />
