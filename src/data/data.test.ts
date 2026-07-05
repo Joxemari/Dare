@@ -195,10 +195,17 @@ describe("completion de Journey por milestones (dispara la celebración)", () =>
 });
 
 describe("Expected Effect — perfiles ricos y distintos por Dare", () => {
-  it("cada Dare muestra entre 3 y 5 efectos (nunca pobre ni saturado)", () => {
+  // Ningún Dare debe salir SATURADO (techo de 5 efectos): el detalle se vuelve
+  // ruido. El suelo es >=1 porque el corpus incluye "micro" Dares de vida
+  // (admin, comunicación, emoción, teléfono…) que son deliberadamente ESTRECHOS
+  // —un "responde a un mensaje" mejora Mood/Confidence y poco más; forzarlos a
+  // 3+ efectos sería relleno deshonesto—. La garantía anti-pobreza real (que un
+  // Dare no muestre "solo Calm/Mood" y que cada familia tenga su efecto
+  // característico) la cubren los dos tests siguientes sobre los Dares físicos.
+  it("ningún Dare está saturado: entre 1 y 5 efectos", () => {
     for (const d of ALL) {
       const n = Object.keys(d.effects).length;
-      expect(n >= 3 && n <= 5, `${d.id} tiene ${n} efectos`).toBe(true);
+      expect(n >= 1 && n <= 5, `${d.id} tiene ${n} efectos`).toBe(true);
     }
   });
 

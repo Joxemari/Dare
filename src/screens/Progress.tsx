@@ -8,8 +8,16 @@ import { todayStr } from "../lib/date";
 import { Ico } from "../components/Ico";
 import { Nav } from "../components/Nav";
 import { wrap, pad } from "../components/layout";
-import type { Cat } from "../types";
+import type { Cat, PlanWhen } from "../types";
 import type { DareApp } from "../lib/useDare";
+
+const WHEN_LABEL: Record<PlanWhen, string> = {
+  "later-today": "Later today",
+  "tomorrow-am": "Tomorrow morning",
+  "tomorrow-pm": "Tomorrow evening",
+  weekend: "This weekend",
+  journey: "In your Journey",
+};
 
 export function Progress({ app }: { app: DareApp }) {
   const { store, catFeedback, proofCount, currentIdentity, journey, dreamReward, isJourneyActive } = app;
@@ -94,6 +102,39 @@ export function Progress({ app }: { app: DareApp }) {
                 </span>
               ))}
             </div>
+          )}
+
+          {/* Planned Dares (v5): Dares apartados para más tarde */}
+          {store.darePlans.length > 0 && (
+            <>
+              <p className="lbl" style={{ marginBottom: 10, color: C.purple }}>
+                {SYMBOLS.focus} Planned Dares
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 22 }}>
+                {store.darePlans.map((p) => (
+                  <div
+                    key={p.id}
+                    className="card"
+                    style={{ padding: 14, display: "flex", alignItems: "center", justifyContent: "space-between", background: C.card2 }}
+                  >
+                    <div>
+                      <p style={{ fontSize: 14, color: C.text }}>{p.label}</p>
+                      <p className="lbl" style={{ fontSize: 8.5, marginTop: 3, color: C.faint }}>
+                        {WHEN_LABEL[p.when]}
+                      </p>
+                    </div>
+                    <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+                      <button className="link" style={{ color: C.faint, fontSize: 12 }} onClick={() => app.removeDarePlan(p.id)}>
+                        Remove
+                      </button>
+                      <button className="link" style={{ color: C.green }} onClick={() => app.startPlannedDare(p)}>
+                        Start
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
 
           {/* top cards: Proof / Momentum / Identity */}

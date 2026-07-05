@@ -2,20 +2,33 @@ import type { ReactNode } from "react";
 import { C, CATS, colorOf } from "../data/colors";
 import { CAT_ICO } from "../data/icons";
 import { SYMBOLS, SECTION_SYM } from "../data/symbols";
-import { SPRINT_DAYS } from "../data/journeys";
 import { findScience } from "../data/science";
 import { Ico } from "../components/Ico";
 import { Meta, companionWord } from "../components/Meta";
 import { Effects } from "../components/Effects";
+import { PlanForLater } from "../components/PlanForLater";
 import { wrap, pad } from "../components/layout";
 import type { Dare } from "../types";
 import type { DareApp } from "../lib/useDare";
+
+/** Resumen "What this is": usa el summary del Dare o deriva un fallback. */
+function dareSummary(d: Dare): string {
+  if (d.summary) return d.summary;
+  return `A ${d.min}-minute ${CATS[d.cat].label.toLowerCase()} dare — small enough to start now, with no need to finish it perfectly.`;
+}
+
+/** Primera frase de un texto (para mantener corto el "Why this works"). */
+function firstSentence(text: string): string {
+  const i = text.indexOf(". ");
+  return i === -1 ? text : text.slice(0, i + 1);
+}
 
 /** Nota explicativa del Companion (por qué acompañar la acción ayuda). */
 function companionNote(d: Dare): string {
   switch (companionWord(d)) {
     case "Silence":
-      return "Silence gives your brain fewer inputs to process. Use the quiet as part of the reset.";
+    case "Quiet":
+      return "Fewer inputs to process means less friction. Use the quiet as part of the reset.";
     case "Podcast":
     case "Audiobook":
       return "Something to listen to lowers how hard the effort feels, so starting and continuing is easier.";
@@ -31,8 +44,12 @@ function companionNote(d: Dare): string {
       return "Doing it with someone adds connection and accountability — play, not homework.";
     case "Daylight":
       return "Daylight itself is the companion: it lifts alertness and helps set your body clock.";
+    case "Timer":
+      return "A short timer makes the ask finite: you only owe it those minutes, which is easy to start.";
+    case "Water":
+      return "A concrete first prop lowers the bar — grab it and you've already begun.";
     default:
-      return "A companion makes the action enjoyable, so you're far more likely to begin.";
+      return "A concrete, ready object makes the first move obvious — so you're far more likely to begin.";
   }
 }
 
@@ -54,7 +71,8 @@ export function Detail({ app }: { app: DareApp }) {
   const why = app.currentDare.why;
   const col = colorOf(d);
   const science = findScience(d.scienceId);
-  const remaining = Math.max(0, SPRINT_DAYS - app.daysDone);
+  // Trigger como PRIMER paso práctico dentro de Steps (ya no es sección propia).
+  const steps = d.trigger ? [`Notice: ${d.trigger}`, ...d.steps] : d.steps;
 
   return (
     <div className="dare-root">
@@ -96,12 +114,12 @@ export function Detail({ app }: { app: DareApp }) {
             <Meta dare={d} />
           </div>
 
-          {/* 1 · Trigger — la acción primero, no la explicación */}
-          <Section symKey="trigger" title="Trigger" color={C.green}>
-            <p className="serif" style={{ fontSize: 18, color: C.text }}>"{d.trigger}"</p>
+          {/* 1 · What this is — un resumen corto de qué es el Dare (antes: Trigger) */}
+          <Section symKey="trigger" title="What this is" color={C.green}>
+            <p style={{ fontSize: 14.5, lineHeight: 1.55, color: C.text }}>{dareSummary(d)}</p>
           </Section>
 
-          {/* 2 · Companion (con explicación de por qué ayuda) */}
+          {/* 2 · Companion (concreto + por qué ayuda) */}
           <Section symKey="companion" title="Companion" color={C.purple}>
             <p style={{ fontSize: 14, color: C.text, marginBottom: 6 }}>{d.companion}</p>
             <p style={{ fontSize: 13, lineHeight: 1.55, color: C.dim }}>{companionNote(d)}</p>
@@ -112,20 +130,9 @@ export function Detail({ app }: { app: DareApp }) {
             <Effects effects={d.effects} />
           </Section>
 
-          {/* 4 · Science Behind Today's Dare */}
-          {science && (
-            <Section symKey="science" title="Science Behind Today's Dare" color={C.gold}>
-              <p style={{ fontSize: 13, fontWeight: 500, marginBottom: 6 }}>{science.title}</p>
-              <p style={{ fontSize: 13.5, lineHeight: 1.55, color: C.dim }}>{science.text}</p>
-              <p className="lbl" style={{ fontSize: 8.5, marginTop: 10, color: C.faint }}>
-                Evidence: {science.evidence}
-              </p>
-            </Section>
-          )}
-
-          {/* 5 · Steps */}
+          {/* 4 · Steps — el Trigger es el primer paso práctico */}
           <Section symKey="steps" title="Steps">
-            {d.steps.map((s, i) => (
+            {steps.map((s, i) => (
               <div
                 key={i}
                 style={{
@@ -133,7 +140,7 @@ export function Detail({ app }: { app: DareApp }) {
                   gap: 12,
                   alignItems: "baseline",
                   padding: "8px 0",
-                  borderBottom: i < d.steps.length - 1 ? `1px solid ${C.line}` : "none",
+                  borderBottom: i < steps.length - 1 ? `1px solid ${C.line}` : "none",
                 }}
               >
                 <span style={{ color: col, fontSize: 11, minWidth: 16 }}>{i + 1}</span>
@@ -142,30 +149,23 @@ export function Detail({ app }: { app: DareApp }) {
             ))}
           </Section>
 
-          {/* 6 · Treat Locked */}
-          <Section symKey="treat" title="Treat Locked" color={C.gold}>
-            <p style={{ fontSize: 13.5, lineHeight: 1.45, color: C.dim }}>
-              A sealed Treat Draw unlocks when you finish — sometimes it's golden.
-            </p>
-            {app.isJourneyActive && app.dreamReward && (
-              <p style={{ fontSize: 12.5, color: C.gold, marginTop: 10 }}>
-                {SYMBOLS.dream} Dream Reward: {app.dreamReward} · {remaining} to go
+          {/* 5 · Why this works — ciencia + porqué, fusionados y cortos */}
+          <Section symKey="why" title="Why this works" color={C.gold}>
+            <p style={{ fontSize: 14, lineHeight: 1.55, color: C.text }}>{why}</p>
+            {science && (
+              <p style={{ fontSize: 13, lineHeight: 1.55, color: C.dim, marginTop: 8 }}>
+                {firstSentence(science.text)}
               </p>
             )}
           </Section>
 
-          {/* 7 · Why this Dare today — la última explicación antes de comprometerse,
-                justo encima de Start dare (primero la acción, este cierre, y a empezar). */}
-          <Section symKey="why" title="Why this Dare today" color={C.purple}>
-            <p style={{ fontSize: 14, lineHeight: 1.55, color: C.text }}>{why}</p>
-          </Section>
-
-          {/* 8 · Start dare — inmediatamente después de "Why this Dare today". */}
           <button className="btn btn-green" style={{ marginTop: 6 }} onClick={() => app.startDare()}>
             Start dare
           </button>
-          {/* 9 · No energy → versión de 3 minutos */}
-          <div style={{ textAlign: "center", marginTop: 16 }}>
+
+          {/* Plan for later (Planned Dares) + versión de baja energía */}
+          <PlanForLater app={app} />
+          <div style={{ textAlign: "center", marginTop: 12 }}>
             <button className="link" onClick={() => app.swapToSmall()}>
               {SYMBOLS.soft} No energy → 3-minute version
             </button>
