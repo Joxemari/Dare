@@ -120,7 +120,8 @@ src/
                Wordmark (la marca: glifo ✦ + "DARE" + eslogan; se reutiliza en
                Splash, Onboarding y el masthead de Today); DailyCardDraw (card
                pull del día, vive en You); y los de Today: TodayHeader (masthead:
-               marca + fecha + saludo inspirador con glow), TodayDareRevealCard,
+               logo ✦DARE izq + imagen del día + fecha + headline rotatorio),
+               TodayDareRevealCard,
                PlannedDueList, ActiveJourneyList.
   screens/     Pantallas (Splash, Onboarding, Dream, Reentry, Home, Card, Checkin,
                Detail, Timer, Complete, JourneyComplete, Journey, Journeys,
@@ -141,16 +142,16 @@ acción en las esquinas** (el perfil vive en la pestaña **You** del nav inferio
 Principio: **UNA acción evidente al abrir**, cero adornos compitiendo arriba (el
 manifiesto es *"one decision removed, one action begun"*). De arriba a abajo:
 
-1. **Masthead** (`TodayHeader`): un encabezado de CONTEXTO, no una acción, pero
-   **inspirador** — la **marca** (`Wordmark`: glifo + "DARE" + *"Daily Actions.
-   Real Energy."*), un pequeño **hero con glow de horizonte** (glifo decorativo,
-   `aria-hidden`), la **fecha** ("SUNDAY 5 JULY", `formatDayLabel`) y un titular
-   serif: **saludo** por franja horaria ("Good morning/afternoon/evening",
-   `greetingFor(hour)`, ambos puros en `lib/date.ts`) + *"Today is yours."* +
-   *"Small steps. Real energy."*. Ya **NO** muestra la línea del capítulo del
-   Journey: el estado de cada Journey vive abajo, en *"Today's plan"*
-   (`ActiveJourneyList`), para no duplicarlo. Da calidez/orientación sin competir
-   con el Dare.
+1. **Masthead** (`TodayHeader`): CONTEXTO + calidez, no una acción. **Logo de la
+   app a la IZQUIERDA** — glifo ✦ (con `pulse` pequeño) + "DARE"; **sin** el 2º
+   favicon apilado y **sin** eslogan (se retiraron de Today). Debajo, un **hero
+   con la IMAGEN del día** (rotatoria, una por día) + degradado a negro por abajo
+   para legibilidad, con la **fecha** ("SUNDAY 5 JULY", `formatDayLabel`) y un
+   **headline motivacional rotatorio** (no cheesy, `data/headlines.ts`) encima.
+   Imagen y headline rotan por día con `pickByDay` (puro, `lib/date.ts`); las
+   imágenes se cargan de `src/assets/today/*` vía `import.meta.glob` en `Home`
+   (nombres libres; Vite las hashea y solo baja la del día). Da calidez sin
+   competir con el Dare; el estado de cada Journey vive abajo en *"Today's plan"*.
 2. **Your Dare** como HÉROE (`TodayDareRevealCard`).
 3. La lista de **Planned Dares vencidos** (`PlannedDueList`) y `ActiveJourneyList`.
 

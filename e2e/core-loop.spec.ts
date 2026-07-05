@@ -27,9 +27,10 @@ async function enterApp(page: Page) {
   // Tras el onboarding aparece el ritual de la carta del día (una vez al día);
   // lo saltamos para llegar a Today.
   await page.getByRole("button", { name: "Skip for now" }).click();
-  // Today mínimo: masthead de contexto (marca + "Today is yours.") + el Dare
-  // como héroe. Sin carta, sin puerta/briefing, sin arrancar Journey.
-  await expect(page.getByText("Today is yours.")).toBeVisible();
+  // Today mínimo: masthead (logo DARE + fecha + headline rotatorio) + el Dare
+  // como héroe. El headline rota por día, así que anclamos en algo estable:
+  // el logo DARE del masthead y la card del Dare.
+  await expect(page.getByRole("img", { name: "DARE" })).toBeVisible();
   await expect(page.getByText("YOUR DARE OF THE DAY")).toBeVisible();
 }
 
@@ -192,7 +193,7 @@ test("Journey day sin dareId: Start lanza un Dare del Journey, no el check-in", 
   await page.goto("/Dare/");
 
   // Today abre directo (sin ritual) y el Journey activo ofrece un "Continue"
-  await expect(page.getByText("Today is yours.")).toBeVisible();
+  await expect(page.getByRole("img", { name: "DARE" })).toBeVisible();
   await page.getByRole("button", { name: "Continue", exact: true }).click();
 
   // Debe caer en el Dare (Detail), NUNCA en el check-in "How are you today?"
