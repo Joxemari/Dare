@@ -17,20 +17,21 @@ function guardPageErrors(page: Page): string[] {
   return errors;
 }
 
-/** Onboarding (2 pantallas) → Today. NO arranca ningún Journey (eso es explícito). */
+/** Onboarding (3 pantallas) → ritual carta (saltar) → Today. NO arranca Journey. */
 async function enterApp(page: Page) {
   await page.addInitScript(() => localStorage.clear()); // arranque limpio y determinista
   await page.goto("/Dare/");
+  // Pantalla 1 (intro). El primer click auto-espera a que el splash (overlay)
+  // termine su crossfade antes de pulsar.
+  await page.getByRole("button", { name: "Continue" }).click();
+  // Pantalla 2 (la idea)
   await expect(page.getByText("You don't need")).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
+  // Pantalla 3 (el método)
   await page.getByRole("button", { name: "Enter DARE" }).click();
-  // Tras el onboarding aparece el ritual de la carta del día (una vez al día);
-  // lo saltamos para llegar a Today.
+  // Tras el onboarding aparece el ritual de la carta del día; lo saltamos.
   await page.getByRole("button", { name: "Skip for now" }).click();
-  // Today mínimo: masthead (logo DARE + fecha + headline rotatorio) + el Dare
-  // como héroe. El headline rota por día, así que anclamos en algo estable:
-  // el logo DARE del masthead y la card del Dare.
-  await expect(page.getByRole("img", { name: "DARE" })).toBeVisible();
+  // Today: la card del Dare (anclamos en algo estable; el headline rota por día).
   await expect(page.getByText("YOUR DARE OF THE DAY")).toBeVisible();
 }
 
