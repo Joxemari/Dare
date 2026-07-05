@@ -192,8 +192,11 @@ test("Journey day sin dareId: Start lanza un Dare del Journey, no el check-in", 
   });
   await page.goto("/Dare/");
 
-  // Today abre directo (sin ritual) y el Journey activo ofrece un "Continue"
-  await expect(page.getByRole("img", { name: "DARE" })).toBeVisible();
+  // Today abre directo (sin ritual) y el Journey activo ofrece un "Continue".
+  // Anclamos en un texto ÚNICO de Today (la marca "DARE" coexiste con la del
+  // splash mientras hace el crossfade). El click auto-espera a que el splash
+  // termine su fade (overlay) antes de pulsar.
+  await expect(page.getByText("YOUR DARE OF THE DAY")).toBeVisible();
   await page.getByRole("button", { name: "Continue", exact: true }).click();
 
   // Debe caer en el Dare (Detail), NUNCA en el check-in "How are you today?"
