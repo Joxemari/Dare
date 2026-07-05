@@ -16,7 +16,7 @@ además de la operativa de desarrollo. No es solo una lista de comandos.
 - **Tailwind CSS v4** vía `@tailwindcss/vite`; los tokens viven en `src/index.css`.
 - **Vitest** para los tests.
 - Fuentes autoalojadas con `@fontsource` (Cormorant Garamond + Space Grotesk); sin CDN de Google.
-- Persistencia en **`localStorage`**, esquema versionado (v4) con migración.
+- Persistencia en **`localStorage`**, esquema versionado (v5) con migración.
 - **PWA instalable** sin dependencias extra (manifest estático + service worker
   a mano); offline y "añadir a inicio". Ver sección *PWA* más abajo.
 - Sin router: las pantallas son estado, no rutas.
@@ -89,10 +89,14 @@ src/
                                   la Daily Card vía Web Share API (ver más abajo)
                  briefing.ts      "lectura del día" estilo Co-Star: contenido del
                                   widget Y del recordatorio (buildBriefing/
-                                  buildReminder) + reminderDue(). Puro, seeded por
-                                  fecha (ver más abajo)
+                                  buildReminder) + dueSlot() (qué franja del
+                                  recordatorio toca: mañana/tarde). Puro, seeded
+                                  por fecha (ver más abajo)
+                 install.ts       decisión PURA del nudge "añadir a inicio" (PWA):
+                                  isIOS/isInStandaloneMode/installOffer (ver más
+                                  abajo)
                Frontera con efectos (I/O), aisladas a propósito:
-                 storage.ts    load/save/migrate sobre localStorage (v4)
+                 storage.ts    load/save/migrate sobre localStorage (v5)
                  useDare.ts    hook de React: estado de la app + orquestación
                  feedback.ts   vibración (navigator.vibrate) + sonido sintetizado
                                (Web Audio, sin assets). Impuro; no se testea.
@@ -332,9 +336,14 @@ concreto— que sirve DE FORMA COMPARTIDA a dos superficies: el **widget in-app*
 regla del repo (lógica pura vs. efectos en la frontera):
 
 - **`src/lib/briefing.ts`** — PURO y testeado (`briefing.test.ts`).
-  `buildBriefing()` construye la lectura; `buildReminder()` deriva el título/cuerpo
-  de la notificación; `reminderDue()` decide (recibiendo `now`) si toca avisar.
-  La variedad se elige con un **PRNG sembrado por la FECHA** (`mulberry32`), así el
+  `buildBriefing()` construye la lectura; `buildReminder(input, slot)` deriva el
+  título/cuerpo de la notificación (el título varía por franja: la tarde dice
+  *"Still time today"* sin culpar); `dueSlot()` decide (recibiendo `now`) **qué
+  franja toca** avisar (`"morning"`/`"evening"`/`null`). **Dos empujones al día**:
+  la mañana dispara en su ventana `[hora_mañana, hora_tarde)` y la tarde a partir
+  de su hora (con prioridad, para no reavisar una mañana ya pasada al abrir de
+  noche); cada franja lleva su propio `lastShown` (dedupe independiente). La
+  variedad se elige con un **PRNG sembrado por la FECHA** (`mulberry32`), así el
   briefing es **estable dentro del día** y cambia cada día (y los tests son
   reproducibles). Respeta el vocabulario del producto: un test *guard* prohíbe
   XP/level/streak/badge/calorie/burn.
@@ -343,18 +352,41 @@ regla del repo (lógica pura vs. efectos en la frontera):
   `serviceWorker.ready.showNotification` (fallback a `new Notification`). El clic
   lo maneja `public/sw.js` (`notificationclick` → enfoca/abre la app).
 - **`src/lib/useDare.ts`** — orquesta: expone el `briefing` derivado, las acciones
-  (`enableNotifications`/`disableNotifications`/`setNotificationTime`) y un efecto
-  que comprueba `reminderDue` al montar, al enfocar la pestaña y **cada minuto
-  mientras la app está viva**; al disparar, sella `notifications.lastShown` (dedupe
-  diario).
+  (`enableNotifications`/`disableNotifications`/`setNotificationSlot(slot,h,m)`) y
+  un efecto que comprueba `dueSlot` al montar, al enfocar la pestaña y **cada
+  minuto mientras la app está viva**; al disparar, sella **solo** el `lastShown`
+  de la franja avisada (dedupe diario por franja).
 - **`src/components/Briefing.tsx`** (widget presentacional, en Home) y la sección
-  **"Daily reminder"** de `src/screens/You.tsx` (toggle + hora + estado del permiso).
+  **"Daily reminder"** de `src/screens/You.tsx` (toggle + **dos horas**,
+  mañana/tarde + estado del permiso).
 
 **Límite honesto (sin backend):** es un recordatorio **LOCAL**, fiable mientras la
 pestaña vive. El **push con la app cerrada** exige servidor push + VAPID → queda
 **diferido** a cuando DARE tenga backend. Igual, los **widgets nativos** de
 pantalla de inicio no existen para una PWA; por eso el "widget" es la tarjeta
 in-app. Las preferencias viven en `store.notifications` (ver *Datos persistidos*).
+
+### Nudge de instalación (PWA) — proteger el localStorage
+
+En **iOS**, una web **no instalada** pierde el `localStorage` a los ~7 días de
+inactividad (Safari lo desaloja) → se borraría el progreso del Journey. Por eso
+DARE **empuja a instalar** ("Add to Home Screen"), lo que hace el almacenamiento
+duradero. Reparto según la regla del repo (lógica pura vs. efectos):
+
+- **`src/lib/install.ts`** — PURO y testeado (`install.test.ts`): `isIOS(ua)`,
+  `isInStandaloneMode(display, ios)` y `installOffer(input)` → `"prompt"` (hay
+  `beforeinstallprompt` capturado: instalación de 1 toque), `"ios-manual"` (iOS
+  sin ese evento: instrucciones Compartir → Add to Home Screen) o `"none"`. No
+  molesta el día 1 (exige algo que perder: ≥1 proof o journey activo) y se
+  **silencia** una temporada (14 días) tras un descarte.
+- **`src/lib/useDare.ts`** — frontera: captura `beforeinstallprompt`/`appinstalled`,
+  detecta standalone, expone `installNudge` (respeta umbral+silencio, para el
+  banner de Reentry), `installSettings` (siempre que NO esté instalada, para
+  Ajustes) y las acciones `promptInstall`/`dismissInstall`.
+- **`src/components/InstallBanner.tsx`** — presentacional (recibe la decisión ya
+  tomada). Se monta en **`src/screens/Reentry.tsx`** (quien vuelve tras una
+  ausencia es justo el de mayor riesgo de desalojo) y en la sección de Ajustes de
+  **`src/screens/You.tsx`**. NO se muestra en Today (se mantiene mínimo).
 
 ### PWA (instalable + offline)
 
@@ -392,8 +424,10 @@ que `index.html` enlaza manifest + apple-touch-icon.
   progreso por journey, journeys completados, dream rewards, check-ins, dares
   del día, daily card, proof library, momentum, badges (clave `traits`),
   `smallVersionUses`, identidades, milestones, companion shelf, boss playlist,
-  planned dares, dates, historial de treats, feedback y las preferencias de
-  notificación). Lo *derivable* (p. ej. el scoring de un dare, el nº de proofs,
+  planned dares, dates, historial de treats, feedback, las preferencias de
+  notificación (dos franjas) y el estado del nudge de instalación (`install`:
+  `dismissedAt`/`installedAt`)). Lo *derivable* (p. ej. el scoring de un dare, el
+  nº de proofs,
   la identidad actual, el capítulo desbloqueado, **el briefing del día**) se
   recalcula, no se guarda.
 - **Guarda referencias, no copias.** Persiste **identificadores** (p. ej. el `id`
@@ -401,8 +435,8 @@ que `index.html` enlaza manifest + apple-touch-icon.
   vía `lookup.ts`) al leer. Así, cambiar el contenido de un dato no rompe los
   datos antiguos guardados. Copiar el objeto entero dentro del store obliga a
   migrar en cuanto cambie su forma.
-- **Versionado de la forma + migración:** el store lleva `version` (hoy `4`) bajo
-  la clave `dare:v4`. `storage.ts` migra cualquier forma antigua/desconocida a v4
+- **Versionado de la forma + migración:** el store lleva `version` (hoy `5`) bajo
+  la clave `dare:v5`. `storage.ts` migra cualquier forma antigua/desconocida a v5
   mergeando sobre `defaultStore()` (ver `migrate()`), de modo que un campo que un
   build viejo nunca escribió recibe un valor por defecto. v2→v3 renombra el
   vocabulario del prototipo al de producto (streak→momentum, rewardDraws→treats,
@@ -410,8 +444,12 @@ que `index.html` enlaza manifest + apple-touch-icon.
   modelo multi-journey y el recordatorio diario: como un store v3 nunca tuvo
   `activeJourneyIds`, se **deriva** (cualquier Journey con progreso > 0 o
   completado se marca activo), así un usuario existente no pierde su Journey en
-  curso; y `notifications` recibe su valor por defecto al mergear. La migración es
-  **idempotente**: aplicarla a un store ya v4 lo deja igual. Si cambia la forma,
+  curso; y `notifications` recibe su valor por defecto al mergear. v4→v5 añade el
+  recordatorio de **dos franjas** y el nudge de instalación: el `notifications` de
+  v4 tenía UNA hora (`{hour,minute,lastShown}`) → se **promueve** a la franja de
+  la **mañana** (conservando la hora y su `lastShown`) y la **tarde** recibe el
+  default (18:00); `install` recibe su valor por defecto. La migración es
+  **idempotente**: aplicarla a un store ya v5 lo deja igual. Si cambia la forma,
   **hay que subir la versión y ampliar la migración en la misma PR.**
 - **Defensivo ante datos corruptos:** si el JSON no parsea, se arranca limpio con
   `defaultStore()` en vez de romper.

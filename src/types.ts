@@ -289,23 +289,48 @@ export interface ScheduledDate {
   journeyId: JourneyId;
 }
 
-/** Preferencias del recordatorio diario (ver lib/notify.ts + briefing.ts).
-    Sin backend: el push en segundo plano no es fiable; esto configura un
-    recordatorio LOCAL (Notifications API + service worker) que se dispara
-    mientras la app está abierta o donde el dispositivo lo permita. */
-export interface NotificationPrefs {
-  enabled: boolean;
-  /** Hora local del recordatorio (0-23). */
+/** Una franja horaria del recordatorio (mañana o tarde). Cada una lleva su
+    propio `lastShown` para el dedupe: disparar la de la mañana NO debe impedir
+    que la de la tarde avise el mismo día. */
+export interface NotificationSlot {
+  /** Hora local (0-23). */
   hour: number;
   /** Minuto local (0-59). */
   minute: number;
-  /** Última fecha (YYYY-MM-DD) en que se mostró — dedupe diario. */
+  /** Última fecha (YYYY-MM-DD) en que se mostró esta franja — dedupe diario. */
   lastShown: string;
 }
 
-/** localStorage — versión 4. Ver storage.ts (migración desde v2/v3). */
+/** Preferencias del recordatorio diario (ver lib/notify.ts + briefing.ts).
+    Sin backend: el push en segundo plano no es fiable; esto configura un
+    recordatorio LOCAL (Notifications API + service worker) que se dispara
+    mientras la app está abierta o donde el dispositivo lo permita.
+
+    DOS empujones al día (v5): uno por la mañana y otro por la tarde, cada uno
+    con su hora y su dedupe. `enabled` cubre ambas franjas. */
+export interface NotificationPrefs {
+  enabled: boolean;
+  /** Empujón de la mañana (por defecto 09:00). */
+  morning: NotificationSlot;
+  /** Empujón de la tarde (por defecto 18:00). */
+  evening: NotificationSlot;
+}
+
+/** Estado del nudge "añadir a inicio" (PWA). Sin backend: instalar es lo que
+    hace DURADERO el localStorage en iOS (Safari desaloja el de una web NO
+    instalada a los ~7 días de inactividad → se perdería el progreso). */
+export interface InstallPrefs {
+  /** Última fecha (YYYY-MM-DD) en que el usuario descartó el nudge — se respeta
+      una ventana de silencio para no insistir. "" = nunca descartado. */
+  dismissedAt: string;
+  /** Fecha (YYYY-MM-DD) en que se detectó la instalación (evento `appinstalled`),
+      o "" si no consta. */
+  installedAt: string;
+}
+
+/** localStorage — versión 5. Ver storage.ts (migración desde v2/v3/v4). */
 export interface DareStore {
-  version: 4;
+  version: 5;
   onboarded: boolean;
   /** Journey "en foco" para la pantalla Journey y la lane de Today. */
   journeyId: JourneyId;
@@ -354,6 +379,8 @@ export interface DareStore {
   dates: ScheduledDate[];
   /** Feedback diferido "+30 min"; se muestra en la próxima apertura. */
   pendingFeedback: { dareId: string; cat: Cat; at: number } | null;
-  /** Preferencias del recordatorio diario (v4). */
+  /** Preferencias del recordatorio diario (v4; dos franjas desde v5). */
   notifications: NotificationPrefs;
+  /** Estado del nudge de instalación PWA (v5). */
+  install: InstallPrefs;
 }
