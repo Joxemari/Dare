@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { C } from "../data/colors";
 import { SYMBOLS } from "../data/symbols";
-import { MS_T, totalMilestones, chapterState } from "../data/journeys";
+import { MS_T, totalMilestones, chapterState, SPRINT_DAYS } from "../data/journeys";
 import { Ico } from "../components/Ico";
 import { Nav } from "../components/Nav";
 import { MilestoneModal } from "../components/MilestoneModal";
@@ -13,8 +13,14 @@ export function Journey({ app }: { app: DareApp }) {
   const { journey, chapter, store, isJourneyActive } = app;
   const [openCh, setOpenCh] = useState<number | null>(chapter.idx);
   const [modal, setModal] = useState<Milestone | null>(null);
+  const [confirmCancel, setConfirmCancel] = useState(false);
   const isPlaceholder = journey.plan.length === 0;
   const dreamReward = store.dreamRewards[journey.id];
+  const progress = store.journeyProgress[journey.id] ?? 0;
+  /** Pausado: arrancado alguna vez (tiene fecha de inicio) pero no activo ahora.
+   *  Se apoya en journeyStartedAt para distinguir "pausado en Day 1" de "sin empezar";
+   *  cancelar borra esa fecha y vuelve a "sin empezar". */
+  const paused = !isJourneyActive && !isPlaceholder && !!store.journeyStartedAt[journey.id];
 
   const allMs = journey.chapters.flatMap((c) => c.milestones);
   const mDone = allMs.filter((m) => store.milestones[m.id]).length;
@@ -40,7 +46,7 @@ export function Journey({ app }: { app: DareApp }) {
           <p style={{ color: C.dim, fontSize: 13.5, marginBottom: 14 }}>{journey.tag}</p>
 
           {/* not started yet — Begin Journey (no auto-start on launch) */}
-          {!isPlaceholder && !isJourneyActive && (
+          {!isPlaceholder && !isJourneyActive && !paused && (
             <div className="card rise" style={{ padding: 22, marginBottom: 22, borderColor: journey.color + "55" }}>
               <p style={{ fontSize: 14.5, lineHeight: 1.55, marginBottom: 10 }}>{journey.promise}</p>
               <p className="serif" style={{ fontStyle: "italic", fontSize: 16, color: C.dim, marginBottom: 18 }}>
@@ -52,6 +58,32 @@ export function Journey({ app }: { app: DareApp }) {
               <p style={{ fontSize: 11.5, color: C.faint, marginTop: 10, textAlign: "center" }}>
                 {dreamReward ? `Dream Reward set: ${dreamReward}` : "You'll choose a Dream Reward first."}
               </p>
+            </div>
+          )}
+
+          {/* paused — resume where you left off, or cancel to reset */}
+          {paused && (
+            <div className="card rise" style={{ padding: 22, marginBottom: 22, borderColor: journey.color + "55" }}>
+              <p className="lbl" style={{ color: journey.color, marginBottom: 8 }}>Paused · Day {Math.min(SPRINT_DAYS, progress + 1)} of {SPRINT_DAYS}</p>
+              <p style={{ fontSize: 14, lineHeight: 1.55, color: C.dim, marginBottom: 18 }}>
+                Your progress is saved. Pick up exactly where you left off.
+              </p>
+              <button className="btn btn-green" onClick={() => app.resumeJourney(journey.id)}>
+                Resume Journey {SYMBOLS.spark}
+              </button>
+              {confirmCancel ? (
+                <div style={{ marginTop: 12, textAlign: "center" }}>
+                  <p style={{ fontSize: 12, color: C.coral, marginBottom: 8 }}>Cancel resets this sprint to Day 1. Sure?</p>
+                  <button className="link" style={{ color: C.coral, marginRight: 18 }} onClick={() => { app.cancelJourney(journey.id); setConfirmCancel(false); }}>
+                    Yes, reset it
+                  </button>
+                  <button className="link" style={{ color: C.dim }} onClick={() => setConfirmCancel(false)}>Keep progress</button>
+                </div>
+              ) : (
+                <button className="link" style={{ color: C.faint, fontSize: 12, marginTop: 12, display: "block", width: "100%", textAlign: "center" }} onClick={() => setConfirmCancel(true)}>
+                  Cancel journey
+                </button>
+              )}
             </div>
           )}
 
@@ -236,9 +268,29 @@ export function Journey({ app }: { app: DareApp }) {
             </p>
           )}
           {isJourneyActive && (
-            <p style={{ fontSize: 12.5, color: C.faint, textAlign: "center", marginTop: 22 }}>
-              Missed a day? No reset. Take the next dare.
-            </p>
+            <div style={{ marginTop: 22, textAlign: "center" }}>
+              <p style={{ fontSize: 12.5, color: C.faint, marginBottom: 14 }}>
+                Missed a day? No reset. Take the next dare.
+              </p>
+              {confirmCancel ? (
+                <div>
+                  <p style={{ fontSize: 12, color: C.coral, marginBottom: 8 }}>Cancel resets this sprint to Day 1. Sure?</p>
+                  <button className="link" style={{ color: C.coral, marginRight: 18 }} onClick={() => { app.cancelJourney(journey.id); setConfirmCancel(false); }}>
+                    Yes, reset it
+                  </button>
+                  <button className="link" style={{ color: C.dim }} onClick={() => setConfirmCancel(false)}>Keep progress</button>
+                </div>
+              ) : (
+                <div style={{ display: "flex", justifyContent: "center", gap: 22 }}>
+                  <button className="link" style={{ color: C.dim, fontSize: 12.5 }} onClick={() => app.pauseJourney(journey.id)}>
+                    Pause journey
+                  </button>
+                  <button className="link" style={{ color: C.faint, fontSize: 12.5 }} onClick={() => setConfirmCancel(true)}>
+                    Cancel journey
+                  </button>
+                </div>
+              )}
+            </div>
           )}
         </div>
         <Nav tab="journey" go={app.setScreen} />

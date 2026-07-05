@@ -1,5 +1,6 @@
 import { C } from "../data/colors";
 import { wrap, pad } from "../components/layout";
+import { InstallBanner } from "../components/InstallBanner";
 import { findDare } from "../lib/lookup";
 import type { DareApp } from "../lib/useDare";
 
@@ -55,6 +56,18 @@ export function Reentry({ app }: { app: DareApp }) {
             <button className="link" style={{ marginTop: 16 }} onClick={() => app.dismissAway()}>
               Not yet — just look around
             </button>
+
+            {/* El que vuelve tras una ausencia es justo quien más riesgo tiene de
+                perder el localStorage (desalojo de Safari): nudge de instalación. */}
+            {app.installNudge !== "none" && (
+              <div style={{ marginTop: 30 }}>
+                <InstallBanner
+                  offer={app.installNudge}
+                  onInstall={app.promptInstall}
+                  onDismiss={app.dismissInstall}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

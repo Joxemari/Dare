@@ -101,17 +101,19 @@ test("Journey: Begin explícito, milestones accionables + tabs Progress/You", as
   await page.getByRole("button", { name: "Journey", exact: true }).click();
   await page.getByRole("button", { name: /Begin Journey/ }).click();
 
-  // sin Dream Reward → setup; al elegirlo, el Journey arranca y muestra capítulos
-  await expect(page.getByText(/What would make finishing/)).toBeVisible();
-  await page.getByText("Painting class").click();
+  // sin Dream Reward → setup; al elegirlo, el Journey arranca y muestra capítulos.
+  // El Journey en foco por defecto es Iron Quiet (MVP, physical-energy-first).
+  await expect(page.getByText(/What would feeling stronger/)).toBeVisible();
+  await page.getByText("New training top").click();
   // La pantalla Journey ya NO muestra "Days Ahead": se centra en capítulos,
   // milestones, % de completion y Dream Reward activo.
   await expect(page.getByText("Chapters")).toBeVisible();
   await expect(page.getByText("The days ahead")).toHaveCount(0);
   await expect(page.getByText(/milestones completed/).first()).toBeVisible();
 
+
   // abrir un milestone (Letter) y completarlo — arregla el "Start" muerto
-  await page.getByText("You don't have a motivation problem").click();
+  await page.getByText("You don't have a discipline problem.").click();
   await expect(page.getByRole("button", { name: "Mark as read" })).toBeVisible();
   await page.getByRole("button", { name: "Mark as read" }).click();
 
