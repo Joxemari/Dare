@@ -235,6 +235,21 @@ export interface TreatDraw {
   special?: "golden" | "date" | "dreamBoost" | "choose";
 }
 
+/** Un treat del catálogo (`data/rewards.ts`). Los tags lo ligan al CONTEXTO
+    del Dare recién completado (su categoría): `fits` = encaja especialmente
+    (se prima al elegir), `avoid` = choca con esa actividad y NO debe salir
+    (p. ej. "un café sentado" justo después de un paseo por el bosque).
+    Sin tags = neutro: vale tras cualquier Dare. */
+export interface Treat {
+  text: string;
+  /** Categorías con las que este treat encaja especialmente. */
+  fits?: readonly Cat[];
+  /** Categorías tras las que NUNCA debe ofrecerse. */
+  avoid?: readonly Cat[];
+  /** Solo los golden llevan efecto especial. */
+  special?: TreatDraw["special"];
+}
+
 /** Un Dare surgido para un día. `why` es la explicación generada. */
 export interface TodaysDare {
   dareId: string;
