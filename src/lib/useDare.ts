@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import type {
-  Avoid,
   BossPlaylist,
   Cat,
   Checkin,
@@ -63,31 +62,6 @@ const FB_DELAY = 30 * 60 * 1000; // 30 minutos
 /** Check-in por defecto para "Just dare me" sin check-in previo:
  *  corto, de baja fricción, inmediato. */
 const SAFE_CI: Checkin = { energy: 5, time: 3, loc: "home", dest: null, state: "normal" };
-
-/** Check-in RÁPIDO de Today: energía + foco (1-5) + qué se evita. Sin
- *  ningún valor por defecto seleccionado (todos null hasta que el usuario
- *  toca). Ver pantalla `QuickCheckin` en TodayDareRevealCard. */
-export type QuickDraft = {
-  energy: number | null;
-  focus: number | null;
-  avoiding: Avoid | null;
-};
-const emptyQuick: QuickDraft = { energy: null, focus: null, avoiding: null };
-
-/** Convierte el check-in rápido (1-5) en un Checkin completo (contexto casa).
- *  Escala energía/foco a 1-10 y deriva el estado mental. */
-function quickToCheckin(q: { energy: number; focus: number; avoiding: Avoid }): Checkin {
-  const state: Checkin["state"] = q.energy <= 2 ? "tired" : q.focus <= 2 ? "blocked" : "normal";
-  return {
-    energy: q.energy * 2,
-    time: 10,
-    loc: "home",
-    dest: null,
-    state,
-    focus: q.focus * 2,
-    avoiding: q.avoiding,
-  };
-}
 
 /** Fecha (YYYY-MM-DD) a partir de la cual un Planned Dare vuelve a Today.
  *  "journey" no tiene fecha (vive en el contexto del Journey). Impuro (usa
@@ -180,9 +154,6 @@ export function useDare() {
   // transitorio (no persistido)
   const [obIdx, setObIdx] = useState(0);
   const [draft, setDraft] = useState<DraftCheckin>(emptyDraft);
-  const [quickDraft, setQuickDraft] = useState<QuickDraft>(emptyQuick);
-  /** ¿Se está mostrando el check-in rápido en Today (gate de "Your Dare")? */
-  const [checkingIn, setCheckingIn] = useState(false);
   const [treat, setTreat] = useState<TreatDraw | null>(null);
   const [treatFlipped, setTreatFlipped] = useState(false);
   const [lastProof, setLastProof] = useState<string>("");
@@ -524,7 +495,6 @@ export function useDare() {
     const rejectedIds = store.rejectedDares.filter((r) => r.date >= cutoff).map((r) => r.dareId);
     const { dare, why } = generateDare(ci, store.lastCats, catFeedback, journey, recentIds, rejectedIds);
     setUsedSmall(false);
-    setCheckingIn(false);
     setStore((s) => ({
       ...s,
       lastCheckin: ci,
@@ -574,23 +544,6 @@ export function useDare() {
     }
   }
 
-  /** Today "Your Dare": abre el check-in rápido (gate previo a generar). */
-  function startQuickCheckin() {
-    setQuickDraft(emptyQuick);
-    setCheckingIn(true);
-  }
-
-  function cancelQuickCheckin() {
-    setCheckingIn(false);
-    setQuickDraft(emptyQuick);
-  }
-
-  /** Genera el Dare a partir del check-in rápido y lo revela inline en Today. */
-  function runQuickCheckin(q: { energy: number; focus: number; avoiding: Avoid }) {
-    const ci = quickToCheckin(q);
-    generateInto(ci, { persistCheckin: true, navigate: "home" });
-  }
-
   /** Marca un Dare como rechazado (no repetir pronto). */
   function rejectDare(dareId: string) {
     setStore((s) => ({
@@ -599,11 +552,11 @@ export function useDare() {
     }));
   }
 
-  /** Today "Another dare": rechaza el actual y vuelve al check-in rápido para
-   *  elegir de nuevo (variedad guiada por el estado). */
+  /** Today "Another dare": rechaza el actual y abre el check-in (el único, la
+   *  pantalla completa "How are you today?") para elegir de nuevo. */
   function anotherDare() {
     if (currentEntry) rejectDare(currentEntry.dareId);
-    startQuickCheckin();
+    setScreen("checkin");
   }
 
   function revealDare() {
@@ -1010,12 +963,9 @@ export function useDare() {
     setAway,
     obIdx,
     setObIdx,
-    // check-in draft (completo) + check-in rápido de Today
+    // check-in draft (pantalla completa "How are you today?")
     draft,
     setDraft,
-    quickDraft,
-    setQuickDraft,
-    checkingIn,
     // derivados
     journey,
     daysDone,
@@ -1068,9 +1018,6 @@ export function useDare() {
     justDareMe,
     quickDareMe,
     revealTodayDare,
-    startQuickCheckin,
-    cancelQuickCheckin,
-    runQuickCheckin,
     rejectDare,
     anotherDare,
     planDare,

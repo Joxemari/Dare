@@ -71,8 +71,8 @@ src/
   lib/         Lógica. La mayoría son funciones PURAS y deterministas:
                  generator.ts     selección del dare (scoring, no if/else),
                                   con contexto+destino del check-in completo
-                                  y, en el check-in rápido de Today, foco +
-                                  qué se evita (avoiding) + evitar rechazados
+                                  + evitar rechazados. Aún soporta foco/avoiding
+                                  en el scoring, hoy sin UI que los alimente
                  achievements.ts  earnedTraits() — qué traits gana un dare
                  companions.ts    sistema de Companions (temptation bundling):
                                   clasifica/resuelve el companion de un dare,
@@ -116,8 +116,7 @@ src/
   components/  Presentacionales: Ico, TarotArt, Dots, Nav, Meta, Effects,
                MilestoneModal, ShareCardButton, PlanForLater, layout;
                DailyCardDraw (card pull del día, vive en You); y los de Today:
-               QuickCheckin (check-in rápido), TodayDareRevealCard,
-               PlannedDueList, ActiveJourneyList.
+               TodayDareRevealCard, PlannedDueList, ActiveJourneyList.
   screens/     Pantallas (Onboarding, Dream, Reentry, Home, Card, Checkin,
                Detail, Timer, Complete, JourneyComplete, Journey, Journeys,
                Progress, You). Consumen el hook.
@@ -137,15 +136,17 @@ briefing solo en el recordatorio, y proofs/badges/ciencia en **Progress**.
 
 **Your Dare a un toque, check-in opcional.** El estado cerrado ofrece **"Just
 dare me"** (`quickDareMe`: genera al instante con el último check-in —o un
-default seguro— y revela INLINE, sin peaje diario) y, como opción secundaria,
-**"Check in first"** (`startQuickCheckin`): abre `QuickCheckin` inline —**Energy
-1-5 · Focus 1-5 · qué estás evitando** (Admin/Body/People/Mind/Nothing), sin
-opción marcada por defecto— y solo entonces genera y revela el Dare. Flujo
+default seguro— y revela INLINE, sin preguntas) y, como opción secundaria,
+**"Check in first"** que abre el **único check-in** de la app: la pantalla
+completa `Checkin` (*"How are you today?"* — Energy 1-10 · Time · Location ·
+Destination · Mental state · vibe/companion + "Plan a Dare this week"). Flujo
 rápido: Your Dare → *Just dare me* → Dare revelado → Start. Flujo afinado: Your
-Dare → *Check in first* → check-in → Dare → Start. En el hook:
-`quickDareMe`/`startQuickCheckin`/`runQuickCheckin` (el rápido mapea a un
-`Checkin` de contexto casa, escalando 1-5→1-10 y derivando el estado);
-`anotherDare` **rechaza** el actual (no repetir pronto) y reabre el check-in.
+Dare → *Check in first* → `Checkin` → *Get my dare* → Detail → Start. En el hook:
+`quickDareMe` (aleatorio inline) y `runCheckin` (desde `Checkin`, navega a
+Detail); `anotherDare` **rechaza** el actual (no repetir pronto) y abre el
+`Checkin`. **Nota:** existió un check-in "rápido" inline (`QuickCheckin`: Energy/
+Focus/Avoiding 1-5) que se **eliminó** para tener un solo check-in — el completo,
+que además rutea destinos (piscina/gym/bosque) y el vibe del companion.
 
 Con **varios Journeys activos**, `ActiveJourneyList` prioriza el Journey
 recomendado por el check-in (`recommendJourney` en `lib/recommend.ts`: energía
