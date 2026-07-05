@@ -17,7 +17,9 @@ import { SYMBOLS } from "../data/symbols";
  *  + SVG inline), escala nítido a cualquier tamaño y hereda el color vía
  *  `currentColor`. Se dimensiona por `fontSize` del contenedor (height ≈ altura de
  *  mayúscula); `letterSpacing`/`textIndent` que pasan los llamadores se ignoran
- *  (el tracking va horneado en la geometría). `viewBox` ajustado a la tinta.
+ *  (el tracking va horneado en la geometría). `viewBox` con un pequeño margen
+ *  (bleed) alrededor de la tinta: si el borde queda JUSTO en el extremo de los
+ *  remates redondeados, a ciertos tamaños el redondeo sub-píxel los recorta.
  *  `aria-label="DARE"` para lectores. Fuente única de la marca; se reutiliza en
  *  Wordmark, Splash, Onboarding y el masthead de Today. */
 export function DareWord({ style }: { style?: CSSProperties }) {
@@ -25,7 +27,7 @@ export function DareWord({ style }: { style?: CSSProperties }) {
     <svg
       role="img"
       aria-label="DARE"
-      viewBox="81 81 1298 238"
+      viewBox="75 75 1310 250"
       fill="none"
       style={{ height: "0.78em", width: "auto", display: "inline-block", verticalAlign: "baseline", color: C.text, ...style }}
     >
