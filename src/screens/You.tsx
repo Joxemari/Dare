@@ -119,8 +119,17 @@ export function You({ app }: { app: DareApp }) {
           {/* today's card — el ritual de sacar carta vive aquí (antes en Today) */}
           <DailyCardDraw app={app} />
 
-          {/* active journeys — pueden ser varios a la vez (multi-journey) */}
-          <div className="card" style={{ padding: 18, marginBottom: 14 }}>
+          {/* active journeys — pueden ser varios a la vez (multi-journey).
+              Acento journey.color cuando hay uno en marcha (coherente con
+              ActiveJourneyList en Today): la tarjeta representa "dónde estás". */}
+          <div
+            className="card"
+            style={{
+              padding: 18,
+              marginBottom: 14,
+              ...(activeJourneys.length > 0 ? { borderColor: `${journey.color}44` } : null),
+            }}
+          >
             <p className="lbl" style={{ marginBottom: activeJourneys.length ? 12 : 6 }}>
               {activeJourneys.length > 1 ? "Active journeys" : "Current journey"}
             </p>
