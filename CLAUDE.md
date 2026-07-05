@@ -125,10 +125,12 @@ src/
   screens/     Pantallas (Splash, Onboarding, Dream, Reentry, Home, Card, Checkin,
                Detail, Timer, Complete, JourneyComplete, Journey, Journeys,
                Progress, You). Consumen el hook.
-               Splash: pantalla oscura de apertura con la marca (crece + shine),
-               transitoria (~1.7s) SOLO tras el onboarding y con motion normal;
-               el gate (showSplash) vive en App.tsx, no se persiste y respeta
-               prefers-reduced-motion.
+               Splash: apertura oscura con reveal por CAPAS — primero el glifo
+               (favicon), luego "DARE" + eslogan. Sale SIEMPRE en cold-start
+               (App solo se monta al arrancar → no aparece al cambiar de pestaña
+               ni en navegación normal), va POR ENCIMA de todo (onboarding
+               incluido), dura ~1.3s y auto-avanza. El gate (showSplash) vive en
+               App.tsx, no se persiste y respeta prefers-reduced-motion.
   App.tsx      "Router" por estado: decide qué pantalla mostrar (+ gate del Splash).
 ```
 
@@ -198,18 +200,20 @@ lo sube y lo marca (`· today`).
 El **card pull del día** (tarot, `DailyCardDraw`) tiene dos superficies, y
 NINGUNA es Today (que queda mínimo):
 
-- **Ritual de apertura, UNA VEZ AL DÍA y SALTABLE.** Al abrir la app, si aún no
-  hay carta hoy y no se ha resuelto el ritual, la pantalla `Card` aparece con las
-  3 cartas boca abajo (*"Draw your card."*) ANTES de Today. Elegir una la revela
-  a pantalla completa; al continuar, la carta **"viaja" hacia la esquina de You**
-  (translate+scale+fade, hint *"Saved in You"*; respeta `prefers-reduced-motion`)
-  para que se entienda que NO se pierde —queda guardada en You— y entra a Today.
-  **"Skip for now"** (`skipCardIntro`) lo
+- **Ritual de apertura, UNA VEZ AL DÍA y SALTABLE.** Al abrir la app (y **también
+  al terminar el onboarding** — `completeOnboarding` enruta al ritual si toca,
+  antes iba directo a Today y por eso "a veces no salía"), si aún no hay carta hoy
+  y no se ha resuelto el ritual, la pantalla `Card` aparece con las 3 cartas boca
+  abajo (*"Draw your card."*) ANTES de Today. Al **pulsar una, se da la vuelta**
+  (`card-flip-out`) y se revela a pantalla completa; al continuar, la carta
+  **"viaja" hacia la esquina de You** (translate+scale+fade, hint *"Saved in
+  You"*; respeta `prefers-reduced-motion`) para que se entienda que NO se pierde
+  —queda guardada en You— y entra a Today. **"Skip for now"** (`skipCardIntro`) lo
   salta sin sacar carta. El gate es puro (`shouldOpenCardIntro` en `useDare`:
   `onboarded && dailyCard.cardId == null && cardIntroDate !== hoy`) y se decide en
-  el inicializador del `screen`; tanto sacar (`pickCard`) como saltar sellan
-  `store.cardIntroDate = hoy`, así **no reaparece** en reaperturas del mismo día.
-  El usuario *away* no lo ve (Reentry manda). Es un placer, no un peaje.
+  el inicializador del `screen` (y en `completeOnboarding`); tanto sacar
+  (`pickCard`) como saltar sellan `store.cardIntroDate = hoy`, así **no reaparece**
+  en reaperturas del mismo día. El usuario *away* no lo ve (Reentry manda).
 - **En la pestaña You**, `DailyCardDraw` es el sitio para sacarla si se saltó, y
   para reabrir la ya sacada (miniatura). Antes vivía arriba en Today.
 

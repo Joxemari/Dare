@@ -24,6 +24,9 @@ async function enterApp(page: Page) {
   await expect(page.getByText("You don't need")).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("button", { name: "Enter DARE" }).click();
+  // Tras el onboarding aparece el ritual de la carta del día (una vez al día);
+  // lo saltamos para llegar a Today.
+  await page.getByRole("button", { name: "Skip for now" }).click();
   // Today mínimo: masthead de contexto (marca + "Today is yours.") + el Dare
   // como héroe. Sin carta, sin puerta/briefing, sin arrancar Journey.
   await expect(page.getByText("Today is yours.")).toBeVisible();

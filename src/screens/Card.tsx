@@ -35,6 +35,16 @@ export function Card({ app }: { app: DareApp }) {
   };
   // Saltar el ritual: marca el día como resuelto para que no reaparezca hoy.
   const skip = () => app.skipCardIntro();
+  // Voltear al pulsar: la carta elegida "se da la vuelta" (card-flip-out) y
+  // luego se revela. Con reduced-motion se revela directo.
+  const [flippingId, setFlippingId] = useState<string | null>(null);
+  const chooseCard = (id: string) => {
+    if (flippingId) return;
+    cardRevealFeedback();
+    if (prefersReducedMotion()) return app.pickCard(id);
+    setFlippingId(id);
+    setTimeout(() => app.pickCard(id), 340);
+  };
 
   // ---- 1. Elegir carta (boca abajo) — ritual de apertura, saltable ----
   if (!card) {
@@ -61,12 +71,9 @@ export function Card({ app }: { app: DareApp }) {
               {cardOptions.map((c, i) => (
                 <button
                   key={c.id}
-                  className="tcard"
-                  style={{ aspectRatio: "5 / 8.5", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}
-                  onClick={() => {
-                    cardRevealFeedback();
-                    app.pickCard(c.id);
-                  }}
+                  className={"tcard" + (flippingId === c.id ? " card-flip-out" : "")}
+                  style={{ aspectRatio: "5 / 8.5", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", opacity: flippingId && flippingId !== c.id ? 0.4 : 1 }}
+                  onClick={() => chooseCard(c.id)}
                   aria-label="Face-down daily card"
                 >
                   <div style={{ position: "absolute", inset: 6, border: `1px solid ${C.gold}33`, borderRadius: 9, pointerEvents: "none" }} />
