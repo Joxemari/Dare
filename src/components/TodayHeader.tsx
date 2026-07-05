@@ -43,6 +43,7 @@ export function TodayHeader({
           position: "relative",
           minHeight: 210,
           display: "flex",
+          overflow: "hidden",
         }}
       >
         {bgUrl && (
@@ -55,6 +56,10 @@ export function TodayHeader({
               backgroundSize: "contain",
               backgroundPosition: "right center",
               backgroundRepeat: "no-repeat",
+              // Un 10% más a la derecha (feedback): desplaza la capa de imagen;
+              // el desborde lo recorta el `overflow: hidden` del hero, y la
+              // máscara acompaña a la imagen (va en este mismo div).
+              transform: "translateX(10%)",
               WebkitMaskImage:
                 "radial-gradient(115% 118% at 72% 42%, #000 46%, transparent 82%)",
               maskImage:
