@@ -47,6 +47,21 @@ export const CAT_MODE: Record<Cat, MovementMode> = {
   recovery: "Recovery",
   focus: "Soft",
   small: "Soft",
+  // Categorías de anti-procrastinación / activación (check-in rápido de Today):
+  // no son "movimiento" físico, así que caen en modos de baja fricción — Soft
+  // por defecto, Recovery para el reset corporal/emocional y Social para lo que
+  // toca a otras personas. Sirven a la regla anti-aburrimiento por MODO.
+  admin: "Soft",
+  communication: "Social",
+  bodyreset: "Recovery",
+  environment: "Soft",
+  creative: "Soft",
+  social: "Social",
+  decision: "Soft",
+  emotion: "Recovery",
+  phone: "Soft",
+  taskcontact: "Soft",
+  close: "Soft",
 };
 
 /** Modo de una categoría (helper puro). */

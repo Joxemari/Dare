@@ -2,7 +2,7 @@ import { DARES } from "../data/dares";
 import { WILDCARDS } from "../data/wildcards";
 import { modeOfCat } from "../data/modes";
 import { vibeBonus, vibeConfig } from "./companions";
-import type { Cat, Checkin, CurrentLoc, Dare, Dest, Journey, Loc } from "../types";
+import type { Avoid, Cat, Checkin, CurrentLoc, Dare, Dest, Journey, Loc } from "../types";
 
 /* --------------------- DARE GENERATOR ---------------------
    Scoring, no cadena de if/else. Optimiza la probabilidad de
@@ -56,7 +56,7 @@ export function allowedLocs(ci: Checkin): Loc[] {
  * `todaysDares` del store encajan tal cual. Alimenta la penalización por
  * repetición del generador — la magia del "reveal" depende de no repetir.
  */
-export function recentDareIds(history: { dareId: string }[], n = 5): string[] {
+export function recentDareIds(history: { dareId: string }[], n = 8): string[] {
   const ids: string[] = [];
   const seen = new Set<string>();
   for (let i = history.length - 1; i >= 0 && ids.length < n; i--) {
@@ -69,12 +69,30 @@ export function recentDareIds(history: { dareId: string }[], n = 5): string[] {
   return ids;
 }
 
+/**
+ * Qué categorías atacan cada tipo de evitación (check-in rápido de Today).
+ * El Dare ofrecido ayuda a HACER CONTACTO con lo evitado, sin exigir terminarlo.
+ */
+const AVOID_CATS: Record<Avoid, Cat[]> = {
+  admin: ["admin", "taskcontact", "close", "communication", "decision", "focus"],
+  body: ["bodyreset", "walk", "recovery", "forest", "small"],
+  people: ["social", "communication"],
+  mind: ["focus", "emotion", "decision", "environment", "recovery"],
+  none: [],
+};
+
+/** Categorías que ayudan cuando el foco está bajo (arranque de baja fricción). */
+const LOW_FOCUS_CATS: Cat[] = ["focus", "decision", "environment", "emotion", "recovery", "small", "bodyreset"];
+/** Categorías que aprovechan un foco alto (algo de más chicha cognitiva). */
+const HIGH_FOCUS_CATS: Cat[] = ["creative", "admin", "taskcontact", "close", "dumbbells", "carry"];
+
 export function generateDare(
   ci: Checkin,
   lastCats: Cat[],
   catFeedback: Partial<Record<Cat, number>>,
   journey: Journey,
   recentIds: string[] = [],
+  rejectedIds: string[] = [],
 ): { dare: Dare; why: string } {
   const locs = allowedLocs(ci);
   const at = (d: Dare) => d.locs.some((l) => locs.includes(l));
@@ -85,8 +103,8 @@ export function generateDare(
   if (ci.time >= 10 && ci.energy >= 3 && Math.random() < wildChance) {
     const wpool = WILDCARDS.filter((w) => w.min <= ci.time + 2 && at(w));
     if (wpool.length) {
-      // no repitas el último wildcard si hay alternativas
-      const fresh = wpool.filter((w) => !recentIds.includes(w.id));
+      // no repitas el último wildcard ni uno rechazado si hay alternativas
+      const fresh = wpool.filter((w) => !recentIds.includes(w.id) && !rejectedIds.includes(w.id));
       const from = fresh.length ? fresh : wpool;
       const dare = from[Math.floor(Math.random() * from.length)];
       return {
@@ -124,6 +142,13 @@ export function generateDare(
     if (ci.dest === "gym" && d.cat === "fitboxing") s += 20;
     if (ci.dest === "padel" && d.cat === "padel") s += 20;
     if (ci.dest === "forest" && d.cat === "forest") s += 20;
+    // ---- evitación (check-in rápido): empuja hacia lo que hace contacto ----
+    if (ci.avoiding && ci.avoiding !== "none" && AVOID_CATS[ci.avoiding].includes(d.cat)) s += 22;
+    // ---- foco (check-in rápido): baja fricción si el foco está bajo ----
+    if (typeof ci.focus === "number") {
+      if (ci.focus <= 4 && LOW_FOCUS_CATS.includes(d.cat)) s += 9;
+      if (ci.focus >= 7 && HIGH_FOCUS_CATS.includes(d.cat)) s += 9;
+    }
     if (lastCats[0] === d.cat) s -= 18;
     if (lastCats[0] === d.cat && lastCats[1] === d.cat) s -= 40;
     // Anti-aburrimiento por MODO (más ancho que la categoría): no repetir el
@@ -135,6 +160,10 @@ export function generateDare(
     // penaliza repetir un Dare concreto reciente (graduado: más reciente, más penalización)
     const recentIdx = recentIds.indexOf(d.id);
     if (recentIdx >= 0) s -= Math.max(6, 26 - recentIdx * 5);
+    // un Dare rechazado ("Another dare") no debe volver pronto: castigo
+    // DECISIVO — mayor que cualquier combinación de bonus, para que solo gane
+    // si es la única alternativa del pool.
+    if (rejectedIds.includes(d.id)) s -= 500;
     s += (catFeedback[d.cat] || 0) * 6;
     // el vibe del check-in ("¿qué lo haría menos aburrido hoy?") empuja hacia
     // la familia de companion elegida (temptation bundling)
@@ -155,7 +184,7 @@ export function buildWhy(ci: Checkin, d: Dare): string {
       : e <= 6
         ? "Medium energy: you need movement, not pressure."
         : "You have fuel today — we're spending it well.";
-  const catLine: Record<Cat, string> = {
+  const catLine: Partial<Record<Cat, string>> = {
     forest: "The pines do half the work.",
     walk: "Music first. Movement follows.",
     dumbbells: "Strength, without the gym ritual.",
@@ -167,6 +196,17 @@ export function buildWhy(ci: Checkin, d: Dare): string {
     recovery: "Rest is part of the work.",
     focus: "Clarity is also energy.",
     small: "Something is better than nothing. Always.",
+    admin: "Contact, not completion. Just open it.",
+    communication: "One honest message beats a perfect one unsent.",
+    bodyreset: "A small reset changes your state fast.",
+    environment: "Clear the space, clear the next step.",
+    creative: "Start badly. Good comes later.",
+    social: "One small move toward people, not away.",
+    decision: "Fewer choices, more motion.",
+    emotion: "Name it, breathe, let the noise drop.",
+    phone: "Distance from the screen makes room for the real thing.",
+    taskcontact: "Make contact with the task — you don't have to finish it.",
+    close: "Close one loop instead of opening another.",
   };
   const stateLine =
     ci.state === "blocked"
@@ -174,5 +214,6 @@ export function buildWhy(ci: Checkin, d: Dare): string {
       : ci.state === "stressed"
         ? " Chosen to lower the noise."
         : "";
-  return opener + " " + catLine[d.cat] + stateLine;
+  const line = catLine[d.cat] ?? "The smallest step still counts.";
+  return opener + " " + line + stateLine;
 }

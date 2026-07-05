@@ -65,10 +65,14 @@ src/
                `traits` del store), rewards (treats etiquetados por
                contexto — `fits`/`avoid` por categoría —, dates, dream;
                antes draws), companions (catálogo de companions +
-               config de vibes; temptation bundling), icons, colors.
+               config de vibes; temptation bundling), briefings (biblioteca
+               de "Today's Briefing": consejos inspirados en personas
+               conocidas + hábito real), icons, colors.
   lib/         Lógica. La mayoría son funciones PURAS y deterministas:
                  generator.ts     selección del dare (scoring, no if/else),
-                                  con contexto+destino del check-in
+                                  con contexto+destino del check-in completo
+                                  y, en el check-in rápido de Today, foco +
+                                  qué se evita (avoiding) + evitar rechazados
                  achievements.ts  earnedTraits() — qué traits gana un dare
                  companions.ts    sistema de Companions (temptation bundling):
                                   clasifica/resuelve el companion de un dare,
@@ -93,11 +97,12 @@ src/
                                   (estado+energía). Puro, prioriza los activos
                  share.ts         capa social: texto/payload PUROS para compartir
                                   la Daily Card vía Web Share API (ver más abajo)
-                 briefing.ts      "lectura del día" estilo Co-Star: contenido del
-                                  widget Y del recordatorio (buildBriefing/
+                 briefing.ts      "Today's Briefing": elige un consejo inspirado
+                                  en alguien conocido (biblioteca `briefings`)
+                                  para el widget Y el recordatorio (buildBriefing/
                                   buildReminder) + dueSlot() (qué franja del
-                                  recordatorio toca: mañana/tarde). Puro, seeded
-                                  por fecha (ver más abajo)
+                                  recordatorio toca: mañana/tarde). Puro, seeded por
+                                  fecha (ver más abajo)
                  install.ts       decisión PURA del nudge "añadir a inicio" (PWA):
                                   isIOS/isInStandaloneMode/installOffer (ver más
                                   abajo)
@@ -109,8 +114,10 @@ src/
                  notify.ts     recordatorio local: permiso + showNotification vía
                                service worker. Impuro; no se testea.
   components/  Presentacionales: Ico, TarotArt, Dots, Nav, Meta, Effects,
-               MilestoneModal, ShareCardButton, Briefing, layout; y los de
-               Today: AtmosphereHero, TodayDareRevealCard, ActiveJourneyList.
+               MilestoneModal, ShareCardButton, Briefing, PlanForLater, layout;
+               y los de Today: DailyCardDraw (card pull inline), AtmosphereHero,
+               TodaysDoor (puerta→briefing), QuickCheckin (check-in rápido),
+               TodayDareRevealCard, PlannedDueList, ActiveJourneyList.
   screens/     Pantallas (Onboarding, Dream, Reentry, Home, Card, Checkin,
                Detail, Timer, Complete, Journey, Journeys, Progress, You).
                Consumen el hook.
@@ -119,25 +126,37 @@ src/
 
 ### Today — ritual diario mínimo (no dashboard)
 
-La pestaña Today (`screens/Home.tsx`) es deliberadamente MÍNIMA: header
-(icono carta · TODAY · perfil), un `AtmosphereHero` (atmósfera diaria: símbolo
-de línea + textos, modular por props para variar por estado/journey), un
-`TodayDareRevealCard` (un Dare oculto que se **revela inline de un toque**, sin
-navegar; estados cerrado/revelado/completado), y `ActiveJourneyList` (filas
-compactas: símbolo + próxima acción + Start, que abre la pestaña Journey). Con
-**varios Journeys activos**, Today prioriza el "Today's Body Dare": sube y
-marca (`· today`) el Journey recomendado por el check-in (`recommendJourney` en
-`lib/recommend.ts`: energía baja → Still Water, con ganas → Iron Quiet, atascado
-→ Wild Ground, con energía alta → Bright Pulse, overwhelmed → Still Water,
-returning → el activo más suave). Bajo
-el hero se mantiene el widget `Briefing` (la "lectura del día" estilo Co-Star,
-parte de la atmósfera diaria). NO muestra proofs, métricas ni calendario — eso
-vive en Progress. El **ritual de
-la carta del día** (tarot) se movió FUERA de Today: vive en la pantalla `Card`
-(elegir 1 de 3 → revelado a pantalla completa), accesible desde el icono
-izquierdo del header. `revealTodayDare`/`anotherDare` en el hook generan el
-Dare y lo revelan sin salir de Today; el check-in completo ("Get my Dare")
-sigue accesible desde un link discreto y abre el Detail.
+La pestaña Today (`screens/Home.tsx`) es deliberadamente MÍNIMA y **sin iconos
+en las esquinas** (el perfil vive en la pestaña **You** del nav inferior): arriba
+el **card pull inline** (`DailyCardDraw`: "DRAW YOUR CARD FOR TODAY" + 3 cartas
+boca abajo → elegir revela en `Card`; una vez elegida, miniatura para reabrirla)
+— antes colgaba de un icono en la esquina; luego **Today's Door** (`TodaysDoor`:
+la puerta se **abre con un flip** y revela detrás **Today's Briefing** — un
+consejo concreto inspirado en alguien conocido, con CTA "Use this for my Dare /
+Close"), **Your Dare** (`TodayDareRevealCard`), la lista de **Planned Dares
+vencidos** (`PlannedDueList`) y `ActiveJourneyList`. NO muestra proofs, badges,
+cartas de ciencia ni métricas — eso vive en Progress.
+
+**Your Dare EXIGE un check-in rápido** (fix del "genera sin preguntar"):
+tocar "Your Dare" abre `QuickCheckin` inline — **Energy 1-5 · Focus 1-5 · qué
+estás evitando** (Admin/Body/People/Mind/Nothing), sin ninguna opción marcada
+por defecto — y solo entonces se genera el Dare y se revela inline. Flujo:
+Today's Door → (opcional) Briefing · Your Dare → check-in → Dare generado →
+Start. En el hook: `startQuickCheckin`/`runQuickCheckin` (mapea el rápido a un
+`Checkin` de contexto casa, escalando 1-5→1-10 y derivando el estado);
+`anotherDare` **rechaza** el actual (no repetir pronto) y reabre el check-in.
+
+Con **varios Journeys activos**, `ActiveJourneyList` prioriza el Journey
+recomendado por el check-in (`recommendJourney` en `lib/recommend.ts`: energía
+baja → Still Water, con ganas → Iron Quiet, atascado → Wild Ground, con energía
+alta → Bright Pulse, overwhelmed → Still Water, returning → el activo más suave),
+lo sube y lo marca (`· today`).
+
+El **card pull del día** (tarot) es ahora **inline en la parte alta de Today**
+(`DailyCardDraw`); elegir una de las 3 cartas abre la pantalla `Card` (revelado a
+pantalla completa) y al volver queda una miniatura. El check-in COMPLETO
+(loc/dest, para encaminar Dares de piscina/gym/bosque) ya no cuelga de Today; se
+alcanza desde el "one more" de la completion.
 
 ### Contenido generativo (pipeline de PRs, no runtime)
 
@@ -363,25 +382,29 @@ identidad. El diseño completo y el modelo de datos a preparar están en
 `docs/social-layer.md` (principio de producto: *presencia, no ranking* — no
 romper el tono anti-gamificación).
 
-### Briefing diario + recordatorio (estilo Co-Star)
+### Today's Briefing + recordatorio (consejo inspirado, no motivación vaga)
 
-Una **"lectura del día"** —titular poético + líneas de estado + un empujón
-concreto— que sirve DE FORMA COMPARTIDA a dos superficies: el **widget in-app**
-(tarjeta en Home) y el **recordatorio local** (notificación). Reparto según la
-regla del repo (lógica pura vs. efectos en la frontera):
+**Today's Briefing** es UN consejo concreto: inspirado en una **persona conocida**
+y un **hábito/método/anécdota real**, accionable HOY y corto (formato *persona →
+insight → "Today: acción"*). NADA de motivación genérica, "draw a card", lenguaje
+de Journey confuso ni nombres de estado internos. Sirve DE FORMA COMPARTIDA a dos
+superficies: el **widget in-app** (detrás de Today's Door) y el **recordatorio
+local** (notificación). Reparto según la regla del repo (puro vs. frontera):
 
+- **`src/data/briefings.ts`** — datos de dominio SIN lógica: la biblioteca
+  `BRIEFINGS` (persona + insight + acción + símbolo).
 - **`src/lib/briefing.ts`** — PURO y testeado (`briefing.test.ts`).
-  `buildBriefing()` construye la lectura; `buildReminder(input, slot)` deriva el
-  título/cuerpo de la notificación (el título varía por franja: la tarde dice
-  *"Still time today"* sin culpar); `dueSlot()` decide (recibiendo `now`) **qué
-  franja toca** avisar (`"morning"`/`"evening"`/`null`). **Dos empujones al día**:
-  la mañana dispara en su ventana `[hora_mañana, hora_tarde)` y la tarde a partir
-  de su hora (con prioridad, para no reavisar una mañana ya pasada al abrir de
-  noche); cada franja lleva su propio `lastShown` (dedupe independiente). La
-  variedad se elige con un **PRNG sembrado por la FECHA** (`mulberry32`), así el
-  briefing es **estable dentro del día** y cambia cada día (y los tests son
-  reproducibles). Respeta el vocabulario del producto: un test *guard* prohíbe
-  XP/level/streak/badge/calorie/burn.
+  `buildBriefing()` elige una entrada de la biblioteca `BRIEFINGS`;
+  `buildReminder(input, slot)` deriva el título/cuerpo de la notificación (el
+  título varía por franja: la tarde dice *"Still time today"* sin culpar);
+  `dueSlot()` decide (recibiendo `now`) **qué franja toca** avisar
+  (`"morning"`/`"evening"`/`null`). **Dos empujones al día**: la mañana dispara en
+  su ventana `[hora_mañana, hora_tarde)` y la tarde a partir de su hora (con
+  prioridad, para no reavisar una mañana ya pasada al abrir de noche); cada franja
+  lleva su propio `lastShown` (dedupe independiente). La elección se hace con un
+  **PRNG sembrado por la FECHA** (`mulberry32`), así el briefing es **estable
+  dentro del día** y cambia cada día (y los tests son reproducibles). Un test
+  *guard* prohíbe XP/level/streak/badge/calorie/burn **y "draw a card"**.
 - **`src/lib/notify.ts`** — frontera con efectos (impura, no testeada, como
   `feedback.ts`): permiso (`Notification`), y `showReminderNotification()` vía
   `serviceWorker.ready.showNotification` (fallback a `new Notification`). El clic
@@ -391,9 +414,10 @@ regla del repo (lógica pura vs. efectos en la frontera):
   un efecto que comprueba `dueSlot` al montar, al enfocar la pestaña y **cada
   minuto mientras la app está viva**; al disparar, sella **solo** el `lastShown`
   de la franja avisada (dedupe diario por franja).
-- **`src/components/Briefing.tsx`** (widget presentacional, en Home) y la sección
-  **"Daily reminder"** de `src/screens/You.tsx` (toggle + **dos horas**,
-  mañana/tarde + estado del permiso).
+- **`src/components/Briefing.tsx`** (presentacional; se muestra detrás de
+  Today's Door al abrirla) y la sección **"Daily reminder"** de
+  `src/screens/You.tsx` (toggle + **dos horas**, mañana/tarde + estado del
+  permiso).
 
 **Límite honesto (sin backend):** es un recordatorio **LOCAL**, fiable mientras la
 pestaña vive. El **push con la app cerrada** exige servidor push + VAPID → queda
@@ -459,7 +483,8 @@ que `index.html` enlaza manifest + apple-touch-icon.
   progreso por journey, journeys completados, dream rewards, check-ins, dares
   del día, daily card, proof library, momentum, badges (clave `traits`),
   `smallVersionUses`, identidades, milestones, companion shelf, boss playlist,
-  planned dares, dates, historial de treats, feedback, las preferencias de
+  planned dares (destinos) + Planned Dares (`darePlans`) + Dares rechazados
+  (`rejectedDares`), dates, historial de treats, feedback, las preferencias de
   notificación (dos franjas) y el estado del nudge de instalación (`install`:
   `dismissedAt`/`installedAt`)). Los check-ins guardan también el **vibe** de
   companion elegido (campo opcional en `Checkin`). Lo *derivable* (p. ej. el
@@ -480,19 +505,21 @@ que `index.html` enlaza manifest + apple-touch-icon.
   modelo multi-journey y el recordatorio diario: como un store v3 nunca tuvo
   `activeJourneyIds`, se **deriva** (cualquier Journey con progreso > 0 o
   completado se marca activo), así un usuario existente no pierde su Journey en
-  curso; y `notifications` recibe su valor por defecto al mergear. v4→v5 juntó
-  DOS cambios de forma que colisionaron al mergear dos ramas: (a) el recordatorio
-  de **dos franjas** + el nudge de instalación — el `notifications` de v4 tenía
-  UNA hora (`{hour,minute,lastShown}`) → se **promueve** a la franja de la
-  **mañana** (conservando la hora y su `lastShown`), la **tarde** recibe el
-  default (18:00) y `install` recibe su valor por defecto; y (b) el sistema de
-  Companions — un campo **opcional** `vibe` en cada `Checkin`, así que los
-  check-ins v4 se leen tal cual (sin `vibe` = surprise), sin nada que derivar.
-  v5→v6 **unifica esas dos ramas v5**: como ambas subieron a `version: 5` con
-  formas distintas, un store v5 podía venir de cualquiera; para desambiguar se
-  sube a v6 y se re-migra con el mismo merge defensivo (rellena franjas,
-  `install` y lee `vibe` como opcional) — sin transformación de datos, solo
-  version bump. La migración es
+  curso; y `notifications` recibe su valor por defecto al mergear.
+  **v4→v5→v6 (nota de unión):** hubo VARIAS "v5" en ramas paralelas que aquí se
+  unifican en **v6**. Una v5 añadió los **Planned Dares** (`darePlans`: Dares
+  concretos apartados para más tarde, guardan el `id` del Dare + cuándo vencen) y
+  el registro de **Dares rechazados** (`rejectedDares`, para no repetir pronto lo
+  descartado con "Another dare"). Otra v5 añadió el recordatorio de **dos
+  franjas** + el **nudge de instalación** (`install`). Otra v5 añadió los
+  **Companions** (campo **opcional** `vibe` en cada `Checkin`). v6 cubre TODAS:
+  los campos nuevos (`darePlans`/`rejectedDares`/`install`) reciben su default al
+  mergear si faltan; el `notifications` de UNA sola hora (v4 o la v5 de Planned
+  Dares) se **promueve** a la franja de la **mañana** (conservando la hora y su
+  `lastShown`) mientras la **tarde** recibe el default (18:00); y los check-ins
+  sin `vibe` se leen tal cual (sin `vibe` = surprise), sin transformar nada. Un
+  store guardado por cualquiera de esas v5 (o un v4) migra a v6 sin pérdida. La
+  migración es
   **idempotente**: aplicarla a un store ya v6 lo deja igual. Si cambia la forma,
   **hay que subir la versión y ampliar la migración en la misma PR.**
 - **Defensivo ante datos corruptos:** si el JSON no parsea, se arranca limpio con

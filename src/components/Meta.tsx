@@ -29,12 +29,20 @@ function companionIco(word: string): string {
   return "headphones";
 }
 
+/** Efecto esperado principal (mayor intensidad) para el strip de metadata. */
+function topEffect(d: Dare): string {
+  const entries = Object.entries(d.effects) as [string, number][];
+  if (!entries.length) return "Reset";
+  return entries.sort((a, b) => b[1] - a[1])[0][0];
+}
+
 export function Meta({ dare }: { dare: Dare }) {
   const companion = companionWord(dare);
+  // "After/Treat" fuera: los Treats aparecen TRAS completar, no antes (spec).
   const rows: [string, string, string][] = [
     [CAT_ICO[dare.cat], "Place", placeWord(dare)],
     [companionIco(companion), "Companion", companion],
-    ["spark", "After", "Treat"],
+    ["spark", "Effect", topEffect(dare)],
   ];
   return (
     <div

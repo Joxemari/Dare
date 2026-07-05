@@ -36,6 +36,8 @@ export function defaultStore(): DareStore {
     companionShelf: null,
     bossPlaylist: null,
     plannedDares: [],
+    darePlans: [],
+    rejectedDares: [],
     dates: [],
     pendingFeedback: null,
     notifications: {
@@ -65,25 +67,22 @@ export function defaultStore(): DareStore {
  *   su Journey en curso. También se añade `notifications`, que un store v3 no
  *   escribió nunca → recibe el default al mergear sobre `defaultStore()`.
  *
- * v4 → v5: DOS cambios de forma independientes que colisionaron en la misma
- *   versión al mergear dos ramas (de ahí el bump a v6 más abajo):
- *   (a) recordatorio de DOS franjas + nudge de instalación. El `notifications`
- *       de v4 tenía UNA sola hora (`{hour,minute,lastShown}`); se promueve a la
- *       franja de la MAÑANA (conservando la hora elegida y su `lastShown`) y la
- *       TARDE recibe el default (18:00). Se añade `install` con su valor por
- *       defecto. Un store v5 parcial completa las franjas que falten.
- *   (b) sistema de Companions (temptation bundling): un campo OPCIONAL `vibe`
- *       en cada Checkin ("¿qué lo haría menos aburrido hoy?"). Los check-ins
- *       guardados por un build v4 no lo llevan → se leen como `undefined`
- *       (= surprise), sin necesidad de derivar ni transformar nada.
- *
- * v5 → v6: unifica las DOS ramas v5 anteriores. Ambas subieron a `version: 5`
- *   con formas distintas (una la de notificaciones+install, otra la de
- *   Companions), así que un store v5 podría venir de cualquiera de las dos. Para
- *   desambiguar se sube a v6: cualquier store v5 (o anterior) se re-migra con el
- *   merge defensivo de abajo, que YA rellena las franjas de notificación,
- *   `install` y lee `vibe` como opcional. No hay transformación de datos: solo
- *   se sube la versión. Idempotente sobre un store ya v6.
+ * v4 → v5/v6: NOTA — hubo VARIAS "v5" en ramas paralelas que aquí se unifican en
+ *   v6. Los cambios de forma de cada una:
+ *   - Planned Dares (`darePlans`) + Dares rechazados (`rejectedDares`).
+ *   - recordatorio de DOS franjas + nudge de instalación (`install`).
+ *   - Companions (temptation bundling): campo OPCIONAL `vibe` en cada `Checkin`.
+ *   Un store guardado por CUALQUIERA de esas v5 (o por un v4) migra a v6 sin
+ *   pérdida porque el merge defensivo de abajo cubre todos:
+ *   - Planned Dares / rechazados: campos NUEVOS → `[]` al mergear si faltan.
+ *   - `notifications`: si trae UNA sola hora (v4, o la v5 de Planned Dares) se
+ *     promueve a la franja de la MAÑANA y la TARDE recibe el default (18:00);
+ *     si ya trae `morning`/`evening` se mergea franja a franja.
+ *   - `install`: campo NUEVO → default si falta.
+ *   - `vibe`: campo OPCIONAL en cada Checkin → los check-ins sin él se leen como
+ *     `undefined` (= surprise), sin transformar nada.
+ *   Se sube a v6 para desambiguar cualquier "v5" heterogénea. Idempotente:
+ *   aplicada a un store ya v6 lo deja igual.
  */
 function migrate(raw: unknown): DareStore {
   const base = defaultStore();
@@ -147,6 +146,9 @@ function migrate(raw: unknown): DareStore {
   if (o.companionShelf && typeof o.companionShelf === "object") merged.companionShelf = o.companionShelf as DareStore["companionShelf"];
   if (o.bossPlaylist && typeof o.bossPlaylist === "object") merged.bossPlaylist = o.bossPlaylist as DareStore["bossPlaylist"];
   if (Array.isArray(o.plannedDares)) merged.plannedDares = o.plannedDares as DareStore["plannedDares"];
+  // v5 — Planned Dares + Dares rechazados (nuevos; un store previo no los tuvo).
+  if (Array.isArray(o.darePlans)) merged.darePlans = o.darePlans as DareStore["darePlans"];
+  if (Array.isArray(o.rejectedDares)) merged.rejectedDares = o.rejectedDares as DareStore["rejectedDares"];
   if (Array.isArray(o.dates)) merged.dates = o.dates as DareStore["dates"];
   if (o.pendingFeedback && typeof o.pendingFeedback === "object") merged.pendingFeedback = o.pendingFeedback as DareStore["pendingFeedback"];
   if (typeof o.smallVersionUses === "number") merged.smallVersionUses = o.smallVersionUses;
@@ -243,6 +245,7 @@ export function save(store: DareStore): void {
 export function clearStore(): void {
   try {
     localStorage.removeItem(KEY);
+    localStorage.removeItem(KEY_V5);
     localStorage.removeItem(KEY_V4);
     localStorage.removeItem(KEY_V3);
     localStorage.removeItem(KEY_V2);

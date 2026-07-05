@@ -18,7 +18,7 @@ import { mulberry32 } from "./prng";
 /** Reduce el companion de un Dare a una sola palabra reconocible. */
 export function companionWord(d: Dare): string {
   const c = d.companion.toLowerCase();
-  if (/silence|quiet/.test(c)) return "Silence";
+  if (/silence/.test(c)) return "Silence";
   if (/podcast/.test(c)) return "Podcast";
   if (/audiobook/.test(c)) return "Audiobook";
   if (/series|netflix|episode|show/.test(c)) return "Netflix";
@@ -34,7 +34,23 @@ export function companionWord(d: Dare): string {
   if (/class/.test(c)) return "Class";
   if (/new|route|street|somewhere|different/.test(c)) return "New route";
   if (/daylight|sunlight|light|morning|sun/.test(c)) return "Daylight";
-  const w = d.companion.split(/\s+/)[0].replace(/[^A-Za-z]/g, "");
+  // companions concretos de los Dares de activación (anti-procrastinación)
+  if (/timer/.test(c)) return "Timer";
+  if (/water/.test(c)) return "Water";
+  if (/inbox|search bar/.test(c)) return "Inbox";
+  if (/notes|calendar|messages|banking|app/.test(c)) return "App";
+  if (/\bpen\b/.test(c)) return "Pen";
+  if (/blank page|\bpage\b/.test(c)) return "Page";
+  if (/window/.test(c)) return "Window";
+  if (/chair/.test(c)) return "Chair";
+  if (/table|corner|surface/.test(c)) return "Space";
+  if (/shoes/.test(c)) return "Shoes";
+  if (/breath|deep breath/.test(c)) return "Breath";
+  if (/quiet|room/.test(c)) return "Quiet";
+  // fallback: primera palabra con significado (salta artículos y números)
+  const skip = new Set(["a", "an", "the", "one", "your", "my", "two", "cold", "single"]);
+  const words = d.companion.replace(/[^A-Za-z0-9\s]/g, "").split(/\s+/).filter(Boolean);
+  const w = words.find((x) => !skip.has(x.toLowerCase()) && /[a-z]/i.test(x)) ?? words[0] ?? "";
   return w ? w[0].toUpperCase() + w.slice(1) : "Companion";
 }
 

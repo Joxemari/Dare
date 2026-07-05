@@ -113,6 +113,37 @@ describe("generateDare", () => {
     }
     expect(noveltyWild).toBeGreaterThan(neutralWild);
   });
+
+  it("evita un Dare rechazado si hay alternativas", () => {
+    const ci: Checkin = { ...base, energy: 6, time: 20, loc: "home", state: "normal" };
+    const options = new Set<string>();
+    for (let i = 0; i < 30; i++) options.add(generateDare(ci, [], {}, ember).dare.id);
+    expect(options.size).toBeGreaterThan(1);
+    const [rejected] = [...options];
+    let hits = 0;
+    for (let i = 0; i < 60; i++) {
+      if (generateDare(ci, [], {}, ember, [], [rejected]).dare.id === rejected) hits++;
+    }
+    expect(hits).toBeLessThan(10);
+  });
+
+  it("la evitación empuja hacia la categoría que hace contacto", () => {
+    // avoiding=admin → probable un Dare de admin/task-contact/close/comm/decision/focus
+    const ci: Checkin = { energy: 6, time: 10, loc: "home", dest: null, state: "normal", focus: 6, avoiding: "admin" };
+    const contactCats = ["admin", "taskcontact", "close", "communication", "decision", "focus"];
+    let hits = 0;
+    for (let i = 0; i < 60; i++) {
+      const { dare } = generateDare(ci, [], {}, ember);
+      if (contactCats.includes(dare.cat)) hits++;
+    }
+    expect(hits).toBeGreaterThan(20);
+  });
+
+  it("acepta focus/avoiding sin romper el `why`", () => {
+    const ci: Checkin = { energy: 3, time: 10, loc: "home", dest: null, state: "tired", focus: 2, avoiding: "mind" };
+    const { why } = generateDare(ci, [], {}, ember);
+    expect(why.length).toBeGreaterThan(0);
+  });
 });
 
 describe("recentDareIds", () => {

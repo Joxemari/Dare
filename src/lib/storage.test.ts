@@ -15,6 +15,9 @@ describe("migrate (v2/v3/v4/v5 → v6)", () => {
     // por defecto no hay ningún Journey activo
     expect(migrate({}).activeJourneyIds).toEqual([]);
     expect(migrate({}).smallVersionUses).toBe(0);
+    // campos nuevos → arrancan vacíos
+    expect(migrate({}).darePlans).toEqual([]);
+    expect(migrate({}).rejectedDares).toEqual([]);
   });
 
   it("añade el default de notifications e install a un store sin ellos", () => {
@@ -121,6 +124,27 @@ describe("migrate (v2/v3/v4/v5 → v6)", () => {
     expect(m.checkins).toHaveLength(1);
   });
 
+  it("v4 → v6: un store v4 sin Planned Dares recibe los campos por defecto", () => {
+    const v4 = { ...defaultStore(), version: 4 as unknown as 6, onboarded: true };
+    delete (v4 as Record<string, unknown>).darePlans;
+    delete (v4 as Record<string, unknown>).rejectedDares;
+    const m = migrate(v4);
+    expect(m.version).toBe(6);
+    expect(m.darePlans).toEqual([]);
+    expect(m.rejectedDares).toEqual([]);
+  });
+
+  it("v6 → v6: conserva Planned Dares y rechazos ya guardados", () => {
+    const s = {
+      ...defaultStore(),
+      darePlans: [{ id: "p1", dareId: "one-song", when: "later-today" as const, dueDate: "2026-07-05", label: "One Song", createdAt: "2026-07-05" }],
+      rejectedDares: [{ dareId: "pine-reset", date: "2026-07-05" }],
+    };
+    const m = migrate(s);
+    expect(m.darePlans).toHaveLength(1);
+    expect(m.rejectedDares).toEqual([{ dareId: "pine-reset", date: "2026-07-05" }]);
+  });
+
   it("v4 → v6: promueve la hora única a la franja de la mañana; tarde por defecto", () => {
     // un store v4 traía `notifications: { enabled, hour, minute, lastShown }`
     const v4 = {
@@ -140,7 +164,7 @@ describe("migrate (v2/v3/v4/v5 → v6)", () => {
     expect(m.install).toEqual({ dismissedAt: "", installedAt: "" });
   });
 
-  it("preserva unas notifications v5 ya guardadas (completando franjas que falten)", () => {
+  it("preserva unas notifications de dos franjas ya guardadas (completando franjas que falten)", () => {
     const s = {
       ...defaultStore(),
       notifications: {
