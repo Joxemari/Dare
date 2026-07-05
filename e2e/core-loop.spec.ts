@@ -84,10 +84,10 @@ test("Dare page: What this is / Why this works, sin Treat Locked + Plan for late
   // "Start check-in" abre el ÚNICO check-in: la pantalla completa "How are you today?"
   await page.getByRole("button", { name: "Start check-in" }).click();
   await expect(page.getByText("How are you today?")).toBeVisible();
-  // Ya NO hay escala de Energy: la deriva el Mood. Tres preguntas.
+  // Tres preguntas: Time / Place / Energy (Energy es directa, ya no la deriva el Mood).
   await page.getByRole("button", { name: "10 min", exact: true }).click(); // time
-  await page.getByRole("button", { name: "Home", exact: true }).click(); // location
-  await page.getByRole("button", { name: "Normal", exact: true }).click(); // mental state
+  await page.getByRole("button", { name: "Home", exact: true }).click(); // place
+  await page.getByRole("button", { name: "Normal", exact: true }).click(); // energy
   // "Get my dare" navega directo al Detail
   await page.getByRole("button", { name: "Get my dare" }).click();
 

@@ -59,7 +59,7 @@ function buildPrompt({ ids, titles, scienceIds, feedback, count }) {
     "Dare/Wildcard: { id, title, cat, min, level, energy:[lo,hi], locs:[], companion, trigger, proof, effects:{Effect:1|2|3}, steps:[], scienceId?, wild? }",
     "Treat: { tier:'common'|'rare'|'golden', text, fits?:Cat[], avoid?:Cat[], special? } (special solo en golden)",
     `cats: forest walk dumbbells fitboxing pool padel tabata carry recovery focus small`,
-    `levels: Easy Medium Strong · locs: home outside forest pool gym padel`,
+    `levels: Easy Medium Strong · locs: home city park forest pool gym padel (forest/pool/gym/padel son DESTINO, nunca los pongas junto a "city")`,
     `effects: Energy Focus Mood Calm Strength Confidence Recovery (1..3)`,
     `scienceIds válidos: ${scienceIds.join(", ")}`,
     "",
@@ -100,13 +100,13 @@ function stub(week, ids) {
   return {
     dares: [
       { id: `${id}-walk`, title: "The Unhurried Loop", cat: "walk", min: 15, level: "Easy", energy: [2, 7],
-        locs: ["outside", "forest"], companion: "One slow album.", trigger: "No route. Just out.",
+        locs: ["city", "park"], companion: "One slow album.", trigger: "No route. Just out.",
         proof: "Moved before negotiating.", effects: { Energy: 2, Calm: 1, Mood: 1 }, scienceId: "walking-outdoors",
         steps: ["Album on before you sit back down", "Out the door, pick the softer direction", "Walk one unhurried loop", "Home when the album says so"] },
     ],
     wildcards: [
       { id: `w-${id}-dusk`, title: "Dusk Detour", cat: "walk", wild: true, min: 15, level: "Easy", energy: [3, 8],
-        locs: ["outside"], companion: "The changing light.", trigger: "Turn where you never turn.", proof: "Let the evening surprise me.",
+        locs: ["city"], companion: "The changing light.", trigger: "Turn where you never turn.", proof: "Let the evening surprise me.",
         effects: { Calm: 2, Mood: 2 }, scienceId: "daylight",
         steps: ["Head out at dusk", "Take one street you never take", "Follow it until it surprises you", "Find your way back slowly"] },
     ],

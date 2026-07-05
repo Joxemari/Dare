@@ -10,7 +10,8 @@ import type { Dare, Loc } from "../types";
 
 const PLACE_WORD: Record<Loc, string> = {
   home: "Home",
-  outside: "Outside",
+  city: "City",
+  park: "Park",
   forest: "Forest",
   pool: "Pool",
   gym: "Gym",

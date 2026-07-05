@@ -15,7 +15,7 @@ const base: Dare = {
   min: 15,
   level: "Easy",
   energy: [3, 8],
-  locs: ["outside", "forest"],
+  locs: ["city", "park"],
   companion: "A podcast.",
   trigger: "Just the door.",
   proof: "Moved before negotiating.",

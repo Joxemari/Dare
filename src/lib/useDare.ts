@@ -9,6 +9,7 @@ import type {
   DarePlan,
   DareStore,
   Dest,
+  EnergyLevel,
   JourneyId,
   PlanWhen,
   TarotCard,
@@ -44,24 +45,23 @@ export type Screen =
   | "progress"
   | "you";
 
-/** Check-in parcial que se rellena en la pantalla de check-in.
- *  `dest`: null = SIN tocar (ningún botón marcado), "none" = "Not now"
- *  elegido explícitamente, o un destino concreto. */
+/** Check-in parcial que se rellena en la pantalla de check-in (Time / Place /
+ *  Energy). `dest` es un campo heredado de "Plan for later", sin uso aquí. */
 export type DraftCheckin = {
-  energy: number | null;
   time: number | null;
   loc: Checkin["loc"] | null;
   dest: Dest | "none" | null;
-  state: Checkin["state"] | null;
+  /** Nivel de Energy elegido (Tired/Calm/Normal/High) — pregunta DIRECTA. */
+  energyLevel: EnergyLevel | null;
   /** "¿Qué lo haría menos aburrido hoy?" — opcional (null = surprise). */
   vibe: CompanionVibe | null;
 };
 
-const emptyDraft: DraftCheckin = { energy: null, time: null, loc: null, dest: null, state: null, vibe: null };
+const emptyDraft: DraftCheckin = { time: null, loc: null, dest: null, energyLevel: null, vibe: null };
 const FB_DELAY = 30 * 60 * 1000; // 30 minutos
 /** Check-in por defecto para "Just dare me" sin check-in previo:
  *  corto, de baja fricción, inmediato. */
-const SAFE_CI: Checkin = { energy: 5, time: 3, loc: "home", dest: null, state: "normal" };
+const SAFE_CI: Checkin = { energy: 6, time: 5, loc: "home", state: "normal" };
 
 /** Fecha (YYYY-MM-DD) a partir de la cual un Planned Dare vuelve a Today.
  *  "journey" no tiene fecha (vive en el contexto del Journey). Impuro (usa
@@ -482,7 +482,8 @@ export function useDare() {
     if (!dare) {
       // Día sin dareId → genera DENTRO del Journey (nunca del pool global).
       const recentIds = recentDareIds([...store.completed, ...store.todaysDares]);
-      const cutoff = todayStr(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000));
+      // Un Dare rechazado no vuelve antes de 7 días (spec: "avoid repeating ... for at least 7 days").
+      const cutoff = todayStr(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
       const rejectedIds = store.rejectedDares.filter((r) => r.date >= cutoff).map((r) => r.dareId);
       dare = generateJourneyDayDare(day.cat, j, store.lastCheckin ?? SAFE_CI, recentIds, rejectedIds);
     }
@@ -537,8 +538,8 @@ export function useDare() {
    */
   function generateInto(ci: Checkin, opts: { persistCheckin: boolean; navigate: "detail" | "home" }) {
     const recentIds = recentDareIds([...store.completed, ...store.todaysDares]);
-    // Dares rechazados recientemente ("Another dare") — se evitan un tiempo.
-    const cutoff = todayStr(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000));
+    // Dares rechazados ("Another dare") no vuelven antes de 7 días.
+    const cutoff = todayStr(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
     const rejectedIds = store.rejectedDares.filter((r) => r.date >= cutoff).map((r) => r.dareId);
     const { dare, why } = generateDare(ci, store.lastCats, catFeedback, journey, recentIds, rejectedIds);
     setUsedSmall(false);
