@@ -108,6 +108,20 @@ const LOW_FOCUS_CATS: Cat[] = ["focus", "decision", "environment", "emotion", "r
 /** Categorías que aprovechan un foco alto (algo de más chicha cognitiva). */
 const HIGH_FOCUS_CATS: Cat[] = ["creative", "admin", "taskcontact", "close", "dumbbells", "carry"];
 
+/**
+ * Encaje de DURACIÓN (input `time` del check-in). Premia que el Dare llene
+ * ~el tiempo disponible y PENALIZA quedarse corto: un Dare de 2 min cuando hay
+ * 30 no tiene sentido. El pool ya descarta los que se pasan (min <= time+2),
+ * así que aquí el caso a corregir es el *undershoot*. Puro y testeable.
+ *
+ * `under` = minutos que el Dare deja sin usar (0 si encaja o se pasa un poco).
+ * A 30 min: un Dare de 30 → +16, de 20 → ~+3, de 2 → tope −22.
+ */
+export function timeFitScore(time: number, min: number): number {
+  const under = Math.max(0, time - min);
+  return Math.max(-22, 16 - under * 1.3);
+}
+
 export function generateDare(
   ci: Checkin,
   lastCats: Cat[],
@@ -162,9 +176,9 @@ export function generateDare(
     if (ci.state === "stressed" && ["forest", "recovery", "pool", "walk"].includes(d.cat)) s += 12;
     if (ci.state === "active" && [...strengthCats, "padel", "pool", "forest"].includes(d.cat)) s += 10;
     // Coherencia de DURACIÓN: el Dare debe durar ~lo que el usuario tiene. Se
-    // aplica siempre (no solo con energía alta), con peso decisivo, para que el
-    // tiempo del Dare coincida con el "time available" del check-in.
-    s += Math.max(0, 16 - Math.abs(ci.time - d.min) * 1.4);
+    // aplica siempre (no solo con energía alta), con peso decisivo: premia el
+    // encaje y PENALIZA quedarse corto (un Dare de 2 min no gana un hueco de 30).
+    s += timeFitScore(ci.time, d.min);
     if (journey.bias.includes(d.cat)) s += 10; // el Journey tira hacia lo suyo
     // el destino elegido empuja hacia su tipo de Dare
     if (ci.dest === "pool" && d.cat === "pool") s += 20;

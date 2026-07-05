@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { generateDare, generateJourneyDayDare, energyForState, allowedLocs, currentToDareLocs, destToDareLoc, recentDareIds } from "./generator";
+import { generateDare, generateJourneyDayDare, energyForState, allowedLocs, currentToDareLocs, destToDareLoc, recentDareIds, timeFitScore } from "./generator";
 import { DARES } from "../data/dares";
 import { journeyById } from "../data/journeys";
 import { mulberry32 } from "./prng";
@@ -204,6 +204,28 @@ describe("coherencia de duración y destino (check-in)", () => {
         expect(dare.min).toBeLessThanOrEqual(time + 2);
       }
     }
+  });
+
+  it("timeFitScore premia el encaje y penaliza quedarse corto", () => {
+    // encaje perfecto = máximo; pasarse un par de min no penaliza (pool ya lo acota)
+    expect(timeFitScore(30, 30)).toBe(16);
+    expect(timeFitScore(30, 31)).toBe(16);
+    // cuanto más corto respecto al tiempo, peor — y con tope negativo
+    expect(timeFitScore(30, 20)).toBeLessThan(timeFitScore(30, 30));
+    expect(timeFitScore(30, 2)).toBeLessThan(0);
+    expect(timeFitScore(30, 2)).toBeGreaterThanOrEqual(-22);
+    // un Dare corto encaja mejor en un hueco corto que en uno largo
+    expect(timeFitScore(10, 8)).toBeGreaterThan(timeFitScore(30, 8));
+  });
+
+  it("no ofrece un Dare mucho más corto que el tiempo disponible (30 min ≠ 2 min)", () => {
+    let tooShort = 0;
+    for (let i = 0; i < 60; i++) {
+      const { dare } = generateDare({ ...base, time: 30, energy: 6, loc: "home", state: "normal" }, [], {}, ember);
+      if (dare.min <= 6) tooShort++;
+    }
+    // con 30 min disponibles, un Dare de ≤6 min casi nunca debería ganar
+    expect(tooShort).toBeLessThan(8);
   });
 
   it("con más tiempo disponible tiende a Dares más largos (coincide con time)", () => {
