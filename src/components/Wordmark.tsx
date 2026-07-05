@@ -11,11 +11,13 @@ import { SYMBOLS } from "../data/symbols";
    role/aria-label para lectores.
    ============================================================ */
 
-/** Logotipo "DARE": las cuatro letras, con A normal y tracking amplio (lo hereda
- *  del `style` del contenedor). La estrella ✦ NO va DENTRO de la palabra —
- *  sustituir la A por un triángulo quedaba desproporcionado— sino como glifo
- *  aparte encima/al lado (ver Wordmark, Splash, Onboarding, masthead de Today).
- *  Fuente única de la marca escrita. */
+/** Logotipo "DARE" con un DETALLE de marca: la A es una A ABIERTA sin barra
+ *  horizontal (dos diagonales en pico, tipo Λ), no una A normal ni el triángulo
+ *  relleno △ (que quedaba desproporcionado dentro de la palabra). Se dibuja con
+ *  un SVG a altura de mayúscula y con el grosor de trazo de D·R·E → proporcionado
+ *  y hereda el color (currentColor). La estrella ✦ va como glifo APARTE (encima/
+ *  al lado). `aria-label="DARE"` para lectores. Fuente única de la marca escrita;
+ *  se reutiliza en Wordmark, Splash, Onboarding y el masthead de Today. */
 export function DareWord({ style }: { style?: CSSProperties }) {
   return (
     <span
@@ -23,7 +25,24 @@ export function DareWord({ style }: { style?: CSSProperties }) {
       aria-label="DARE"
       style={{ fontFamily: "var(--font-sans)", fontWeight: 400, display: "inline-block", color: C.text, ...style }}
     >
-      DARE
+      D
+      {/* A sin barra: pico Λ. viewBox con la misma proporción que height/width
+          para no deformar el trazo; se apoya en la línea base como una letra. */}
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 69 80"
+        style={{ height: "0.72em", width: "0.62em", verticalAlign: "baseline" }}
+      >
+        <path
+          d="M6 75 L34.5 7 L63 75"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      RE
     </span>
   );
 }
