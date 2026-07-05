@@ -45,6 +45,18 @@ export const CATS: Record<Cat, { color: string; label: string }> = {
   recovery: { color: C.purple, label: "Recovery" },
   focus: { color: C.gold, label: "Focus" },
   small: { color: C.green, label: "Small Dare" },
+  // anti-procrastinación / activación
+  admin: { color: C.gold, label: "Admin" },
+  communication: { color: C.teal, label: "Communication" },
+  bodyreset: { color: C.green, label: "Body Reset" },
+  environment: { color: C.teal, label: "Environment Reset" },
+  creative: { color: C.purple, label: "Creative Start" },
+  social: { color: C.coral, label: "Social Courage" },
+  decision: { color: C.gold, label: "Decision Reduction" },
+  emotion: { color: C.purple, label: "Emotional Reset" },
+  phone: { color: C.coral, label: "Phone Boundary" },
+  taskcontact: { color: C.gold, label: "Task Contact" },
+  close: { color: C.green, label: "Completion Close" },
 };
 
 export const LEVELS: Record<Level, number> = { Easy: 1, Medium: 2, Strong: 3 };
