@@ -31,7 +31,9 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(() => !prefersReducedMotion());
   useEffect(() => {
     if (!showSplash) return;
-    const t = setTimeout(() => setShowSplash(false), 1300);
+    // Más lento a propósito: el favicon respira SOLO un buen rato y "DARE" +
+    // eslogan entran tarde (ver los retardos en index.css). ~2.6s en total.
+    const t = setTimeout(() => setShowSplash(false), 2600);
     return () => clearTimeout(t);
   }, [showSplash]);
 
