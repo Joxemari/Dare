@@ -1,4 +1,4 @@
-import type { Chapter, DayPlan, Journey, MilestoneType } from "../types";
+import type { Chapter, DayPlan, Journey, JourneyId, MilestoneType } from "../types";
 import type { SymbolKey } from "./symbols";
 import { JOURNEY_COLOR } from "./colors";
 
@@ -138,12 +138,12 @@ export const JOURNEYS: Journey[] = [
     color: JOURNEY_COLOR.iron,
     tag: "Strength without noise.",
     problem: "I want to feel stronger, but exercise feels boring and mentally heavy.",
-    promise: "Build strength without turning it into another obligation.",
+    promise: "Build real strength in twelve minutes, without the gym or the drama.",
     lesson: "Strength gives your energy somewhere to live.",
-    bias: ["dumbbells", "carry", "tabata", "fitboxing", "padel", "pool"],
+    bias: ["dumbbells", "carry", "tabata", "walk"],
     identity: { id: "quiet-builder", name: "Quiet Builder", line: "Uses strength to create energy." },
     completionLine:
-      "You did not become stronger by doing more. You became stronger by making strength easier to start.",
+      "You didn't get stronger by doing more. You got stronger by making it easy to start, attractive to repeat, and a little harder each time.",
     dreamPrompt: "What would feeling stronger be worth?",
     dreamOptions: [
       { id: "top", emoji: "🎽", label: "New training top" },
@@ -157,74 +157,178 @@ export const JOURNEYS: Journey[] = [
     ],
     chapters: [
       {
-        n: "I", name: "First Weight", sym: "strength", goal: "Remove dumbbell friction.", days: [1, 1],
+        n: "I", name: "The First Two Reps", sym: "strength", goal: "Make starting impossible to refuse.", days: [1, 1],
         milestones: [
-          { id: "iq-1-letter", t: "letter", title: "Strength is not a workout. It is a signal.", body: "Every time you lift, your body gets a message: this system is worth maintaining. You're not chasing a look or burning anything. You're telling your body to keep the lights on. Twelve minutes is enough to send the signal." },
-          { id: "iq-1-action", t: "action", title: "Put your dumbbells where you can see them", action: "text", body: "Out of the cupboard, into the room you live in. Visible weights get lifted. Hidden ones don't." },
-          { id: "iq-1-goal", t: "goal", title: "Complete one 12-minute strength Dare", goalHint: "Check in at home — we'll give you a standing dumbbell Dare." },
-          { id: "iq-1-science", t: "science", title: "Why muscle supports long-term energy", scienceId: "muscle-energy" },
-          { id: "iq-1-proof", t: "proof", title: "I chose strength without drama." },
+          { id: "iq-1-letter", t: "letter", title: "You don't have a discipline problem.", body: "You have a starting problem — and starting is a design problem, not a character flaw. BJ Fogg, who runs Stanford's Behavior Design Lab, built a life-changing habit from two push-ups after each toilet break; the trick was making the action so small refusal made no sense. Wendy Wood's research on habit says the same from the other side: durable behaviour runs on cues in your environment, not daily willpower. So we stop relying on motivation. We shrink the first move until it's laughable, and we let the room do the reminding. Twelve minutes is the session. Two reps is the door." },
+          { id: "iq-1-action", t: "action", title: "Put your weights where you live", action: "text", body: "Out of the cupboard, into the room you actually sit in — beside the sofa, under the TV. A visible weight is a silent cue; a hidden one is a decision you'll keep postponing. Name where they'll live now." },
+          { id: "iq-1-action2", t: "action", title: "Set your two-rep minimum", action: "text", body: "Decide the smallest version that still counts on your worst day: two goblet squats, one carry across the room. This floor never moves and never resets. On good days you'll do far more — but the streak you're protecting is 'I showed up', not 'I crushed it'. Write your minimum." },
+          { id: "iq-1-goal", t: "goal", title: "Complete one 12-minute strength Dare", goalHint: "Check in at home — we'll give you a standing dumbbell Dare. If today is a bad day, your two-rep minimum still closes it." },
+          { id: "iq-1-science", t: "science", title: "How habits actually form", scienceId: "habit-automaticity" },
+          { id: "iq-1-proof", t: "proof", title: "I made strength a decision, not a mood." },
         ],
       },
       {
-        n: "II", name: "Make It Play", sym: "strong", goal: "Make training less boring.", days: [2, 3],
+        n: "II", name: "Make It Attractive", sym: "strong", goal: "Bundle strength with something you love.", days: [2, 3],
         milestones: [
-          { id: "iq-2-letter", t: "letter", title: "Play counts as training", body: "The best training is the kind you'd do anyway. Water, a bag to hit, a game with a friend. If it doesn't feel like homework, you'll come back. That's the whole strategy." },
-          { id: "iq-2-action", t: "action", title: "Create your Boss Playlist", action: "bossPlaylist", body: "The one that makes you feel unstoppable. Name it, pick the platform, choose the first song. It's the soundtrack to your Tabatas." },
-          { id: "iq-2-goal", t: "goal", title: "Complete one standing tabata", goalHint: "8 minutes, standing — check in with energy 5+ at home." },
-          { id: "iq-2-goal2", t: "goal", title: "Complete one water, padel or play-based Dare", goalHint: "Choose Pool or Padel as your destination in the check-in." },
-          { id: "iq-2-science", t: "science", title: "Why short intensity works", scienceId: "tabata" },
+          { id: "iq-2-letter", t: "letter", title: "Trick yourself on purpose.", body: "James Clear's second law of behaviour change is 'make it attractive'. The cleanest way to do that is temptation bundling: pair the thing you should do with the thing you want. Behavioural economist Katy Milkman tested this by letting people hear page-turner audiobooks only at the gym — attendance jumped. So don't fight the pull of your favourite series. Use it. The next episode is the reward you lift for; the weights are the price of admission. This is why 'Netflix & Iron' beats a grim workout every time — you'll come back for the story." },
+          { id: "iq-2-action", t: "action", title: "Create your Boss Playlist", action: "bossPlaylist", body: "The one that makes you feel unstoppable. Name it, pick the platform, choose the first song. Music you love is shown to lower how hard effort feels — this is the soundtrack that makes a set fly by." },
+          { id: "iq-2-action2", t: "action", title: "Name your temptation bundle", action: "text", body: "Choose one show, podcast or album you'll allow yourself ONLY while training. Guard it — don't watch it on the sofa. Write the title. It becomes the reason you look forward to lifting." },
+          { id: "iq-2-goal", t: "goal", title: "Complete one loaded carry Dare", goalHint: "Pick things up and carry them — farmer carries, laps or stairs. Grip and posture, no floor work." },
+          { id: "iq-2-goal2", t: "goal", title: "Lift once with your bundle running", goalHint: "Same weights, but only press play on your bundled show while you move." },
+          { id: "iq-2-science", t: "science", title: "Bundle the boring with the good", scienceId: "temptation-bundling" },
         ],
       },
       {
-        n: "III", name: "Load the Body", sym: "forge", goal: "Add real stimulus without overwhelm.", days: [4, 5],
+        n: "III", name: "A Little More", sym: "forge", goal: "Add a little more than last time.", days: [4, 5],
         milestones: [
-          { id: "iq-3-letter", t: "letter", title: "Muscle is not a look. It is capacity.", body: "Forget the mirror. Muscle is active tissue that stores energy, supports steady glucose and holds your posture. You're building capacity, not decorating a shelf." },
-          { id: "iq-3-goal", t: "goal", title: "Complete two strength Dares", goalHint: "Two strength or carry Dares this chapter." },
-          { id: "iq-3-goal2", t: "goal", title: "Complete one Strong Dare", goalHint: "When energy is high, take a Strong-level Dare." },
-          { id: "iq-3-motivator", t: "motivator", title: "Strong does not need to be loud", body: "You don't have to grunt, post, or suffer. Quiet, consistent strength outlasts the loud kind every time." },
-          { id: "iq-3-proof", t: "proof", title: "I can carry more than I think." },
+          { id: "iq-3-letter", t: "letter", title: "Muscle is an account you fund now.", body: "Forget the mirror. Dr Gabrielle Lyon calls muscle 'the organ of longevity' — active tissue that holds your posture and plays a role in how steadily you handle glucose. Peter Attia frames it as an account: the strength and muscle you build in your prime is what protects your mobility and independence decades from now. And the mechanism for building it is almost boringly simple — progressive overload, first formalised by physician Thomas DeLorme in 1940s rehab wards: do a little more than last time. One more rep. A slightly heavier weight. A cleaner set. You're not decorating a shelf. You're making deposits." },
+          { id: "iq-3-action", t: "action", title: "Start a lift log", action: "text", body: "One note on your phone: date, move, weight, reps. That's it. What gets measured moves — a log turns 'I should push a bit' into an obvious next number. Write today's lifts down the moment you finish." },
+          { id: "iq-3-goal", t: "goal", title: "Complete two strength Dares this chapter", goalHint: "Two strength or carry Dares — log both." },
+          { id: "iq-3-goal2", t: "goal", title: "Beat your last number by a little", goalHint: "One more rep, a slightly heavier weight, or one cleaner set than your log shows." },
+          { id: "iq-3-motivator", t: "motivator", title: "Strong doesn't need to be loud", body: "No grunting, no posting, no suffering for an audience. Quiet, consistent, progressive strength outlasts the loud kind — because it's built on a system, not a mood. The person who adds one rep a week for a year is unrecognisable. Nobody watched them do it." },
+          { id: "iq-3-science", t: "science", title: "Why grip strength keeps coming up", scienceId: "grip-longevity" },
+          { id: "iq-3-proof", t: "proof", title: "I lifted more than the version of me who started." },
         ],
       },
       {
-        n: "IV", name: "Quiet Power", sym: "dream", goal: "Convert strength into identity.", days: [6, 7],
+        n: "IV", name: "Quiet Power", sym: "dream", goal: "Turn strength into identity.", days: [6, 7],
         milestones: [
-          { id: "iq-4-letter", t: "letter", title: "Quiet power is still power", body: "You didn't become stronger by doing more. You became stronger by making it easier to start. That's a skill that outlasts any program." },
-          { id: "iq-4-goal", t: "goal", title: "Complete your favourite strength-related Dare", goalHint: "Pick the one that gave you the most energy and repeat it." },
-          { id: "iq-4-reflection", t: "reflection", title: "Write one line: what felt stronger?", body: "One line. What feels stronger than a week ago — body, or the ease of starting?" },
+          { id: "iq-4-letter", t: "letter", title: "Every set is a vote.", body: "James Clear's sharpest idea: every action is a vote for the type of person you're becoming. You didn't spend this week chasing a number — you cast six or seven votes for 'someone who trains'. That's identity, and psychologist Albert Bandura showed why it lasts: doing the hard thing and finishing builds self-efficacy, the quiet belief that you can. That belief, not willpower, is what carries a habit through the flat weeks. You're not someone trying to get strong anymore. You're someone who lifts — and has the log to prove it." },
+          { id: "iq-4-goal", t: "goal", title: "Complete your strongest session of the week", goalHint: "Pick the lift that felt best and repeat it — beat one number if you can." },
+          { id: "iq-4-reflection", t: "reflection", title: "Write one line: what got easier?", body: "One line. What's easier than seven days ago — a weight, a rep, or the moment of starting itself? Save it. It's the first entry in who you're becoming." },
           { id: "iq-4-badge", t: "badge", title: "△ Quiet Builder", body: "Uses strength to create energy." },
         ],
       },
     ],
     plan: [
       { day: 1, title: "First Weight", cat: "dumbbells", dareId: "iron-first-weight",
-        dare: "12 min dumbbells: goblet squat, dumbbell row, shoulder press, farmer hold.", soft: "One round only.", bold: "Three full rounds.",
-        trigger: "No gym. Just two weights.", companion: "Netflix.", treat: "Hot shower.", proof: "Chose strength without drama.",
-        scienceTitle: "Muscle tissue and neuromuscular coordination", scienceBody: "Lifting recruits muscle tissue and trains neuromuscular coordination. Regular loading is associated with steadier energy and everyday strength over time." },
-      { day: 2, title: "Water Energy", cat: "pool", dareId: "water-reset",
-        dare: "20 min pool or easy swim.", soft: "Shower + 5 min standing mobility.", bold: "30 min varied swim.",
-        trigger: "Let water do half the work.", companion: "Calm playlist or silence.", treat: "Nice body lotion.", proof: "Used water to reset my body.",
-        scienceTitle: "Parasympathetic activation and sensory input", scienceBody: "Water and rhythmic movement can support parasympathetic activation — the 'rest and recover' side of the nervous system — which may leave you calmer afterwards." },
-      { day: 3, title: "Standing Tabata", cat: "tabata", dareId: "micro-tabata",
-        dare: "8 min standing tabata, 20s on / 10s off (squats, reverse lunges, shadowboxing, fast feet, curls, presses).", soft: "4 min, one move.", bold: "12 min, two-move rounds.",
-        trigger: "Eight minutes. No negotiation.", companion: "Boss playlist.", treat: "Cold drink.", proof: "Did intensity without overthinking.",
-        scienceTitle: "Heart rate, endorphins and perceived energy", scienceBody: "Short bursts of effort raise heart rate and are associated with a release of endorphins, which can lift perceived energy for hours afterwards." },
-      { day: 4, title: "Hit Back", cat: "fitboxing", dareId: "shadow-rounds",
-        dare: "Fitboxing class if available, or 12 min shadowboxing.", soft: "3 min shadowboxing.", bold: "20 min with combinations.",
-        trigger: "Hit resistance back.", companion: "High-energy music.", treat: "Long shower.", proof: "Turned stress into movement.",
-        scienceTitle: "Coordination, rhythm and stress discharge", scienceBody: "Rhythmic, coordinated movement can give stress somewhere to go, and is associated with a shift out of a wound-up state." },
-      { day: 5, title: "Carry Strength", cat: "carry", dareId: "carry-strength",
+        dare: "12 min dumbbells: goblet squat, dumbbell row, shoulder press, farmer hold.", soft: "Your two-rep minimum only.", bold: "Three full rounds.",
+        trigger: "No gym. Just two weights.", companion: "The show you only watch while lifting.", treat: "Hot shower.", proof: "Made strength a decision, not a mood.",
+        scienceTitle: "Why muscle is the organ of longevity", scienceBody: "Muscle is active tissue, not decoration: it holds your posture and plays a role in how steadily your body handles glucose. Dr Gabrielle Lyon calls it 'the organ of longevity'. Regular loading — even 12 minutes — signals the body to keep it, and is associated with steadier energy and better mobility as you age." },
+      { day: 2, title: "Carry Strength", cat: "carry", dareId: "carry-strength",
         dare: "Farmer carry + squats + presses, 12–15 min.", soft: "Carry bags or dumbbells for 3 short rounds.", bold: "Heavier carries, longer distance.",
-        trigger: "Pick things up. Carry them.", companion: "Netflix or music.", treat: "Protein-rich snack.", proof: "Built strength in small sets.",
-        scienceTitle: "Grip strength and loaded movement", scienceBody: "Carrying load trains grip and whole-body strength. Grip strength is associated with overall resilience and healthy ageing." },
+        trigger: "Pick things up. Carry them.", companion: "A short podcast.", treat: "Big glass of cold water.", proof: "Carried more than I thought I could.",
+        scienceTitle: "Grip strength and healthy ageing", scienceBody: "Carries train grip, posture and core with no floor work. Grip strength is cheap to measure and, in large cohort studies like the international PURE study, is associated with overall muscular strength and healthier ageing — a marker of the account you're funding now." },
+      { day: 3, title: "Boss Playlist Sets", cat: "tabata", dareId: "sweat-eight",
+        dare: "8 min standing intervals, 20s on / 10s off, to your Boss Playlist.", soft: "4 min, one move.", bold: "12 min, two-move rounds.",
+        trigger: "Boss playlist. Eight minutes.", companion: "Your Boss Playlist.", treat: "Cold drink.", proof: "Let the music carry the hard part.",
+        scienceTitle: "Music, effort and temptation bundling", scienceBody: "Music you love is shown to lower perceived effort — a hard set feels more doable, though the physical work is the same. Pair that with temptation bundling (Katy Milkman's research): reserving a favourite playlist for training is associated with showing up more often." },
+      { day: 4, title: "One Weight Flow", cat: "dumbbells", dareId: "kettlebell-flow",
+        dare: "14 min flow: swings, goblet squats, presses with one weight. Log it.", soft: "Two easy rounds.", bold: "Four rounds, heavier.",
+        trigger: "No gym. Just one weight.", companion: "Podcast or playlist.", treat: "Protein-rich snack.", proof: "Added a little more than last time.",
+        scienceTitle: "Progressive overload — a little more than last time", scienceBody: "Getting stronger runs on one principle: progressive overload, formalised by physician Thomas DeLorme in the 1940s. Adding a rep, a little load, or a cleaner set over weeks is associated with steady gains and is gentler on motivation than big jumps. A quick lift log makes the next small step obvious." },
+      { day: 5, title: "Loaded Walk", cat: "walk", dareId: "stair-climb",
+        dare: "12 min: stairs or a brisk walk carrying something with intent.", soft: "One steady climb, then home.", bold: "Add a loaded backpack.",
+        trigger: "Take the stairs on purpose.", companion: "One driving song.", treat: "Coffee in the sun.", proof: "Turned an ordinary climb into training.",
+        scienceTitle: "Everyday load beats the elevator", scienceBody: "Climbing and loaded walking recruit the large muscles of the legs and hips and raise heart rate gently — a near-frictionless way to add strength and capacity that transfers straight into daily life. The best training is often the kind you barely schedule." },
       { day: 6, title: "Active Recovery", cat: "recovery",
-        dare: "Active recovery: pool, walk, standing mobility or light dumbbells.", soft: "7 min walk.", bold: "Mobility flow + easy swim.",
-        trigger: "Recovery is still training.", companion: "Soft playlist.", treat: "Early night ritual.", proof: "Recovered without stopping.",
-        scienceTitle: "HRV and nervous system recovery", scienceBody: "Easy movement and rest support heart rate variability, a marker associated with a well-recovered nervous system." },
+        dare: "10 min standing mobility, or light dumbbells with no intensity.", soft: "7 min neck, shoulders, hips.", bold: "Full mobility flow.",
+        trigger: "Recovery is still training.", companion: "Soft playlist.", treat: "Early night ritual.", proof: "Let the strength settle in.",
+        scienceTitle: "You get stronger between sessions", scienceBody: "Muscle adapts during recovery, not only during effort. Easy movement and genuine rest support heart rate variability, a marker associated with a well-recovered nervous system — and a recovered body is one that shows up again tomorrow." },
       { day: 7, title: "Quiet Power", cat: "dumbbells", chapter: true, dream: true,
-        dare: "Your favourite from the week: dumbbells, pool, Fitboxing, padel or standing tabata.", soft: "The easiest version of it.", bold: "The strongest version you've done.",
-        trigger: "Choose your strongest proof.", companion: "Best companion.", treat: "Dream Reward unlock.", proof: "Became someone who trains strength.",
-        scienceTitle: "Self-efficacy", scienceBody: "Choosing and completing your own strength Dare builds self-efficacy, which is associated with continuing a habit long after a program ends." },
+        dare: "Your strongest session of the week: dumbbells, kettlebell or carries. Beat one number.", soft: "The easiest version of it.", bold: "The strongest version you've done.",
+        trigger: "Cast one more vote.", companion: "Best companion.", treat: "Dream Reward unlock.", proof: "Became someone who lifts — and has the log to prove it.",
+        scienceTitle: "Identity and self-efficacy", scienceBody: "James Clear frames every rep as a vote for who you're becoming; Albert Bandura's work on self-efficacy explains why it sticks — doing the hard thing and finishing builds the quiet belief that you can, and that belief carries a habit long after any plan ends." },
+    ],
+  },
+
+  // ======================= BRIGHT PULSE ◆ =======================
+  {
+    id: "pulse",
+    name: "Bright Pulse",
+    sym: "strong",
+    color: JOURNEY_COLOR.pulse,
+    tag: "Energy you can switch on.",
+    problem: "I want fast energy, but 'cardio' has always sounded like punishment.",
+    promise: "Eight-minute sessions, built on music and play, that switch you on.",
+    lesson: "Intensity is a mood, not a chore.",
+    bias: ["tabata", "fitboxing", "padel", "walk"],
+    identity: { id: "bright-mover", name: "Bright Mover", line: "Turns energy up on purpose." },
+    completionLine:
+      "You stopped waiting for energy to arrive. You learned to generate it — one song, eight minutes, on demand.",
+    dreamPrompt: "What would feeling switched-on again be worth?",
+    dreamOptions: [
+      { id: "headphones", emoji: "🎧", label: "New headphones" },
+      { id: "class", emoji: "🥊", label: "Fitboxing class pack" },
+      { id: "top", emoji: "🎽", label: "New training top" },
+      { id: "concert", emoji: "🎫", label: "Concert or gig" },
+      { id: "speaker", emoji: "🔊", label: "Bluetooth speaker" },
+      { id: "trainers", emoji: "👟", label: "New trainers" },
+      { id: "smoothie", emoji: "🥤", label: "Smoothie bar week" },
+      { id: "custom", emoji: "✍️", label: "Create my own", custom: true },
+    ],
+    chapters: [
+      {
+        n: "I", name: "Turn It Up", sym: "strong", goal: "Prove eight minutes is a real session.", days: [1, 1],
+        milestones: [
+          { id: "bp-1-letter", t: "letter", title: "Four minutes made history once.", body: "In 1996, Japanese researcher Izumi Tabata published a study on Olympic speed skaters showing that four minutes of brutal intervals moved fitness markers that hours of steady training barely touched. Martin Gibala at McMaster University has spent twenty years extending the point in his lab and in The One-Minute Workout: even sixty-second 'exercise snacks' — a hard stair climb, one fast hill — are associated with real gains. The grim hour on a treadmill was never the entry price. Yours is eight minutes and a playlist that makes standing still impossible. This journey isn't about enduring cardio. It's about discovering you own a dial." },
+          { id: "bp-1-action", t: "action", title: "Create your Boss Playlist", action: "bossPlaylist", body: "Three to five songs that make you feel unstoppable. Name it, pick the platform, choose the first track. Music you love is shown to lower how hard effort feels — this playlist is equipment, not decoration." },
+          { id: "bp-1-action2", t: "action", title: "Anchor your eight minutes", action: "text", body: "Decide when the eight minutes live: after the first coffee, right after work, before the shower. Psychologists call this an implementation intention — deciding when-and-where in advance is associated with far higher follow-through than 'sometime today'. Write your anchor." },
+          { id: "bp-1-goal", t: "goal", title: "Complete one 8-minute intensity Dare", goalHint: "Standing intervals or dance cardio at home — energy 5+. Your anchor moment is the cue." },
+          { id: "bp-1-science", t: "science", title: "Minutes count more than you think", scienceId: "exercise-snacks" },
+          { id: "bp-1-proof", t: "proof", title: "I proved eight minutes is enough." },
+        ],
+      },
+      {
+        n: "II", name: "Find the Rhythm", sym: "rhythm", goal: "Let music do half the work.", days: [2, 3],
+        milestones: [
+          { id: "bp-2-letter", t: "letter", title: "Music is legal doping.", body: "Costas Karageorghis, who has studied music and movement at Brunel University for decades, calls the right track 'a legal performance-enhancing drug': it reliably lowers how hard effort feels, so the same work simply costs less. Kelly McGonigal's The Joy of Movement goes further — when movement locks onto a beat, the brain starts predicting the rhythm and rewards you for landing on it. That's why dance cardio and shadowboxing work when 'exercising' doesn't: they aren't repetitions, they're groove. You don't need choreography. Humans bounce to a beat before they can walk." },
+          { id: "bp-2-action", t: "action", title: "Build the three-song ladder", action: "text", body: "Pick three songs: one that starts you moving, one that pushes, one that finishes big. That's a complete session disguised as a playlist — structure without a spreadsheet. Write the three tracks." },
+          { id: "bp-2-goal", t: "goal", title: "Complete one fitboxing or shadowboxing Dare", goalHint: "Jab, cross, hook — three rounds to a loud playlist. Land the punches on the beat." },
+          { id: "bp-2-goal2", t: "goal", title: "Complete one dance cardio Dare", goalHint: "No choreography. Nobody's watching. Three songs, keep moving." },
+          { id: "bp-2-science", t: "science", title: "Music and perceived effort", scienceId: "music-effort" },
+          { id: "bp-2-proof", t: "proof", title: "I turned music into movement." },
+        ],
+      },
+      {
+        n: "III", name: "Make It Social", sym: "reset", goal: "Use play and people as fuel.", days: [4, 5],
+        milestones: [
+          { id: "bp-3-letter", t: "letter", title: "The rower's high is real.", body: "In 2010, Oxford researchers found that rowers training in sync could tolerate noticeably more discomfort than rowers training alone — moving together raises the body's natural painkillers. And psychiatrist Stuart Brown, who founded the National Institute for Play after studying thousands of life histories, argues adults don't quit movement because it's hard; they quit because it stops being play. A padel match is an interval session wearing a costume: you'll push harder, feel it less, and want to come back. Which is the entire game." },
+          { id: "bp-3-action", t: "action", title: "Send the invite now", action: "text", body: "Text one person and propose a game or a fast walk this week — before this feeling cools. A sent invitation is a commitment device: future-you shows up because someone is waiting. Write who you asked." },
+          { id: "bp-3-goal", t: "goal", title: "Complete one play or padel Dare", goalHint: "Book a court, rally against a wall, or race someone up a hill — it counts." },
+          { id: "bp-3-motivator", t: "motivator", title: "Chase the buzz, not the exhaustion", body: "You don't have to suffer to get a real lift. The best sessions leave you brighter, not wrecked — and 'brighter' is the metric this journey actually tracks." },
+          { id: "bp-3-proof", t: "proof", title: "I got a real lift from playing." },
+        ],
+      },
+      {
+        n: "IV", name: "Bright Return", sym: "dream", goal: "Make energy-on-demand an identity.", days: [6, 7],
+        milestones: [
+          { id: "bp-4-letter", t: "letter", title: "You own the dial now.", body: "William James suspected it over a century ago: 'We don't sing because we're happy; we're happy because we sing.' Modern behavioural activation research agrees — action changes state faster than waiting for the state to change you. You now have a week of your own evidence: eight minutes and one loud song, and the day tilts. That's not a workout plan. That's a switch you carry everywhere. Use it on the grey days especially — that's what it's for." },
+          { id: "bp-4-goal", t: "goal", title: "Complete your favourite Pulse Dare", goalHint: "The session that gave you the biggest lift — repeat it, one notch brighter." },
+          { id: "bp-4-reflection", t: "reflection", title: "What flips your switch fastest?", body: "One line. Which session changed your state quickest this week — the intervals, the punches, the dance, the game? Keep it. That's your reset button, in writing." },
+          { id: "bp-4-badge", t: "badge", title: "◆ Bright Mover", body: "Turns energy up on purpose." },
+        ],
+      },
+    ],
+    plan: [
+      { day: 1, title: "Eight Bright Minutes", cat: "tabata", dareId: "sweat-eight",
+        dare: "8 min standing intervals, 20s on / 10s off, to your Boss Playlist.", soft: "4 min, one move.", bold: "12 min, two-move rounds.",
+        trigger: "Boss playlist. Eight minutes.", companion: "Your Boss Playlist.", treat: "Cold drink.", proof: "Proved eight minutes is enough.",
+        scienceTitle: "Tabata's four minutes, your eight", scienceBody: "Izumi Tabata's 1996 protocol and Martin Gibala's 'exercise snack' research point the same way: short, honest bursts raise heart rate fast and are associated with real fitness gains — no long session required. The endorphin lift can outlast the session by hours." },
+      { day: 2, title: "Shadow Rounds", cat: "fitboxing", dareId: "fitboxing-flow",
+        dare: "15 min fitboxing flow: jab, cross, hook to a loud playlist.", soft: "3 rounds of shadowboxing.", bold: "20 min with combinations.",
+        trigger: "Hit resistance back.", companion: "High-energy playlist.", treat: "Long shower.", proof: "Gave the day's stress somewhere to go.",
+        scienceTitle: "Coordination, rhythm and stress discharge", scienceBody: "Boxing-style movement stacks three levers at once: coordination demands full attention (no room for rumination), rhythm turns effort into groove, and intensity is associated with discharging a wound-up state into controlled action." },
+      { day: 3, title: "Dance Cardio", cat: "tabata", dareId: "dance-cardio",
+        dare: "12 min dance cardio — three songs, no choreography.", soft: "One song, just move.", bold: "Five songs, full commitment.",
+        trigger: "Nobody's watching. Move anyway.", companion: "Your three-song ladder.", treat: "Fresh smoothie.", proof: "Turned music into movement.",
+        scienceTitle: "Groove and perceived effort", scienceBody: "Music you love is shown to lower how hard movement feels — Karageorghis calls it 'a legal performance-enhancing drug' — and moving on the beat turns repetition into groove. The session reads shorter and brighter than the clock says." },
+      { day: 4, title: "Play a Game", cat: "padel", dareId: "book-the-court",
+        dare: "Book padel with a friend, or rally against a wall.", soft: "15 min wall rally, solo.", bold: "Full match.",
+        trigger: "This is play, not training.", companion: "A friend.", treat: "Matcha or coffee after.", proof: "Got a real lift from playing.",
+        scienceTitle: "Synchrony and the rower's high", scienceBody: "Oxford research on rowers found that moving in sync with others raised pain thresholds — shared effort is associated with feeling easier than solo effort. Play is the friendliest interval session there is, and the one you'll actually rebook." },
+      { day: 5, title: "Fast Feet Outside", cat: "walk", dareId: "stair-climb",
+        dare: "12 min: brisk intervals, stairs or a fast loop.", soft: "One steady climb.", bold: "6 hill or stair repeats.",
+        trigger: "Take the stairs on purpose.", companion: "One driving song.", treat: "Cold drink in the sun.", proof: "Turned the city into a session.",
+        scienceTitle: "One-minute bursts, long-term returns", scienceBody: "A large 2022 UK study of everyday movement linked a few one-minute vigorous bursts — stairs, fast hills — with substantially better long-term health. Your commute can be a session; it just needs intent." },
+      { day: 6, title: "Easy Reset", cat: "recovery",
+        dare: "10 min gentle mobility — let the body come down.", soft: "5 min neck and shoulders.", bold: "Full mobility flow + long exhales.",
+        trigger: "Bright doesn't mean burnt out.", companion: "Calm playlist.", treat: "Body lotion ritual.", proof: "Recharged the switch instead of forcing it.",
+        scienceTitle: "Recovery between efforts", scienceBody: "The body adapts between efforts, not only during them. Easy movement and rest are associated with a well-recovered, more responsive nervous system — which is what makes tomorrow's intensity feel bright instead of heavy." },
+      { day: 7, title: "Bright Return", cat: "tabata", chapter: true, dream: true,
+        dare: "Your favourite Pulse session of the week.", soft: "The gentlest version of it.", bold: "The most intense version you've done.",
+        trigger: "Turn it up one more time.", companion: "Best companion.", treat: "Dream Reward unlock.", proof: "Became someone who generates their own energy.",
+        scienceTitle: "Action before mood", scienceBody: "William James guessed it and behavioural activation research confirmed it: acting changes state faster than waiting to feel like acting. Choosing and repeating your favourite session builds the self-efficacy that keeps the switch working long after this sprint ends." },
     ],
   },
 
@@ -235,13 +339,13 @@ export const JOURNEYS: Journey[] = [
     sym: "calm",
     color: JOURNEY_COLOR.water,
     tag: "A quieter head, a looser body.",
-    problem: "I feel wired, tired or overstimulated.",
-    promise: "Come down without disappearing.",
+    problem: "I run wired all day and can't switch off at night.",
+    promise: "Come down on purpose — breath, water, and a real ending to the day.",
     lesson: "Recovery is an action, not a collapse.",
     bias: ["recovery", "pool", "forest", "focus"],
     identity: { id: "regulator", name: "Regulator", line: "Knows how to lower the noise." },
     completionLine:
-      "You learned that recovery is not doing nothing. It is choosing the signal that brings you back.",
+      "You learned that calm isn't something you wait for. It's somewhere you know the way back to.",
     dreamPrompt: "What would feeling calm again be worth?",
     dreamOptions: [
       { id: "massage", emoji: "💆", label: "Massage" },
@@ -255,61 +359,62 @@ export const JOURNEYS: Journey[] = [
     ],
     chapters: [
       {
-        n: "I", name: "Lower the Volume", sym: "calm", goal: "Reduce stimulation.", days: [1, 1],
+        n: "I", name: "Lower the Volume", sym: "calm", goal: "Learn the fastest way down.", days: [1, 1],
         milestones: [
-          { id: "sw-1-letter", t: "letter", title: "You are not lazy. You may be overloaded.", body: "Wired-and-tired is not a character flaw. A nervous system running hot all day struggles to switch off. The fix isn't more discipline — it's lowering the volume, on purpose, for a few minutes." },
-          { id: "sw-1-action", t: "action", title: "Choose your calm signal", action: "text", body: "Pick the one cue that tells your body it's safe to come down — a candle, a song, a long exhale. Name it, and use it every time." },
-          { id: "sw-1-goal", t: "goal", title: "Complete one 5-minute downshift", goalHint: "Check in tired or stressed — we'll give you a 5-minute calm Dare." },
-          { id: "sw-1-science", t: "science", title: "How breathing affects the nervous system", body: "A longer exhale than inhale is associated with parasympathetic activation, the branch of the nervous system that can slow heart rate and help you settle." },
-          { id: "sw-1-proof", t: "proof", title: "I lowered the volume." },
+          { id: "sw-1-letter", t: "letter", title: "The off-switch is trainable.", body: "In 1975 a Harvard cardiologist, Herbert Benson, showed that the body has a built-in 'relaxation response' — an off-switch that can be trained like a muscle, not a personality trait you either have or don't. Fifty years later, a Stanford trial (Balban, 2023) got specific about the fastest way in: five minutes a day of 'cyclic sighing' — two inhales through the nose, one long exhale — improved mood and lowered resting breathing rate over a month, edging out meditation. Wired-and-tired isn't a flaw in you. It's a nervous system that never gets the signal the day is over. This week, you learn to send the signal." },
+          { id: "sw-1-action", t: "action", title: "Choose your calm signal", action: "text", body: "Pick the one cue that tells your body it's safe to come down — a candle, a song, the long exhale itself. Used consistently, a cue becomes a conditioned off-ramp: the body starts the descent before you've finished asking. Name yours." },
+          { id: "sw-1-goal", t: "goal", title: "Complete one 5-minute downshift", goalHint: "Check in tired or stressed — we'll give you a 5-minute calm Dare. Two inhales, one long exhale." },
+          { id: "sw-1-science", t: "science", title: "The long exhale, measured", scienceId: "cyclic-sighing" },
+          { id: "sw-1-proof", t: "proof", title: "I sent the off signal myself." },
         ],
       },
       {
-        n: "II", name: "Waterline", sym: "water", goal: "Use water and body cues to reset.", days: [2, 3],
+        n: "II", name: "Waterline", sym: "water", goal: "Let water do the regulating.", days: [2, 3],
         milestones: [
-          { id: "sw-2-letter", t: "letter", title: "The body can lead the mind down", body: "You can't always think your way calm. But water, warmth and slow movement give the body a cue, and the mind tends to follow. Start with the body." },
+          { id: "sw-2-letter", t: "letter", title: "Blue mind.", body: "Marine biologist Wallace J. Nichols spent a career on why humans go quiet near water — he called the state 'blue mind'. The mechanics are surprisingly physical: cool water on the face triggers the mammalian dive reflex, which slows the heart within seconds; immersion simplifies what your senses have to process; and swimming forces the long, rhythmic exhale that breathwork classes charge for. You can't always think your way calm. Water doesn't ask you to think." },
+          { id: "sw-2-action", t: "action", title: "Book the water", action: "text", body: "Put one water slot in this week's calendar now — pool, bath, or an unhurried shower with the last minute slower. Recovery that isn't scheduled loses to everything else. Write when." },
           { id: "sw-2-goal", t: "goal", title: "Complete one water-based reset", goalHint: "Pool, shower or bath — choose water as today's reset." },
-          { id: "sw-2-goal2", t: "goal", title: "Complete one slow walk", goalHint: "A 15-minute walk with no productivity goal." },
-          { id: "sw-2-science", t: "science", title: "Why rhythm and sensory input can support recovery", body: "Rhythmic movement and gentle sensory input, like warm water, are associated with a downshift in arousal and can support recovery." },
-          { id: "sw-2-proof", t: "proof", title: "I used water to reset." },
+          { id: "sw-2-goal2", t: "goal", title: "Complete one slow walk", goalHint: "A 15-minute walk with no destination and no productivity goal." },
+          { id: "sw-2-science", t: "science", title: "Blue mind", scienceId: "blue-mind" },
+          { id: "sw-2-proof", t: "proof", title: "I let water do the regulating." },
         ],
       },
       {
-        n: "III", name: "Evening Softening", sym: "shift", goal: "Build a shutdown ritual.", days: [4, 5],
+        n: "III", name: "Evening Softening", sym: "shift", goal: "Give the day a real ending.", days: [4, 5],
         milestones: [
-          { id: "sw-3-letter", t: "letter", title: "Your day needs an ending", body: "Without a clear ending, work bleeds into the night and sleep pays for it. A short shutdown ritual tells your body the day is closed." },
-          { id: "sw-3-action", t: "action", title: "Create a 20-minute shutdown shelf", action: "text", body: "Line up what a soft ending looks like: dim light, a candle, tea, a book. Twenty minutes, same order, most nights." },
-          { id: "sw-3-goal", t: "goal", title: "Complete one screen-light reduction", goalHint: "Dim or drop screens for the last stretch of the evening." },
-          { id: "sw-3-science", t: "science", title: "Circadian rhythm and sleep cues", body: "Dimmer light in the evening is associated with a healthier circadian rhythm, which can help sleep arrive more easily." },
+          { id: "sw-3-letter", t: "letter", title: "Say the day is closed.", body: "Cal Newport ends every workday with the same small ceremony: open loops written down, a plan for each, then a phrase that means it's over. It sounds precious until you see the evidence — Masicampo and Baumeister found that unfinished tasks stop intruding on the mind once you've written a concrete plan for them. You don't have to finish the day's work; you have to park it. Add what sleep scientist Matthew Walker keeps repeating in Why We Sleep — dim, regular, unstimulating evenings — and you get a real ending instead of a slow fade into your phone." },
+          { id: "sw-3-action", t: "action", title: "Create a 20-minute shutdown shelf", action: "text", body: "Line up what a soft ending looks like: loops written down, dim light, a candle, tea, a book. Twenty minutes, same order, most nights — the sameness is the signal. Write your sequence." },
+          { id: "sw-3-goal", t: "goal", title: "Complete one screen-light reduction", goalHint: "Dim or drop screens for the last stretch of the evening. Park tomorrow's loops on paper first." },
+          { id: "sw-3-science", t: "science", title: "Why a shutdown ritual works", scienceId: "shutdown-ritual" },
         ],
       },
       {
         n: "IV", name: "Quiet Return", sym: "dream", goal: "Make regulation part of identity.", days: [6, 7],
         milestones: [
-          { id: "sw-4-letter", t: "letter", title: "Calm is not passivity", body: "Choosing to come down is an active skill, not a collapse. The people who look unshakeable aren't calmer by luck — they practise the return." },
-          { id: "sw-4-goal", t: "goal", title: "Complete one calm Dare when restless", goalHint: "Next time you feel restless, use a calm Dare instead of scrolling." },
-          { id: "sw-4-reflection", t: "reflection", title: "What helps me come back?", body: "One line. Which signal brought you back this week — breath, water, an ending? Keep it where you can find it." },
+          { id: "sw-4-letter", t: "letter", title: "Calm is a skill, not weather.", body: "The people who look unshakeable aren't luckier — they've practised the return trip. Heart-rate variability, the metric recovery science leans on, is essentially the fitness of your braking system; like any fitness, it responds to training. This week you built the brake: a breath that works in minutes, water that works without effort, an evening that actually ends. You're not someone who hopes to feel calm anymore. You're someone who knows the way back." },
+          { id: "sw-4-goal", t: "goal", title: "Complete one calm Dare when restless", goalHint: "Next time you feel restless, run your calm signal instead of scrolling. That's the rep that counts double." },
+          { id: "sw-4-reflection", t: "reflection", title: "What brings me back?", body: "One line. Which signal worked fastest this week — the exhale, the water, the ending? Write it down and keep it where the restless version of you will find it." },
           { id: "sw-4-badge", t: "badge", title: "☾ Regulator", body: "Knows how to lower the noise." },
         ],
       },
     ],
     plan: [
       { day: 1, title: "Lower the Volume", cat: "recovery",
-        dare: "5 min long-exhale breathing.", soft: "2 min, hand on chest.", bold: "10 min box breathing.",
-        trigger: "Exhale longer than you inhale.", companion: "Timer.", treat: "Tea.", proof: "Lowered the volume.",
-        scienceTitle: "Parasympathetic activation", scienceBody: "A longer exhale is associated with parasympathetic activation, which can slow the heart rate and help you feel settled." },
+        dare: "5 min cyclic sighing: two inhales through the nose, one long exhale.", soft: "2 min, hand on chest.", bold: "10 min: cyclic sighing, then box breathing.",
+        trigger: "Exhale longer than you inhale.", companion: "Timer.", treat: "Tea.", proof: "Sent the off signal myself.",
+        scienceTitle: "Cyclic sighing, measured", scienceBody: "In a 2023 Stanford trial, five minutes of daily long-exhale breathing improved mood over a month, slightly outperforming meditation. The long exhale leans on the nervous system's built-in brake — parasympathetic activation." },
       { day: 2, title: "Slow Walk", cat: "walk", dareId: "night-walk",
         dare: "15 min slow walk, no productivity.", soft: "5 min around the block.", bold: "25 min unhurried loop.",
-        trigger: "Walk like nothing is chasing you.", companion: "Soft playlist.", treat: "Fresh juice.", proof: "Moved without rushing.",
-        scienceTitle: "Blood flow, mood and rumination", scienceBody: "A gentle walk increases blood flow and is associated with less rumination and a steadier mood." },
+        trigger: "Walk like nothing is chasing you.", companion: "Soft playlist.", treat: "Fresh juice.", proof: "Moved without rushing anywhere.",
+        scienceTitle: "Blood flow, mood and rumination", scienceBody: "A gentle walk increases blood flow and is associated with less rumination and a steadier mood — movement gives a spinning head somewhere quieter to sit." },
       { day: 3, title: "Waterline", cat: "pool", dareId: "water-window",
         dare: "Pool, shower or bath reset.", soft: "Warm shower, last minute slower.", bold: "Easy swim, then float.",
-        trigger: "Let water change the signal.", companion: "Silence.", treat: "Body lotion.", proof: "Used water to reset.",
-        scienceTitle: "Sensory input and recovery cues", scienceBody: "Warm water and gentle sensory input can act as a recovery cue, associated with a downshift out of a wired state." },
+        trigger: "Let water change the signal.", companion: "Silence.", treat: "Body lotion.", proof: "Let water do the regulating.",
+        scienceTitle: "Blue mind and the dive reflex", scienceBody: "Cool water on the face can trigger the mammalian dive reflex, slowing the heart within seconds; immersion simplifies sensory input. Wallace J. Nichols called the resulting quiet 'blue mind' — the pool does the coaching." },
       { day: 4, title: "Evening Shutdown", cat: "recovery",
-        dare: "20 min evening shutdown ritual.", soft: "Dim the lights and make tea.", bold: "Full wind-down: no screens, candle, book.",
-        trigger: "Give the day an ending.", companion: "Candle or music.", treat: "New tea.", proof: "Closed the loop.",
-        scienceTitle: "Circadian rhythm", scienceBody: "A consistent, dim evening routine is associated with a healthier circadian rhythm and easier sleep onset." },
+        dare: "20 min shutdown ritual: park the open loops, dim the lights, close the day.", soft: "Dim the lights and make tea.", bold: "Full wind-down: loops on paper, no screens, candle, book.",
+        trigger: "Give the day an ending.", companion: "Candle or music.", treat: "New tea.", proof: "Closed the day on purpose.",
+        scienceTitle: "Parked loops and dim light", scienceBody: "Masicampo and Baumeister found unfinished tasks stop intruding once you've written a concrete plan for them — the day can end because it's parked, not abandoned. Dim, regular evenings also support the circadian rhythm that makes sleep arrive." },
       { day: 5, title: "Unclench", cat: "recovery",
         dare: "10 min stretch or standing mobility.", soft: "3 min neck and shoulders.", bold: "Full mobility flow.",
         trigger: "Unclench first.", companion: "Calm playlist.", treat: "Hot shower.", proof: "Released tension.",
@@ -526,13 +631,13 @@ export const JOURNEYS: Journey[] = [
     sym: "forest",
     color: JOURNEY_COLOR.wild,
     tag: "The outside changes you.",
-    problem: "I stay inside too long and my energy collapses.",
-    promise: "Use the outside as a state-change.",
-    lesson: "Environment is an energy tool.",
+    problem: "I stay inside too long and my energy flattens into fog.",
+    promise: "Use light, streets and trees as a daily energy tool.",
+    lesson: "Change the place and the mind follows.",
     bias: ["forest", "walk"],
     identity: { id: "outwalker", name: "Outwalker", line: "Changes state by changing place." },
     completionLine:
-      "You learned that sometimes the fastest way to change your mind is to change your place.",
+      "You learned that the fastest way to change your mind is often to change your place.",
     dreamPrompt: "What would feeling more alive outside be worth?",
     dreamOptions: [
       { id: "trainers", emoji: "👟", label: "New trainers" },
@@ -546,39 +651,41 @@ export const JOURNEYS: Journey[] = [
     ],
     chapters: [
       {
-        n: "I", name: "Step Out", sym: "forest", goal: "Make leaving easy.", days: [1, 1],
+        n: "I", name: "Step Out", sym: "forest", goal: "Make leaving the house frictionless.", days: [1, 1],
         milestones: [
-          { id: "wg-1-letter", t: "letter", title: "Outside is not an activity. It is a switch.", body: "You don't have to earn going outside with a plan. Stepping out is a switch — light, air, movement — that can change your state in minutes. Use it like a tool." },
-          { id: "wg-1-action", t: "action", title: "Prepare your leave-the-house kit", action: "text", body: "Shoes, jacket, headphones — by the door. The fewer decisions between you and outside, the more often you'll go." },
-          { id: "wg-1-goal", t: "goal", title: "Complete one 5-minute outside Dare", goalHint: "Just cross the door and stay out five minutes." },
+          { id: "wg-1-letter", t: "letter", title: "Solvitur ambulando.", body: "'It is solved by walking' — the phrase is old enough that nobody's sure who said it first, and it keeps being rediscovered. Nietzsche claimed all truly great thoughts are conceived while walking; Dickens paced London half the night to untangle his plots. The mechanism under the poetry is blunt: even an overcast sky delivers many times more light than a lit room, and that morning light anchors the circadian clock that decides how awake you feel at four in the afternoon. You don't need a hike, a view or good weather. You need the door — and a reason to be on the other side of it." },
+          { id: "wg-1-action", t: "action", title: "Prepare your leave-the-house kit", action: "text", body: "Shoes, jacket, headphones — by the door tonight. BJ Fogg would call this shrinking the behaviour to its trigger: the fewer decisions between you and outside, the more often you'll go. Name what's in your kit and where it lives." },
+          { id: "wg-1-action2", t: "action", title: "Claim your ten-minute slot", action: "text", body: "Pick the daily moment the outside gets: with the first coffee, after lunch, at the school run. Same slot every day — habits attach to anchors, not intentions. Write the slot." },
+          { id: "wg-1-goal", t: "goal", title: "Complete one 5-minute outside Dare", goalHint: "Just cross the door and stay out five minutes. The door is the whole workout." },
           { id: "wg-1-science", t: "science", title: "Daylight and circadian rhythm", scienceId: "daylight" },
           { id: "wg-1-proof", t: "proof", title: "I changed state by changing place." },
         ],
       },
       {
-        n: "II", name: "Green Signal", sym: "reset", goal: "Use nature or green space.", days: [2, 3],
+        n: "II", name: "Green Signal", sym: "reset", goal: "Use green space as medicine.", days: [2, 3],
         milestones: [
-          { id: "wg-2-letter", t: "letter", title: "Your nervous system notices where you are", body: "A street and a stand of trees don't feel the same, and that's not in your imagination. Green space is associated with a softer, more restored kind of attention." },
-          { id: "wg-2-goal", t: "goal", title: "Complete one park or tree-lined walk", goalHint: "Choose a route with trees, a park, or any green you can reach." },
+          { id: "wg-2-letter", t: "letter", title: "Soft fascination.", body: "Psychologists Rachel and Stephen Kaplan spent their careers on one simple observation: focused attention is a muscle that tires, and nature restores it in a way streets and screens don't. They called the mechanism 'soft fascination' — leaves, water and light hold attention gently, without demanding it. In Japan the idea became practice: Dr Qing Li's research on shinrin-yoku, forest bathing, associates unhurried time among trees with lower stress markers. The trees aren't décor. They're doing something to you — you just have to stand under them long enough to collect it." },
+          { id: "wg-2-goal", t: "goal", title: "Complete one park or tree-lined walk", goalHint: "Choose a route with trees, a park, or any green you can reach. Slow counts." },
           { id: "wg-2-science", t: "science", title: "Green space and attention restoration", scienceId: "nature" },
-          { id: "wg-2-proof", t: "proof", title: "I used green space." },
+          { id: "wg-2-proof", t: "proof", title: "I let the green do the restoring." },
         ],
       },
       {
-        n: "III", name: "Small Expedition", sym: "wildcard", goal: "Add novelty and exploration.", days: [4, 5],
+        n: "III", name: "Small Expedition", sym: "wildcard", goal: "Add novelty and awe on foot.", days: [4, 5],
         milestones: [
-          { id: "wg-3-letter", t: "letter", title: "Novelty wakes up attention", body: "Same route, same mind. A new street, a turn you never take — novelty is associated with a small lift in attention and mood. Give your walk something to notice." },
-          { id: "wg-3-goal", t: "goal", title: "Take one new route", goalHint: "Walk somewhere you don't usually go." },
-          { id: "wg-3-goal2", t: "goal", title: "Complete one phone-light walk", goalHint: "Leave the phone in your pocket. Look up." },
-          { id: "wg-3-science", t: "science", title: "Novelty, attention and mood", body: "New surroundings are associated with heightened attention and a small mood lift, which can make a familiar walk feel fresh again." },
+          { id: "wg-3-letter", t: "letter", title: "Walk somewhere you've never been.", body: "A Stanford experiment by Marily Oppezzo found people produced far more creative ideas while walking than sitting — and the effect lingered after they sat back down. Add novelty and it compounds: in a UCSF study, people asked to take a weekly fifteen-minute 'awe walk' — deliberately noticing what's vast, old or surprising — reported more positive emotion and less daily distress within eight weeks. Same legs, same city. The variable is where you point them, and what you agree to notice on the way." },
+          { id: "wg-3-action", t: "action", title: "Draw one new line on your map", action: "text", body: "Pick a street, park or route you've never walked and name the day you'll take it. Novelty is cheap when you plan it and rare when you don't. Write the route." },
+          { id: "wg-3-goal", t: "goal", title: "Take one new route", goalHint: "Walk the line you drew. No autopilot." },
+          { id: "wg-3-goal2", t: "goal", title: "Complete one phone-light walk", goalHint: "Leave the phone in your pocket. Look up — that's where the awe is." },
+          { id: "wg-3-science", t: "science", title: "The awe walk effect", scienceId: "awe-walks" },
         ],
       },
       {
-        n: "IV", name: "Grounded", sym: "dream", goal: "Make outside a reset identity.", days: [6, 7],
+        n: "IV", name: "Grounded", sym: "dream", goal: "Make outside your reset identity.", days: [6, 7],
         milestones: [
-          { id: "wg-4-letter", t: "letter", title: "You can leave the room before you solve the problem", body: "You don't have to fix the mood before you move. Often the fastest route out of a stuck head is out the door — the thinking clears once you're walking." },
-          { id: "wg-4-goal", t: "goal", title: "Complete your favourite outside Dare", goalHint: "The outside Dare that gave you the most energy." },
-          { id: "wg-4-reflection", t: "reflection", title: "Where do I feel most alive?", body: "One line. Which place gave you the most back this week? Note it — that's your reset." },
+          { id: "wg-4-letter", t: "letter", title: "Attention is the beginning of devotion.", body: "That's Mary Oliver's line, and she wrote most of her poems on foot. Thoreau called an early-morning walk 'a blessing for the whole day'. After a week of doors, green routes and new streets, you know what they meant — not as poetry, but as procedure: you don't have to solve the mood before you move. When the head is stuck, the body knows the way out. Move first, and let the place do the arguing." },
+          { id: "wg-4-goal", t: "goal", title: "Complete your favourite outside Dare", goalHint: "The outside Dare that gave you the most back — repeat it." },
+          { id: "wg-4-reflection", t: "reflection", title: "Where do I feel most alive?", body: "One line. Which place gave you the most back this week — the pines, the new street, the bench in the sun? Name it. That's your reset, with an address." },
           { id: "wg-4-badge", t: "badge", title: "↟ Outwalker", body: "Changes state by changing place." },
         ],
       },
@@ -587,23 +694,23 @@ export const JOURNEYS: Journey[] = [
       { day: 1, title: "Cross the Door", cat: "small", dareId: "out-the-door",
         dare: "5 min outside, no goal.", soft: "Step onto the doorstep and breathe.", bold: "10-minute walk, no destination.",
         trigger: "Just cross the door.", companion: "One song.", treat: "Orange juice.", proof: "Changed state by changing place.",
-        scienceTitle: "Daylight", scienceBody: "Morning daylight is associated with a healthier circadian rhythm and a lift in daytime alertness." },
+        scienceTitle: "Daylight sets the clock", scienceBody: "Even an overcast sky delivers many times more light than a lit room, and morning daylight anchors the circadian rhythm — which is associated with steadier daytime energy and easier sleep at night. Five minutes out the door is a real dose." },
       { day: 2, title: "City Walk", cat: "walk", dareId: "podcast-mile",
         dare: "15 min walk.", soft: "5 min around the block.", bold: "25-minute walk with a turnaround point.",
-        trigger: "Let your body lead.", companion: "Podcast.", treat: "Coffee.", proof: "Moved through the city.",
-        scienceTitle: "Blood flow", scienceBody: "Walking increases blood flow, which is associated with better mood and clearer thinking." },
+        trigger: "Let your body lead.", companion: "Podcast.", treat: "Coffee.", proof: "Solved something by walking.",
+        scienceTitle: "Solvitur ambulando", scienceBody: "Walking increases blood flow and is associated with better mood and clearer thinking — Nietzsche claimed his best thoughts arrived on foot, and Stanford experiments later agreed: people generate markedly more ideas while walking than sitting." },
       { day: 3, title: "Green Route", cat: "forest", dareId: "pine-reset",
         dare: "Park, trees or green route.", soft: "Sit under a tree for a few minutes.", bold: "A longer loop through the greenest route you have.",
-        trigger: "Find something alive.", companion: "Calm playlist.", treat: "Park reading.", proof: "Used green space.",
-        scienceTitle: "Attention restoration", scienceBody: "Time in green space is associated with attention restoration — a softer, recovered kind of focus." },
+        trigger: "Find something alive.", companion: "Calm playlist.", treat: "Park reading.", proof: "Let the green do the restoring.",
+        scienceTitle: "Soft fascination", scienceBody: "The Kaplans' attention restoration research suggests nature repairs tired, directed attention through 'soft fascination' — and forest-bathing studies in Japan associate slow time among trees with lower stress markers." },
       { day: 4, title: "New Route", cat: "walk", dareId: "leave-door",
         dare: "Take a new route.", soft: "One new street on your usual walk.", bold: "A whole route you've never walked.",
-        trigger: "No autopilot today.", companion: "Music.", treat: "Nice snack.", proof: "Added novelty.",
-        scienceTitle: "Novelty and attention", scienceBody: "New surroundings are associated with heightened attention and a small lift in mood." },
+        trigger: "No autopilot today.", companion: "Music.", treat: "Nice snack.", proof: "Walked a line I'd never drawn.",
+        scienceTitle: "Novelty compounds a walk", scienceBody: "New surroundings are associated with heightened attention and a lift in mood — the same walk with a different map gives your brain something to actually notice." },
       { day: 5, title: "Phone-Light Walk", cat: "walk",
         dare: "A phone-light walk.", soft: "Phone in pocket for 5 minutes.", bold: "A full walk with no phone at all.",
-        trigger: "Look up.", companion: "Silence.", treat: "Tea.", proof: "Reduced input.",
-        scienceTitle: "Cognitive load", scienceBody: "Less incoming input lowers cognitive load, which can help attention recover while you walk." },
+        trigger: "Look up.", companion: "Silence.", treat: "Tea.", proof: "Gave my attention the hour off.",
+        scienceTitle: "The awe walk effect", scienceBody: "In a UCSF study, weekly fifteen-minute 'awe walks' — deliberately noticing what's vast, old or surprising — were associated with more positive emotion within eight weeks. Awe needs a raised head; the phone stays in the pocket." },
       { day: 6, title: "Outdoor Date", cat: "forest",
         dare: "An outdoor Date — make outside beautiful.", soft: "Coffee on a bench outside.", bold: "A half-day outdoors: picnic, park, walk.",
         trigger: "Make outside beautiful.", companion: "Book or camera.", treat: "Picnic or café.", proof: "Nourished energy.",
@@ -716,6 +823,28 @@ export const JOURNEYS: Journey[] = [
 
 export const SPRINT_DAYS = 7;
 
+/* ---- MVP: solo 4 Journeys se ofrecen para empezar ----
+   DARE es physical-energy-first. El MVP arranca con 4 Journeys físicos:
+   Iron Quiet (fuerza), Bright Pulse (cardio divertido), Wild Ground (fuera)
+   y Still Water (recuperación). El resto del set (First Flame, Clear Signal,
+   Steady Current, Quiet Fire) se conservan en los datos como CONCEPTOS DE
+   ROADMAP y para no romper el progreso guardado, pero NO aparecen en la
+   selección de Journeys. Ver CLAUDE.md. */
+export const MVP_JOURNEY_IDS: JourneyId[] = ["iron", "pulse", "wild", "water"];
+
+/** Los Journeys del MVP, en el orden en que se ofrecen. */
+export const MVP_JOURNEYS: Journey[] = MVP_JOURNEY_IDS
+  .map((id) => JOURNEYS.find((j) => j.id === id))
+  .filter((j): j is Journey => !!j);
+
+/** ¿Es `id` uno de los Journeys del MVP (ofrecibles)? */
+export const isMvpJourney = (id: string): boolean => (MVP_JOURNEY_IDS as string[]).includes(id);
+
+/** Journeys de roadmap: se conservan en datos y se muestran como "Coming soon"
+ *  (solo preview — nombre, tag, promesa y estructura de capítulos), sin poder
+ *  empezarse. Para reintroducir uno basta añadir su id a MVP_JOURNEY_IDS. */
+export const ROADMAP_JOURNEYS: Journey[] = JOURNEYS.filter((j) => !isMvpJourney(j.id));
+
 export function journeyById(id: string): Journey {
   return JOURNEYS.find((j) => j.id === id) ?? JOURNEYS[0];
 }
@@ -767,9 +896,33 @@ export function currentChapter(j: Journey, done: Record<string, boolean>): Chapt
   return { ...j.chapters[idx], idx };
 }
 
+/** Una sola "próxima acción" de un Journey para la lista de Today: el primer
+ *  milestone sin completar del capítulo en curso; si no queda ninguno, la
+ *  promesa del Journey como cierre. */
+export function nextAction(j: Journey, done: Record<string, boolean>): string {
+  const ch = currentChapter(j, done);
+  const pending = ch.milestones.find((m) => !done[m.id]);
+  return pending?.title ?? j.promise;
+}
+
 /** Total de milestones de un Journey (para el % de completion). */
 export function totalMilestones(j: Journey): number {
   return j.chapters.reduce((n, c) => n + c.milestones.length, 0);
+}
+
+/** Todos los ids de milestone de un Journey (para limpiar al cancelar). Puro. */
+export function journeyMilestoneIds(j: Journey): string[] {
+  return j.chapters.flatMap((c) => c.milestones.map((m) => m.id));
+}
+
+/**
+ * El día del plan que toca HOY según los días completados (`daysDone`). Puro.
+ * `daysDone` es el índice 0-based del progreso: con 0 hechos, hoy es plan[0]
+ * (Day 1). Si el sprint está completo (daysDone >= 7), devuelve null.
+ */
+export function todaysDayPlan(j: Journey, daysDone: number): DayPlan | null {
+  if (daysDone >= j.plan.length) return null;
+  return j.plan[daysDone] ?? null;
 }
 
 /* ---- Variantes de dificultad de un día (spec: ◌ Soft / ◆ Real / ⟁ Bold) ---- */

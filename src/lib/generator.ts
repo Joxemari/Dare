@@ -1,5 +1,6 @@
 import { DARES } from "../data/dares";
 import { WILDCARDS } from "../data/wildcards";
+import { modeOfCat } from "../data/modes";
 import type { Cat, Checkin, CurrentLoc, Dare, Dest, Journey, Loc } from "../types";
 
 /* --------------------- DARE GENERATOR ---------------------
@@ -122,6 +123,12 @@ export function generateDare(
     if (ci.dest === "forest" && d.cat === "forest") s += 20;
     if (lastCats[0] === d.cat) s -= 18;
     if (lastCats[0] === d.cat && lastCats[1] === d.cat) s -= 40;
+    // Anti-aburrimiento por MODO (más ancho que la categoría): no repetir el
+    // mismo modo de movimiento más de dos veces seguidas (spec). El modo del
+    // Dare comparado con los de los dos últimos completados.
+    const dMode = modeOfCat(d.cat);
+    if (lastCats[0] && modeOfCat(lastCats[0]) === dMode) s -= 8;
+    if (lastCats[0] && lastCats[1] && modeOfCat(lastCats[0]) === dMode && modeOfCat(lastCats[1]) === dMode) s -= 30;
     // penaliza repetir un Dare concreto reciente (graduado: más reciente, más penalización)
     const recentIdx = recentIds.indexOf(d.id);
     if (recentIdx >= 0) s -= Math.max(6, 26 - recentIdx * 5);

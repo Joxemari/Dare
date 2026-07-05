@@ -15,8 +15,9 @@ import { DARES } from "../data/dares";
 import { TAROT } from "../data/tarot";
 import { TRAITS } from "../data/traits";
 import { CATS } from "../data/colors";
-import { JOURNEYS, journeyById, currentChapter, SPRINT_DAYS } from "../data/journeys";
+import { JOURNEYS, MVP_JOURNEYS, journeyById, currentChapter, journeyMilestoneIds, todaysDayPlan, SPRINT_DAYS } from "../data/journeys";
 import { generateDare, recentDareIds } from "./generator";
+import { recommendJourney } from "./recommend";
 import { rollTreat, sample } from "./random";
 import { findDare, findCard } from "./lookup";
 import { earnedTraits } from "./achievements";
@@ -78,6 +79,7 @@ const BADGE_PRIORITY = [
   // Badges finales de Journey (máxima prioridad al destacar en completion).
   "first-mover",
   "quiet-builder",
+  "bright-mover",
   "regulator",
   "clear-mind",
   "returner",
@@ -154,6 +156,14 @@ export function useDare() {
   /** Journeys arrancados por el usuario (pueden ser varios a la vez). */
   const activeJourneys = JOURNEYS.filter((j) => store.activeJourneyIds.includes(j.id));
   const isJourneyActive = store.activeJourneyIds.includes(store.journeyId);
+  /** Journey del MVP a destacar HOY según el último check-in (Today's Body Dare).
+   *  Puro (recommend.ts): prioriza los activos; si no hay, sugiere uno. */
+  const recommendedJourneyId = recommendJourney({
+    state: store.lastCheckin?.state ?? "normal",
+    energy: store.lastCheckin?.energy ?? 5,
+    active: store.activeJourneyIds,
+    returning: away,
+  });
   const catFeedback = catFeedbackMap(store);
   const today = todayStr();
   const proofCount = store.proofLibrary.length;
@@ -318,6 +328,84 @@ export function useDare() {
     setScreen("journey");
   }
 
+  /** Pausa un Journey: sale de los activos pero CONSERVA su progreso,
+   *  milestones y Dream Reward. Reanudable sin perder nada. */
+  function pauseJourney(id: JourneyId) {
+    setStore((s) => ({ ...s, activeJourneyIds: s.activeJourneyIds.filter((j) => j !== id) }));
+  }
+
+  /** Reanuda un Journey pausado: vuelve a los activos sin tocar su progreso.
+   *  Mantiene su `journeyStartedAt` si ya existía. */
+  function resumeJourney(id: JourneyId) {
+    setStore((s) =>
+      s.activeJourneyIds.includes(id)
+        ? s
+        : {
+            ...s,
+            activeJourneyIds: [...s.activeJourneyIds, id],
+            journeyStartedAt: s.journeyStartedAt[id]
+              ? s.journeyStartedAt
+              : { ...s.journeyStartedAt, [id]: todayStr() },
+          },
+    );
+  }
+
+  /** Cancela un Journey: lo saca de activos y RESETEA su sprint — progreso a 0,
+   *  sus milestones borrados, fuera de completados y sin fecha de inicio. El
+   *  Dream Reward elegido se conserva (para reempezar sin re-configurar). */
+  function cancelJourney(id: JourneyId) {
+    const msIds = journeyMilestoneIds(journeyById(id));
+    setStore((s) => {
+      const milestones = { ...s.milestones };
+      for (const mid of msIds) delete milestones[mid];
+      const journeyStartedAt = { ...s.journeyStartedAt };
+      delete journeyStartedAt[id];
+      return {
+        ...s,
+        activeJourneyIds: s.activeJourneyIds.filter((j) => j !== id),
+        journeyProgress: { ...s.journeyProgress, [id]: 0 },
+        journeysCompleted: s.journeysCompleted.filter((j) => j !== id),
+        milestones,
+        journeyStartedAt,
+      };
+    });
+  }
+
+  /** Today's Body Dare de un Journey activo: lanza el Dare PRESCRITO del día
+   *  que toca (plan[daysDone]) directamente al Detail. Si el día no fija un
+   *  dareId concreto, cae al check-in de ese Journey. Pone el Journey en foco
+   *  para que completar avance SU sprint. */
+  function startJourneyDay(id: JourneyId) {
+    const j = journeyById(id);
+    const prog = store.journeyProgress[id] ?? 0;
+    const day = todaysDayPlan(j, prog);
+    patch({ journeyId: id });
+    const dare = day?.dareId ? findDare(day.dareId) : null;
+    if (day && dare) {
+      const t = todayStr();
+      setStore((s) => ({
+        ...s,
+        journeyId: id,
+        todaysDares: [
+          ...s.todaysDares.filter((e) => !(e.date === t && e.completedAt === null)),
+          {
+            dareId: dare.id,
+            date: t,
+            wild: false,
+            revealed: true,
+            why: `${j.name} · Day ${prog + 1}: ${day.title}. Today's action from your journey.`,
+            startedAt: null,
+            completedAt: null,
+          },
+        ],
+      }));
+      setScreen("detail");
+    } else {
+      // Sin dareId fijo (p. ej. días de recuperación abiertos) → check-in del Journey.
+      setScreen("checkin");
+    }
+  }
+
   function pickCard(cardId: string) {
     setStore((s) => (s.dailyCard ? { ...s, dailyCard: { ...s.dailyCard, cardId } } : s));
     // Al elegir carta se revela a pantalla completa (screen "card"); desde el
@@ -325,8 +413,12 @@ export function useDare() {
     setScreen("card");
   }
 
-  /** Genera un Dare desde un check-in y lo abre en Detail (sin tap-to-reveal). */
-  function generateInto(ci: Checkin, opts: { persistCheckin: boolean }) {
+  /**
+   * Genera un Dare desde un check-in. `navigate: "detail"` lo abre en la
+   * pantalla de Detalle (flujo "Get my Dare"); `navigate: "home"` lo revela
+   * inline en Today (ritual de un toque, sin cambiar de pantalla).
+   */
+  function generateInto(ci: Checkin, opts: { persistCheckin: boolean; navigate: "detail" | "home" }) {
     const recentIds = recentDareIds([...store.completed, ...store.todaysDares]);
     const { dare, why } = generateDare(ci, store.lastCats, catFeedback, journey, recentIds);
     setUsedSmall(false);
@@ -334,14 +426,15 @@ export function useDare() {
       ...s,
       lastCheckin: ci,
       checkins: opts.persistCheckin ? [...s.checkins, { ...ci, date: todayStr() }].slice(-60) : s.checkins,
+      // Reemplaza cualquier Dare de hoy aún SIN completar (p. ej. "Another dare"
+      // no apila): conserva los ya completados para el recuento del día.
       todaysDares: [
-        ...s.todaysDares,
+        ...s.todaysDares.filter((e) => !(e.date === todayStr() && e.completedAt === null)),
         {
           dareId: dare.id,
           date: todayStr(),
           wild: !!dare.wild,
-          // "Get my Dare" / "Just dare me" abren el Dare directamente.
-          revealed: true,
+          revealed: true, // "Get my Dare" / "Just dare me" / "Reveal" abren el Dare directamente
           why,
           startedAt: null,
           completedAt: null,
@@ -349,17 +442,32 @@ export function useDare() {
       ],
     }));
     setDraft(emptyDraft);
-    setScreen("detail");
+    setScreen(opts.navigate === "home" ? "home" : "detail");
   }
 
   /** "Get my Dare" desde el check-in completo → abre el Detail directamente. */
   function runCheckin(ci: Checkin) {
-    generateInto(ci, { persistCheckin: true });
+    generateInto(ci, { persistCheckin: true, navigate: "detail" });
   }
 
   /** "Just dare me": Dare inmediato. Último check-in si existe, o default seguro. */
   function justDareMe() {
-    generateInto(store.lastCheckin ?? SAFE_CI, { persistCheckin: false });
+    generateInto(store.lastCheckin ?? SAFE_CI, { persistCheckin: false, navigate: "detail" });
+  }
+
+  /** Today "Reveal today's dare": revela el Dare de hoy INLINE (sin navegar).
+   *  Si ya hay uno sin revelar, lo abre; si no, genera uno al instante. */
+  function revealTodayDare() {
+    if (currentEntry && currentEntry.completedAt === null) {
+      if (!currentEntry.revealed) patchCurrentEntry({ revealed: true });
+      return;
+    }
+    generateInto(store.lastCheckin ?? SAFE_CI, { persistCheckin: false, navigate: "home" });
+  }
+
+  /** Today "Another dare": genera un Dare distinto y lo deja revelado inline. */
+  function anotherDare() {
+    generateInto(store.lastCheckin ?? SAFE_CI, { persistCheckin: false, navigate: "home" });
   }
 
   function revealDare() {
@@ -635,6 +743,7 @@ export function useDare() {
     chapter,
     activeJourneys,
     isJourneyActive,
+    recommendedJourneyId,
     catFeedback,
     currentDare,
     daresToday,
@@ -660,7 +769,7 @@ export function useDare() {
     fbNote,
     // constantes útiles
     traitDefs: TRAITS,
-    journeys: JOURNEYS,
+    journeys: MVP_JOURNEYS,
     // acciones
     completeOnboarding,
     replayOnboarding,
@@ -668,9 +777,15 @@ export function useDare() {
     confirmDreamReward,
     startJourney,
     activateJourney,
+    pauseJourney,
+    resumeJourney,
+    cancelJourney,
+    startJourneyDay,
     pickCard,
     runCheckin,
     justDareMe,
+    revealTodayDare,
+    anotherDare,
     revealDare,
     startDare,
     swapToSmall,
