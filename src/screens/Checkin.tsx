@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { C } from "../data/colors";
 import { SYMBOLS } from "../data/symbols";
 import { wrap, pad } from "../components/layout";
+import { energyForState } from "../lib/generator";
 import type { CurrentLoc, MentalState } from "../types";
 import type { DareApp } from "../lib/useDare";
 
@@ -24,7 +26,14 @@ const states: [MentalState, string][] = [
 
 export function Checkin({ app }: { app: DareApp }) {
   const { draft, setDraft } = app;
-  const ready = draft.energy && draft.time && draft.loc && draft.state;
+  // Sin router: al cambiar de screen no se resetea el scroll. Al abrir el
+  // check-in, lo llevamos ARRIBA para que lo primero que veas sea el título.
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, []);
+  // La energía ya no se pregunta: la deriva el Mood. Basta con tiempo, lugar y
+  // estado para generar.
+  const ready = draft.time && draft.loc && draft.state;
 
   return (
     <div className="dare-root">
@@ -48,24 +57,6 @@ export function Checkin({ app }: { app: DareApp }) {
           >
             Just dare me — skip the questions {SYMBOLS.spark}
           </button>
-
-          <p className="lbl" style={{ marginBottom: 10 }}>
-            Energy
-          </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(10,1fr)", gap: 5, marginBottom: 22 }}>
-            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-              <button
-                key={n}
-                className={"pill" + (draft.energy === n ? " on" : "")}
-                style={{ padding: "8px 0", fontSize: 12 }}
-                aria-label={`Energy ${n} of 10`}
-                aria-pressed={draft.energy === n}
-                onClick={() => setDraft({ ...draft, energy: n })}
-              >
-                {n}
-              </button>
-            ))}
-          </div>
 
           <p className="lbl" style={{ marginBottom: 10 }}>
             Time available
@@ -123,7 +114,8 @@ export function Checkin({ app }: { app: DareApp }) {
             onClick={() =>
               ready &&
               app.runCheckin({
-                energy: draft.energy!,
+                // La energía se DERIVA del estado mental (ya no se pregunta).
+                energy: energyForState(draft.state!),
                 time: draft.time!,
                 loc: draft.loc!,
                 // El destino ya no es una pregunta aparte: si loc === "anywhere"
@@ -135,11 +127,11 @@ export function Checkin({ app }: { app: DareApp }) {
           >
             Get my dare
           </button>
-          {/* El botón queda atenuado hasta completar las cuatro: una pista corta
+          {/* El botón queda atenuado hasta completar las tres: una pista corta
               evita la confusión de "por qué no puedo continuar". */}
           {!ready && (
             <p style={{ fontSize: 11.5, color: C.faint, textAlign: "center", marginTop: 10 }}>
-              Answer all four to continue.
+              Answer all three to continue.
             </p>
           )}
         </div>

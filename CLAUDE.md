@@ -176,20 +176,27 @@ nuevo Today Dare siempre se ajusta a cómo/dónde estás. En el hook: `runChecki
 El "Another dare" del revelado del flujo rápido sigue siendo aleatorio
 (`anotherQuickDare`); `anotherDare` (rechazar + `Checkin`) queda disponible.
 
-**El check-in es CORTO a propósito** (tres preguntas + una): **Energy** (1-10) ·
-**Time available** · **Where are you right now?** · **Mental state**. La pregunta
-de ubicación incluye una última opción **"Send me somewhere ✦"** (loc
-`"anywhere"`): en vez de una segunda pregunta de destino, si la eliges el
-generador te **manda a un sitio** (piscina/gym/bosque/…, vía
-`currentToDareLocs("anywhere")`). El Dare resultante es **coherente** con
-energía, tiempo, ubicación y estado mental, y su **duración (`min`) coincide con
-el "time available"** (peso decisivo en el scoring del generador; nunca elige un
-Dare más largo que el tiempo disponible). **Notas:** el check-in "rápido" inline
-(`QuickCheckin`: Energy/Focus/Avoiding 1-5) se **eliminó** para tener uno solo; y
-la pregunta de **vibe/companion** y el módulo **"Plan a Dare this week"** también
-se retiraron para acortarlo (el generador aún soporta `vibe`/`focus`/`avoiding`
-en el scoring, hoy sin UI que los alimente; los companions siguen rotando por
-fecha).
+**El check-in es CORTO a propósito** (TRES preguntas): **Time available** ·
+**Where are you right now?** · **Mental state**. **La energía ya NO se pregunta**:
+se **deriva del Mood** (`energyForState` en `generator.ts`: tired→2, blocked→3,
+stressed→4, normal→6, active→9) — el estado mental ya implica el nivel de energía,
+y así el check-in es más corto. Al abrir, la pantalla hace `scrollTo(top)` (sin
+router, el scroll no se resetea solo). La pregunta de ubicación incluye una última
+opción **"Send me somewhere ✦"** (loc `"anywhere"`): en vez de una segunda
+pregunta de destino, si la eliges el generador te **manda a un sitio** (piscina/
+gym/bosque/…, vía `currentToDareLocs("anywhere")`).
+
+**Mapeo directo check-in → Dare** (spec "sé muy customizado"): **Mood → energía
+→ intensidad** (`energyForState`; el generador cae a niveles Easy con energía ≤3 y
+sesga hacia categorías calmantes/energéticas según el estado) · **Time available →
+duración** (coherencia decisiva: `d.min ≈ time`, nunca mayor) · **Where →
+localización** (incl. destino con "anywhere") · y el **Companion** sale coherente
+con la categoría del Dare resultante (`resolveCompanion` filtra por categoría).
+**Notas:** el check-in "rápido" inline (`QuickCheckin`: Energy/Focus/Avoiding 1-5)
+se **eliminó** para tener uno solo; y la pregunta de **vibe/companion** y el módulo
+**"Plan a Dare this week"** también se retiraron para acortarlo (el generador aún
+soporta `vibe`/`focus`/`avoiding` en el scoring, hoy sin UI que los alimente; los
+companions siguen rotando por fecha).
 
 Con **varios Journeys activos**, `ActiveJourneyList` prioriza el Journey
 recomendado por el check-in (`recommendJourney` en `lib/recommend.ts`: energía

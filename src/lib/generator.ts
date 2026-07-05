@@ -2,7 +2,26 @@ import { DARES } from "../data/dares";
 import { WILDCARDS } from "../data/wildcards";
 import { modeOfCat } from "../data/modes";
 import { vibeBonus, vibeConfig } from "./companions";
-import type { Avoid, Cat, Checkin, CurrentLoc, Dare, Dest, Journey, Loc } from "../types";
+import type { Avoid, Cat, Checkin, CurrentLoc, Dare, Dest, Journey, Loc, MentalState } from "../types";
+
+/** Energía (1-10) DERIVADA del estado mental. El check-in ya no pregunta la
+ *  energía por separado: el Mood la implica. Puro y testeable. tired/blocked
+ *  bajan (arranque de baja fricción → el generador cae a Easy), active sube
+ *  (permite Strong), stressed queda medio-bajo (empuja a calmar), normal medio. */
+export function energyForState(state: MentalState): number {
+  switch (state) {
+    case "tired":
+      return 2;
+    case "blocked":
+      return 3;
+    case "stressed":
+      return 4;
+    case "normal":
+      return 6;
+    case "active":
+      return 9;
+  }
+}
 
 /* --------------------- DARE GENERATOR ---------------------
    Scoring, no cadena de if/else. Optimiza la probabilidad de

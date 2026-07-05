@@ -84,7 +84,7 @@ test("Dare page: What this is / Why this works, sin Treat Locked + Plan for late
   // "Start check-in" abre el ÚNICO check-in: la pantalla completa "How are you today?"
   await page.getByRole("button", { name: "Start check-in" }).click();
   await expect(page.getByText("How are you today?")).toBeVisible();
-  await page.getByRole("button", { name: "Energy 3 of 10" }).click(); // energy (1-10)
+  // Ya NO hay escala de Energy: la deriva el Mood. Tres preguntas.
   await page.getByRole("button", { name: "10 min", exact: true }).click(); // time
   await page.getByRole("button", { name: "Home", exact: true }).click(); // location
   await page.getByRole("button", { name: "Normal", exact: true }).click(); // mental state
