@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { DARES } from "./dares";
 import { WILDCARDS } from "./wildcards";
-import { JOURNEYS, totalMilestones, chapterCompleted, unlockedChapterCount, currentChapter, nextAction, SPRINT_DAYS } from "./journeys";
+import { JOURNEYS, MVP_JOURNEYS, MVP_JOURNEY_IDS, ROADMAP_JOURNEYS, isMvpJourney, totalMilestones, journeyMilestoneIds, todaysDayPlan, chapterCompleted, unlockedChapterCount, currentChapter, nextAction, SPRINT_DAYS } from "./journeys";
 import { SCIENCE, findScience } from "./science";
 import { TRAITS, findTrait } from "./traits";
 import { SYMBOLS, JOURNEY_SYM } from "./symbols";
@@ -134,10 +134,12 @@ describe("desbloqueo de capítulos por completado", () => {
   });
 });
 
-describe("Journey system — los 7 Journeys del set final", () => {
-  const EXPECTED_IDS = ["ember", "iron", "water", "clear", "current", "wild", "fire"];
+describe("Journey system — el set completo (MVP + roadmap)", () => {
+  // Los 4 del MVP (Iron Quiet, Bright Pulse, Wild Ground, Still Water) + los
+  // conceptos de roadmap que se conservan en datos (ember/clear/current/fire).
+  const EXPECTED_IDS = ["ember", "iron", "pulse", "water", "clear", "current", "wild", "fire"];
 
-  it("están los 7 Journeys esperados", () => {
+  it("están los Journeys esperados", () => {
     expect(JOURNEYS.map((j) => j.id).sort()).toEqual([...EXPECTED_IDS].sort());
   });
 
@@ -224,6 +226,65 @@ describe("Journey system — los 7 Journeys del set final", () => {
     const ember = JOURNEYS.find((j) => j.id === "ember")!;
     const allDoneMap = Object.fromEntries(ember.chapters.flatMap((c) => c.milestones).map((m) => [m.id, true]));
     expect(nextAction(ember, allDoneMap)).toBe(ember.promise);
+  });
+});
+
+describe("MVP — solo 4 Journeys ofrecibles", () => {
+  it("MVP_JOURNEY_IDS son exactamente los 4 físicos del MVP", () => {
+    expect([...MVP_JOURNEY_IDS].sort()).toEqual(["iron", "pulse", "water", "wild"].sort());
+  });
+
+  it("MVP_JOURNEYS resuelve los 4 y respeta el orden declarado", () => {
+    expect(MVP_JOURNEYS.map((j) => j.id)).toEqual(MVP_JOURNEY_IDS);
+    expect(MVP_JOURNEYS).toHaveLength(4);
+  });
+
+  it("isMvpJourney distingue MVP de roadmap", () => {
+    expect(isMvpJourney("iron")).toBe(true);
+    expect(isMvpJourney("pulse")).toBe(true);
+    expect(isMvpJourney("ember")).toBe(false);
+    expect(isMvpJourney("fire")).toBe(false);
+  });
+
+  it("Bright Pulse existe con su Badge final y símbolo ◆", () => {
+    const pulse = JOURNEYS.find((j) => j.id === "pulse")!;
+    expect(pulse.identity.id).toBe("bright-mover");
+    expect(findTrait("bright-mover")).toBeTruthy();
+    expect(SYMBOLS[pulse.sym]).toBe("◆");
+  });
+
+  it("ROADMAP_JOURNEYS son los 4 restantes, disjuntos del MVP y con preview completo", () => {
+    expect(ROADMAP_JOURNEYS.map((j) => j.id).sort()).toEqual(["clear", "current", "ember", "fire"]);
+    for (const j of ROADMAP_JOURNEYS) {
+      expect(isMvpJourney(j.id), j.id).toBe(false);
+      // El preview "Coming soon" del picker necesita tag, promesa y capítulos.
+      expect(j.tag && j.promise, `${j.id} preview copy`).toBeTruthy();
+      expect(j.chapters.length, `${j.id} chapters`).toBe(4);
+    }
+    expect(MVP_JOURNEYS.length + ROADMAP_JOURNEYS.length).toBe(JOURNEYS.length);
+  });
+});
+
+describe("plan diario por Journey (Today's plan)", () => {
+  it("todaysDayPlan devuelve el día que toca según el progreso", () => {
+    const iron = JOURNEYS.find((j) => j.id === "iron")!;
+    expect(todaysDayPlan(iron, 0)).toBe(iron.plan[0]); // 0 hechos → Day 1
+    expect(todaysDayPlan(iron, 2)).toBe(iron.plan[2]); // 2 hechos → Day 3
+  });
+
+  it("todaysDayPlan es null cuando el sprint está completo", () => {
+    const iron = JOURNEYS.find((j) => j.id === "iron")!;
+    expect(todaysDayPlan(iron, SPRINT_DAYS)).toBeNull();
+    expect(todaysDayPlan(iron, SPRINT_DAYS + 3)).toBeNull();
+  });
+
+  it("journeyMilestoneIds lista TODOS los ids de milestone del Journey (para cancelar)", () => {
+    const iron = JOURNEYS.find((j) => j.id === "iron")!;
+    const ids = journeyMilestoneIds(iron);
+    const expected = iron.chapters.flatMap((c) => c.milestones.map((m) => m.id));
+    expect(ids).toEqual(expected);
+    expect(ids).toContain("iq-1-letter");
+    expect(new Set(ids).size).toBe(ids.length); // sin duplicados
   });
 });
 

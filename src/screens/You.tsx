@@ -6,6 +6,7 @@ import { SPRINT_DAYS } from "../data/journeys";
 import { Ico } from "../components/Ico";
 import { TarotArt } from "../components/TarotArt";
 import { Nav } from "../components/Nav";
+import { InstallBanner } from "../components/InstallBanner";
 import { wrap, pad } from "../components/layout";
 import type { Cat } from "../types";
 import type { DareApp } from "../lib/useDare";
@@ -158,31 +159,42 @@ export function You({ app }: { app: DareApp }) {
               )}
             </div>
             <p style={{ fontSize: 12.5, color: C.dim, lineHeight: 1.5, marginBottom: notifOn ? 14 : 0 }}>
-              A single nudge with today's briefing — the same reading as your Today tab.
+              Two gentle nudges a day — morning and evening — with today's briefing. The
+              evening one only arrives if your dare is still waiting.
             </p>
 
             {notifOn && (
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontSize: 13, color: C.dim }}>Remind me at</span>
-                <input
-                  type="time"
-                  value={`${pad2(notif.hour)}:${pad2(notif.minute)}`}
-                  onChange={(e) => {
-                    const [h, m] = e.target.value.split(":").map(Number);
-                    if (!Number.isNaN(h) && !Number.isNaN(m)) app.setNotificationTime(h, m);
-                  }}
-                  style={{
-                    background: C.bg,
-                    color: C.text,
-                    border: `1px solid ${C.line}`,
-                    borderRadius: 8,
-                    padding: "6px 10px",
-                    fontFamily: "inherit",
-                    fontSize: 14,
-                    colorScheme: "dark",
-                  }}
-                  aria-label="Reminder time"
-                />
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {([
+                  ["morning", "Morning nudge", notif.morning],
+                  ["evening", "Evening nudge", notif.evening],
+                ] as const).map(([slot, label, s]) => (
+                  <div
+                    key={slot}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}
+                  >
+                    <span style={{ fontSize: 13, color: C.dim }}>{label}</span>
+                    <input
+                      type="time"
+                      value={`${pad2(s.hour)}:${pad2(s.minute)}`}
+                      onChange={(e) => {
+                        const [h, m] = e.target.value.split(":").map(Number);
+                        if (!Number.isNaN(h) && !Number.isNaN(m)) app.setNotificationSlot(slot, h, m);
+                      }}
+                      style={{
+                        background: C.bg,
+                        color: C.text,
+                        border: `1px solid ${C.line}`,
+                        borderRadius: 8,
+                        padding: "6px 10px",
+                        fontFamily: "inherit",
+                        fontSize: 14,
+                        colorScheme: "dark",
+                      }}
+                      aria-label={`${label} time`}
+                    />
+                  </div>
+                ))}
               </div>
             )}
 
@@ -196,6 +208,18 @@ export function You({ app }: { app: DareApp }) {
               background delivery needs a server — coming later.
             </p>
           </div>
+
+          {/* añadir a inicio (PWA) — protege el localStorage en iOS */}
+          {app.installSettings !== "none" && (
+            <div style={{ marginBottom: 14 }}>
+              <InstallBanner
+                offer={app.installSettings}
+                onInstall={app.promptInstall}
+                onDismiss={app.dismissInstall}
+                compact
+              />
+            </div>
+          )}
 
           {/* manifesto */}
           <div className="card" style={{ padding: 18, marginBottom: 26, background: C.card2 }}>

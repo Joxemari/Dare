@@ -1,5 +1,5 @@
 import { TREATS } from "../data/rewards";
-import type { TreatDraw } from "../types";
+import type { Cat, Tier, Treat, TreatDraw } from "../types";
 
 /** Escoge `n` elementos distintos al azar de `arr`. */
 export function sample<T>(arr: readonly T[], n: number): T[] {
@@ -12,25 +12,47 @@ export function sample<T>(arr: readonly T[], n: number): T[] {
 }
 
 /**
+ * Elige un treat del pool respetando el contexto del Dare completado:
+ * los que CHOCAN con la categoría (`avoid`) quedan excluidos; los que
+ * ENCAJAN (`fits`) pesan ×3 — se priman sin volverse un guion (la
+ * sorpresa sigue siendo parte del treat). Fallback defensivo: si el
+ * filtro vaciara el pool, se elige entre todos.
+ *
+ * Exportada para poder testearla con pools sintéticos y `rand` sembrado.
+ */
+export function pickTreat(pool: readonly Treat[], cat: Cat | null, rand: () => number): Treat {
+  const eligible = cat ? pool.filter((t) => !t.avoid?.includes(cat)) : pool;
+  const usable = eligible.length ? eligible : pool;
+  const weights = usable.map((t) => (cat && t.fits?.includes(cat) ? 3 : 1));
+  const total = weights.reduce((a, b) => a + b, 0);
+  let x = rand() * total;
+  for (let i = 0; i < usable.length; i++) {
+    x -= weights[i];
+    if (x < 0) return usable[i];
+  }
+  return usable[usable.length - 1];
+}
+
+/**
  * Tira un Treat Draw. Base: common 70% / rare 24% / golden 6% (sin "double XP").
  *
- * `boost` (0..1) SESGA la tirada hacia mejores treats. El caller lo sube
- * cuando el Dare merece premio extra según la ciencia del hábito:
- * completar con poca motivación (spec: "reward low-motivation completion
- * strongly") o probar una actividad/deporte nuevo (spec: "reward trying new
- * activities, not only streaks"). A boost=1: golden ~16%, rare ~44%.
+ * Combina las DOS intenciones del sistema de recompensas:
+ *  - `cat` (contexto): categoría del Dare recién completado; dentro del tier
+ *    elegido, `pickTreat` excluye los `avoid` y prima los `fits` (×3).
+ *  - `boost` (0..1): SESGA la TIRADA hacia mejores tiers cuando el Dare merece
+ *    premio extra según la ciencia del hábito — completar con poca motivación
+ *    ("reward low-motivation completion strongly") o probar algo nuevo ("reward
+ *    trying new activities, not only streaks"). A boost=1: golden ~16%, rare ~44%.
+ *
+ * `rand` es inyectable para que los tests sean deterministas (por defecto,
+ * `Math.random`: la tirada real sigue siendo una sorpresa).
  */
-export function rollTreat(boost = 0): TreatDraw {
+export function rollTreat(cat: Cat | null = null, boost = 0, rand: () => number = Math.random): TreatDraw {
   const b = Math.max(0, Math.min(1, boost));
   const goldenP = 0.06 + 0.1 * b;
   const rareP = 0.3 + 0.2 * b;
-  const r = Math.random();
-  if (r < goldenP) {
-    const g = TREATS.golden[Math.floor(Math.random() * TREATS.golden.length)];
-    return { tier: "golden", text: g.text, special: g.special };
-  }
-  if (r < rareP) {
-    return { tier: "rare", text: TREATS.rare[Math.floor(Math.random() * TREATS.rare.length)] };
-  }
-  return { tier: "common", text: TREATS.common[Math.floor(Math.random() * TREATS.common.length)] };
+  const r = rand();
+  const tier: Tier = r < goldenP ? "golden" : r < rareP ? "rare" : "common";
+  const t = pickTreat(TREATS[tier], cat, rand);
+  return t.special ? { tier, text: t.text, special: t.special } : { tier, text: t.text };
 }

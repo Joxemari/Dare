@@ -161,27 +161,52 @@ export function buildBriefing(input: BriefingInput): Briefing {
   };
 }
 
+/** Franja del recordatorio: mañana o tarde (ver NotificationPrefs). */
+export type ReminderSlot = "morning" | "evening";
+
 /** Título + cuerpo del recordatorio local, derivados del briefing.
     Su trabajo es tirar de ti cuando aún NO has hecho el Dare, sin
-    regañar; por eso reusa el titular + el focus. */
-export function buildReminder(input: BriefingInput): { title: string; body: string } {
+    regañar; por eso reusa el titular + el focus. El título varía por franja:
+    la de la tarde reconoce que el día avanza ("Still time today") sin culpar. */
+export function buildReminder(
+  input: BriefingInput,
+  slot: ReminderSlot = "morning",
+): { title: string; body: string } {
   const b = buildBriefing(input);
-  const title = input.doneToday ? "Your day is done" : "Your dare is waiting";
+  const title = input.doneToday
+    ? "Your day is done"
+    : slot === "evening"
+      ? "Still time today"
+      : "Your dare is waiting";
   const body = `${b.headline} ${b.focus}`.trim();
   return { title, body };
 }
 
 /**
- * ¿Toca mostrar el recordatorio AHORA? Decisión PURA (recibe `now`),
- * testeable; el efecto de mostrarlo vive en `notify.ts`.
- * Reglas: solo si está activado, si no se mostró ya hoy, si aún no se
- * hizo el Dare (no molestar) y si ya llegó la hora elegida.
+ * ¿Qué franja del recordatorio toca mostrar AHORA (o ninguna)? Decisión PURA
+ * (recibe `now`), testeable; el efecto de mostrarlo vive en `notify.ts`.
+ *
+ * Reglas: solo si está activado y si aún NO se hizo el Dare (no molestar). Cada
+ * franja lleva su propio `lastShown` (dedupe independiente): la de la tarde
+ * tiene prioridad una vez llegada su hora — así, al abrir la app por la noche,
+ * NO se reavisa una mañana ya pasada. La mañana solo dispara dentro de su
+ * ventana [hora_mañana, hora_tarde).
  */
-export function reminderDue(prefs: NotificationPrefs, now: Date, doneToday: boolean): boolean {
-  if (!prefs.enabled) return false;
-  if (doneToday) return false;
-  if (prefs.lastShown === todayStr(now)) return false;
+export function dueSlot(
+  prefs: NotificationPrefs,
+  now: Date,
+  doneToday: boolean,
+): ReminderSlot | null {
+  if (!prefs.enabled) return null;
+  if (doneToday) return null;
+  const today = todayStr(now);
   const nowMin = now.getHours() * 60 + now.getMinutes();
-  const targetMin = prefs.hour * 60 + prefs.minute;
-  return nowMin >= targetMin;
+  const morningMin = prefs.morning.hour * 60 + prefs.morning.minute;
+  const eveningMin = prefs.evening.hour * 60 + prefs.evening.minute;
+
+  if (prefs.evening.lastShown !== today && nowMin >= eveningMin) return "evening";
+  if (prefs.morning.lastShown !== today && nowMin >= morningMin && nowMin < eveningMin) {
+    return "morning";
+  }
+  return null;
 }
