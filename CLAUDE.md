@@ -148,16 +148,18 @@ NO muestra carta del día, briefing, proofs, badges, ciencia ni métricas — la
 carta vive en **You**, el briefing solo en el recordatorio, y proofs/badges/
 ciencia en **Progress**.
 
-**Your Dare a un toque, check-in opcional.** El estado cerrado ofrece **"Just
-dare me"** (`quickDareMe`: genera al instante con el último check-in —o un
-default seguro— y revela INLINE, sin preguntas) y, como opción secundaria,
-**"Check in first"** que abre el **único check-in** de la app: la pantalla
-completa `Checkin` (*"How are you today?"* — Energy 1-10 · Time · Location ·
-Destination · Mental state · vibe/companion + "Plan a Dare this week"). Flujo
-rápido: Your Dare → *Just dare me* → Dare revelado → Start. Flujo afinado: Your
-Dare → *Check in first* → `Checkin` → *Get my dare* → Detail → Start. En el hook:
-`quickDareMe` (aleatorio inline) y `runCheckin` (desde `Checkin`, navega a
-Detail); `anotherDare` **rechaza** el actual (no repetir pronto) y abre el
+**Your Dare: dos vías, AMBAS en la propia card.** El estado cerrado ofrece
+**"Start check-in"** (primario) que abre el **único check-in** de la app —la
+pantalla completa `Checkin` (*"How are you today?"* — Energy 1-10 · Time ·
+Location · Destination · Mental state · vibe/companion + "Plan a Dare this
+week")— y, como segunda opción en la MISMA card, **"Just dare me ✦"**
+(`quickDareMe`: rápido y aleatorio con el último check-in —o un default seguro—,
+se revela **INLINE en la card**, sin entrar en la pantalla del Dare; ayuda:
+*"Skips the questions. Uses what we know."*). Flujo afinado: Your Dare → *Start
+check-in* → `Checkin` → *Get my dare* → Detail → Start. Flujo rápido: Your Dare →
+*Just dare me* → Dare revelado inline → Start. En el hook: `runCheckin` (desde
+`Checkin`, navega a Detail) y `quickDareMe` (aleatorio, `navigate:"home"` →
+inline); `anotherDare` **rechaza** el actual (no repetir pronto) y abre el
 `Checkin`. **Nota:** existió un check-in "rápido" inline (`QuickCheckin`: Energy/
 Focus/Avoiding 1-5) que se **eliminó** para tener un solo check-in — el completo,
 que además rutea destinos (piscina/gym/bosque) y el vibe del companion.

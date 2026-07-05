@@ -94,13 +94,16 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
       <p className="lbl" style={{ marginBottom: 8, color: C.dim }}>
         YOUR DARE OF THE DAY
       </p>
-      <p style={{ fontSize: 15, color: C.dim, marginBottom: 22 }}>One action, chosen for you.</p>
-      <button className="btn btn-green" onClick={() => app.quickDareMe()}>
-        Just dare me
+      <p style={{ fontSize: 15, color: C.dim, marginBottom: 22 }}>20 seconds. Then we choose for you.</p>
+      <button className="btn btn-green" onClick={() => app.setScreen("checkin")}>
+        Start check-in
       </button>
-      <button className="link" style={{ marginTop: 14 }} onClick={() => app.setScreen("checkin")}>
-        Check in first
+      {/* "Just dare me": rápido y aleatorio, se revela AQUÍ MISMO (inline, sin
+          entrar en la pantalla del Dare). Segunda opción, en la propia card. */}
+      <button className="btn btn-line" style={{ marginTop: 12 }} onClick={() => app.quickDareMe()}>
+        Just dare me {SYMBOLS.spark}
       </button>
+      <p style={{ fontSize: 12, color: C.faint, marginTop: 12 }}>Skips the questions. Uses what we know.</p>
     </div>
   );
 }

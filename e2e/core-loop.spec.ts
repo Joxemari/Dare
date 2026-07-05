@@ -35,12 +35,13 @@ test("Today: mínimo (solo Dare) + 'Just dare me' un toque, loop sin errores", a
   await enterApp(page);
 
   // Today es mínimo: NO hay card pull ni Today's Door; solo el Dare + Journeys.
-  await expect(page.getByText("One action, chosen for you.")).toBeVisible();
+  // La card cerrada ofrece Start check-in + Just dare me (en la propia card).
+  await expect(page.getByText("Skips the questions. Uses what we know.")).toBeVisible();
   await expect(page.getByText("No Journey started yet.")).toBeVisible();
   await expect(page.getByText("DRAW YOUR CARD FOR TODAY")).toHaveCount(0);
   await expect(page.getByText("Today's Door")).toHaveCount(0);
 
-  // "Just dare me": un toque genera y revela el Dare INLINE (check-in opcional)
+  // "Just dare me": un toque genera y revela el Dare INLINE, sin entrar en el Dare
   await page.getByRole("button", { name: "Just dare me" }).click();
 
   // Dare revelado inline
@@ -73,8 +74,8 @@ test("Dare page: What this is / Why this works, sin Treat Locked + Plan for late
   const errors = guardPageErrors(page);
   await enterApp(page);
 
-  // "Check in first" abre el ÚNICO check-in: la pantalla completa "How are you today?"
-  await page.getByRole("button", { name: "Check in first" }).click();
+  // "Start check-in" abre el ÚNICO check-in: la pantalla completa "How are you today?"
+  await page.getByRole("button", { name: "Start check-in" }).click();
   await expect(page.getByText("How are you today?")).toBeVisible();
   await page.getByRole("button", { name: "3", exact: true }).click(); // energy (1-10)
   await page.getByRole("button", { name: "10 min", exact: true }).click(); // time
