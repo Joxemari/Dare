@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type {
   Avoid,
   BossPlaylist,
@@ -17,15 +17,17 @@ import type {
 import { DARES } from "../data/dares";
 import { TAROT } from "../data/tarot";
 import { TRAITS } from "../data/traits";
-import { JOURNEYS, journeyById, currentChapter, SPRINT_DAYS } from "../data/journeys";
+import { JOURNEYS, MVP_JOURNEYS, journeyById, currentChapter, journeyMilestoneIds, todaysDayPlan, SPRINT_DAYS } from "../data/journeys";
 import { generateDare, recentDareIds, buildWhy } from "./generator";
+import { recommendJourney } from "./recommend";
 import { rollTreat, sample } from "./random";
 import { findDare, findCard } from "./lookup";
 import { earnedTraits } from "./achievements";
 import { load, save, defaultStore, clearStore } from "./storage";
 import { todayStr, daysBetween } from "./date";
-import { buildBriefing, buildReminder, reminderDue, type BriefingInput } from "./briefing";
+import { buildBriefing, buildReminder, dueSlot, type BriefingInput } from "./briefing";
 import { notificationPermission, requestNotificationPermission, showReminderNotification } from "./notify";
+import { installOffer, isIOS, isInStandaloneMode, type InstallOffer } from "./install";
 
 export type Screen =
   | "onboarding"
@@ -124,14 +126,12 @@ const BADGE_PRIORITY = [
   // Badges finales de Journey (máxima prioridad al destacar en completion).
   "first-mover",
   "quiet-builder",
+  "bright-mover",
   "regulator",
   "clear-mind",
   "returner",
   "outwalker",
   "forged",
-  "proof-of-iron",
-  "proof-of-fire",
-  "quiet-power",
   "builder",
   "courageous",
   "momentum-keeper",
@@ -206,6 +206,14 @@ export function useDare() {
   /** Journeys arrancados por el usuario (pueden ser varios a la vez). */
   const activeJourneys = JOURNEYS.filter((j) => store.activeJourneyIds.includes(j.id));
   const isJourneyActive = store.activeJourneyIds.includes(store.journeyId);
+  /** Journey del MVP a destacar HOY según el último check-in (Today's Body Dare).
+   *  Puro (recommend.ts): prioriza los activos; si no hay, sugiere uno. */
+  const recommendedJourneyId = recommendJourney({
+    state: store.lastCheckin?.state ?? "normal",
+    energy: store.lastCheckin?.energy ?? 5,
+    active: store.activeJourneyIds,
+    returning: away,
+  });
   const catFeedback = catFeedbackMap(store);
   const today = todayStr();
   const proofCount = store.proofLibrary.length;
@@ -250,8 +258,9 @@ export function useDare() {
     (p) => p.when !== "journey" && p.dueDate && p.dueDate <= today,
   );
 
-  // Recordatorio local: comprueba al montar, al enfocar la pestaña y cada
-  // minuto mientras la app está viva. La DECISIÓN (`reminderDue`) y el
+  // Recordatorio local (dos franjas: mañana y tarde): comprueba al montar, al
+  // enfocar la pestaña y cada minuto mientras la app está viva. La DECISIÓN
+  // (`dueSlot`, qué franja toca) y el
   // CONTENIDO (`buildReminder`) son puros; el efecto de mostrar y el permiso
   // viven en `notify.ts`. Límite honesto: sin backend no hay push con la app
   // cerrada (ver notify.ts).
@@ -262,10 +271,19 @@ export function useDare() {
     const check = () => {
       if (cancelled) return;
       const now = new Date();
-      if (!reminderDue(store.notifications, now, daresToday > 0)) return;
-      const r = buildReminder({ date: todayStr(now), doneToday: daresToday > 0 });
+      const slot = dueSlot(store.notifications, now, daresToday > 0);
+      if (!slot) return;
+      const r = buildReminder({ date: todayStr(now), doneToday: daresToday > 0 }, slot);
       showReminderNotification(r.title, r.body, url);
-      setStore((s) => ({ ...s, notifications: { ...s.notifications, lastShown: todayStr(now) } }));
+      const today = todayStr(now);
+      // Sella SOLO la franja disparada (dedupe independiente mañana/tarde).
+      setStore((s) => ({
+        ...s,
+        notifications: {
+          ...s.notifications,
+          [slot]: { ...s.notifications[slot], lastShown: today },
+        },
+      }));
     };
     check();
     const id = setInterval(check, 60 * 1000);
@@ -281,12 +299,51 @@ export function useDare() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     store.notifications.enabled,
-    store.notifications.hour,
-    store.notifications.minute,
-    store.notifications.lastShown,
+    store.notifications.morning.hour,
+    store.notifications.morning.minute,
+    store.notifications.morning.lastShown,
+    store.notifications.evening.hour,
+    store.notifications.evening.minute,
+    store.notifications.evening.lastShown,
     notifyPermission,
     daresToday,
   ]);
+
+  // ---- instalación PWA (frontera con efectos) ----
+  // Capturamos `beforeinstallprompt` para poder ofrecer una instalación de 1
+  // toque, y detectamos si la app ya corre en standalone (instalada). La
+  // DECISIÓN de qué ofrecer es PURA (`install.ts`); esto solo mueve el
+  // efecto/estado del navegador, como `notify.ts` para el recordatorio.
+  const installEvtRef = useRef<{ prompt: () => void; userChoice: Promise<unknown> } | null>(null);
+  const [installPromptAvailable, setInstallPromptAvailable] = useState(false);
+  const [standalone, setStandalone] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    const display = window.matchMedia?.("(display-mode: standalone)").matches ?? false;
+    const ios = (window.navigator as unknown as { standalone?: boolean }).standalone ?? false;
+    return isInStandaloneMode(display, ios);
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onBIP = (e: Event) => {
+      // Evita el mini-infobar del navegador: mostramos NUESTRO nudge.
+      e.preventDefault();
+      installEvtRef.current = e as unknown as { prompt: () => void; userChoice: Promise<unknown> };
+      setInstallPromptAvailable(true);
+    };
+    const onInstalled = () => {
+      installEvtRef.current = null;
+      setInstallPromptAvailable(false);
+      setStandalone(true);
+      setStore((s) => ({ ...s, install: { ...s.install, installedAt: todayStr() } }));
+    };
+    window.addEventListener("beforeinstallprompt", onBIP);
+    window.addEventListener("appinstalled", onInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onBIP);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
+  }, []);
 
   // ---- mutadores ----
   const patch = (p: Partial<DareStore>) => setStore((s) => ({ ...s, ...p }));
@@ -355,6 +412,84 @@ export function useDare() {
     setDreamReward(id);
     activateJourney(store.journeyId);
     setScreen("journey");
+  }
+
+  /** Pausa un Journey: sale de los activos pero CONSERVA su progreso,
+   *  milestones y Dream Reward. Reanudable sin perder nada. */
+  function pauseJourney(id: JourneyId) {
+    setStore((s) => ({ ...s, activeJourneyIds: s.activeJourneyIds.filter((j) => j !== id) }));
+  }
+
+  /** Reanuda un Journey pausado: vuelve a los activos sin tocar su progreso.
+   *  Mantiene su `journeyStartedAt` si ya existía. */
+  function resumeJourney(id: JourneyId) {
+    setStore((s) =>
+      s.activeJourneyIds.includes(id)
+        ? s
+        : {
+            ...s,
+            activeJourneyIds: [...s.activeJourneyIds, id],
+            journeyStartedAt: s.journeyStartedAt[id]
+              ? s.journeyStartedAt
+              : { ...s.journeyStartedAt, [id]: todayStr() },
+          },
+    );
+  }
+
+  /** Cancela un Journey: lo saca de activos y RESETEA su sprint — progreso a 0,
+   *  sus milestones borrados, fuera de completados y sin fecha de inicio. El
+   *  Dream Reward elegido se conserva (para reempezar sin re-configurar). */
+  function cancelJourney(id: JourneyId) {
+    const msIds = journeyMilestoneIds(journeyById(id));
+    setStore((s) => {
+      const milestones = { ...s.milestones };
+      for (const mid of msIds) delete milestones[mid];
+      const journeyStartedAt = { ...s.journeyStartedAt };
+      delete journeyStartedAt[id];
+      return {
+        ...s,
+        activeJourneyIds: s.activeJourneyIds.filter((j) => j !== id),
+        journeyProgress: { ...s.journeyProgress, [id]: 0 },
+        journeysCompleted: s.journeysCompleted.filter((j) => j !== id),
+        milestones,
+        journeyStartedAt,
+      };
+    });
+  }
+
+  /** Today's Body Dare de un Journey activo: lanza el Dare PRESCRITO del día
+   *  que toca (plan[daysDone]) directamente al Detail. Si el día no fija un
+   *  dareId concreto, cae al check-in de ese Journey. Pone el Journey en foco
+   *  para que completar avance SU sprint. */
+  function startJourneyDay(id: JourneyId) {
+    const j = journeyById(id);
+    const prog = store.journeyProgress[id] ?? 0;
+    const day = todaysDayPlan(j, prog);
+    patch({ journeyId: id });
+    const dare = day?.dareId ? findDare(day.dareId) : null;
+    if (day && dare) {
+      const t = todayStr();
+      setStore((s) => ({
+        ...s,
+        journeyId: id,
+        todaysDares: [
+          ...s.todaysDares.filter((e) => !(e.date === t && e.completedAt === null)),
+          {
+            dareId: dare.id,
+            date: t,
+            wild: false,
+            revealed: true,
+            why: `${j.name} · Day ${prog + 1}: ${day.title}. Today's action from your journey.`,
+            startedAt: null,
+            completedAt: null,
+          },
+        ],
+      }));
+      setScreen("detail");
+    } else {
+      // Sin dareId fijo (p. ej. días de recuperación abiertos) → check-in del Journey.
+      setScreen("checkin");
+    }
   }
 
   function pickCard(cardId: string) {
@@ -482,7 +617,9 @@ export function useDare() {
   function finishDare() {
     if (!currentDare || currentDare.completed) return;
     const d: Dare = currentDare.dare;
-    const roll = rollTreat();
+    // El treat conoce el CONTEXTO: la categoría del Dare recién hecho
+    // (nada de "un café sentado" tras un paseo por el bosque).
+    const roll = rollTreat(d.cat);
     const counts = { ...store.catCounts, [d.cat]: (store.catCounts[d.cat] || 0) + 1 };
     const completedBefore = todaysToday.filter((e) => e.completedAt !== null).length;
     const isFirstToday = completedBefore === 0;
@@ -513,24 +650,25 @@ export function useDare() {
       have,
     });
 
-    // badges e identidad de fin de Journey
+    // Cierre de Journey: UN capstone deliberado — la identity del Journey
+    // (First Mover, Quiet Builder…). Los demás badges de un Journey salen de
+    // los umbrales de achievements.ts ganados por el camino (momentum-keeper,
+    // rhythm-finder, courageous…), nunca uno por cada Dare. Así hay más de un
+    // badge por Journey sin spam (spec).
     const newIdentities: string[] = [];
     if (finishesJourney) {
-      const jTrait = store.journeyId === "ember" ? "proof-of-fire" : store.journeyId === "iron" ? "proof-of-iron" : null;
-      if (jTrait && !have(jTrait) && !earned.includes(jTrait)) earned.push(jTrait);
-      if (store.journeyId === "iron") {
-        // Iron Quiet completado → Quiet Power y Builder (vía Journey).
-        for (const b of ["quiet-power", "builder"]) if (!have(b) && !earned.includes(b)) earned.push(b);
-      }
       const identId = journey.identity.id;
       if (!store.identities.includes(identId)) newIdentities.push(identId);
-      // la identidad también existe como badge coleccionable
+      // la identity también se colecciona como badge (findTrait la renderiza).
       if (!have(identId) && !earned.includes(identId)) earned.push(identId);
     }
 
     // Un único badge "destacado" para la pantalla de completion (el más
     // importante); el resto se desbloquean en silencio y aparecen en Progress.
-    const featured = featureBadge(earned);
+    // Al cerrar Journey, el capstone (identity) se muestra en su propio bloque
+    // premium: lo excluimos del banner para no mostrar el mismo badge dos veces.
+    const capstone = finishesJourney ? journey.identity.id : null;
+    const featured = featureBadge(earned.filter((id) => id !== capstone));
 
     setStore((s) => {
       // sella la completion en la entrada activa
@@ -764,11 +902,59 @@ export function useDare() {
     setStore((s) => ({ ...s, notifications: { ...s.notifications, enabled: false } }));
   }
 
-  /** Fija la hora local del recordatorio; resetea `lastShown` para permitir
-      que un horario recién adelantado pueda disparar hoy mismo. */
-  function setNotificationTime(hour: number, minute: number) {
-    setStore((s) => ({ ...s, notifications: { ...s.notifications, hour, minute, lastShown: "" } }));
+  /** Fija la hora local de una franja (mañana/tarde); resetea su `lastShown`
+      para permitir que un horario recién adelantado pueda disparar hoy mismo. */
+  function setNotificationSlot(slot: "morning" | "evening", hour: number, minute: number) {
+    setStore((s) => ({
+      ...s,
+      notifications: {
+        ...s.notifications,
+        [slot]: { hour, minute, lastShown: "" },
+      },
+    }));
   }
+
+  // ---- instalación PWA ----
+  /** Lanza el diálogo nativo de instalación (si hay `beforeinstallprompt`). */
+  async function promptInstall() {
+    const evt = installEvtRef.current;
+    if (!evt) return;
+    try {
+      evt.prompt();
+      await evt.userChoice;
+    } catch {
+      /* el usuario canceló o el navegador lo rechazó — sin ruido */
+    }
+    installEvtRef.current = null;
+    setInstallPromptAvailable(false);
+  }
+
+  /** Descarta el nudge; se silencia una temporada (ver install.ts). */
+  function dismissInstall() {
+    setStore((s) => ({ ...s, install: { ...s.install, dismissedAt: todayStr() } }));
+  }
+
+  // Ofertas de instalación (decisión PURA en install.ts). El NUDGE respeta el
+  // umbral (algo que perder) y el silencio tras un descarte; en AJUSTES se
+  // ofrece siempre que la app NO esté ya instalada (el usuario está buscándolo).
+  const installBase = {
+    standalone,
+    ios: typeof navigator !== "undefined" ? isIOS(navigator.userAgent) : false,
+    promptAvailable: installPromptAvailable,
+    today: todayStr(),
+  };
+  const installNudge: InstallOffer = installOffer({
+    ...installBase,
+    proofCount,
+    activeJourneys: activeJourneys.length,
+    dismissedAt: store.install.dismissedAt,
+  });
+  const installSettings: InstallOffer = installOffer({
+    ...installBase,
+    proofCount: 1,
+    activeJourneys: 1,
+    dismissedAt: "",
+  });
 
   return {
     store,
@@ -791,6 +977,7 @@ export function useDare() {
     chapter,
     activeJourneys,
     isJourneyActive,
+    recommendedJourneyId,
     catFeedback,
     currentDare,
     daresToday,
@@ -803,6 +990,9 @@ export function useDare() {
     briefing,
     notifyPermission,
     duePlannedDares,
+    // instalación PWA
+    installNudge,
+    installSettings,
     // timer + treat transitorio
     secs,
     setSecs,
@@ -817,7 +1007,7 @@ export function useDare() {
     fbNote,
     // constantes útiles
     traitDefs: TRAITS,
-    journeys: JOURNEYS,
+    journeys: MVP_JOURNEYS,
     // acciones
     completeOnboarding,
     replayOnboarding,
@@ -825,6 +1015,10 @@ export function useDare() {
     confirmDreamReward,
     startJourney,
     activateJourney,
+    pauseJourney,
+    resumeJourney,
+    cancelJourney,
+    startJourneyDay,
     pickCard,
     runCheckin,
     justDareMe,
@@ -856,7 +1050,9 @@ export function useDare() {
     scheduleDate,
     enableNotifications,
     disableNotifications,
-    setNotificationTime,
+    setNotificationSlot,
+    promptInstall,
+    dismissInstall,
   };
 }
 

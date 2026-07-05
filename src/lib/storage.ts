@@ -1,7 +1,8 @@
 import type { DareStore, JourneyId } from "../types";
 
-const KEY = "dare:v5";
+const KEY = "dare:v6";
 /** Claves antiguas, si un build previo escribió alguna. */
+const KEY_V5 = "dare:v5";
 const KEY_V4 = "dare:v4";
 const KEY_V3 = "dare:v3";
 const KEY_V2 = "dare:v2";
@@ -9,12 +10,12 @@ const KEY_V1 = "dare:v1";
 
 export function defaultStore(): DareStore {
   return {
-    version: 5,
+    version: 6,
     onboarded: false,
-    journeyId: "ember",
+    journeyId: "iron",
     activeJourneyIds: [],
     journeyStartedAt: {},
-    journeyProgress: { ember: 0, iron: 0, water: 0, clear: 0, current: 0, wild: 0, fire: 0 },
+    journeyProgress: { ember: 0, iron: 0, pulse: 0, water: 0, clear: 0, current: 0, wild: 0, fire: 0 },
     journeysCompleted: [],
     dreamRewards: {},
     checkins: [],
@@ -39,15 +40,20 @@ export function defaultStore(): DareStore {
     rejectedDares: [],
     dates: [],
     pendingFeedback: null,
-    notifications: { enabled: false, hour: 9, minute: 0, lastShown: "" },
+    notifications: {
+      enabled: false,
+      morning: { hour: 9, minute: 0, lastShown: "" },
+      evening: { hour: 18, minute: 0, lastShown: "" },
+    },
+    install: { dismissedAt: "", installedAt: "" },
   };
 }
 
 /**
- * Migra una forma desconocida/antigua hasta v4. Defensiva: mergea sobre
+ * Migra una forma desconocida/antigua hasta v6. Defensiva: mergea sobre
  * los defaults, de modo que cualquier campo que el build viejo nunca
  * escribió reciba un valor razonable. Idempotente: aplicada a un store ya
- * v4 lo deja igual.
+ * v6 lo deja igual.
  *
  * v2 → v3: renombra el vocabulario del prototipo al del producto —
  *   xp/streak/badges/rewardDraws/tarot → se descartan o remapean a
@@ -61,10 +67,17 @@ export function defaultStore(): DareStore {
  *   su Journey en curso. También se añade `notifications`, que un store v3 no
  *   escribió nunca → recibe el default al mergear sobre `defaultStore()`.
  *
- * v4 → v5: Planned Dares (Dares concretos apartados para más tarde) + registro
- *   de Dares rechazados (para no repetirlos pronto). Ambos son campos NUEVOS:
- *   un store v4 nunca los escribió → reciben `[]` al mergear sobre
- *   `defaultStore()`. Nada que remapear; el resto del store se conserva igual.
+ * v4 → v5/v6: NOTA — hubo DOS "v5" en ramas paralelas que aquí se unifican en
+ *   v6. Una v5 añadió Planned Dares (`darePlans`) + Dares rechazados
+ *   (`rejectedDares`); la otra v5 añadió el recordatorio de DOS franjas +
+ *   nudge de instalación (`install`). Un store guardado por CUALQUIERA de las
+ *   dos v5 (o por un v4) migra a v6 sin pérdida porque el merge cubre ambos:
+ *   - Planned Dares / rechazados: campos NUEVOS → `[]` al mergear si faltan.
+ *   - `notifications`: si trae UNA sola hora (v4 o la v5 de Planned Dares) se
+ *     promueve a la franja de la MAÑANA y la TARDE recibe el default (18:00);
+ *     si ya trae `morning`/`evening` se mergea franja a franja.
+ *   - `install`: campo NUEVO → default si falta.
+ *   Idempotente: aplicada a un store ya v6 lo deja igual.
  */
 function migrate(raw: unknown): DareStore {
   const base = defaultStore();
@@ -76,7 +89,7 @@ function migrate(raw: unknown): DareStore {
     ...base,
     onboarded: typeof o.onboarded === "boolean" ? o.onboarded : base.onboarded,
     journeyId: typeof o.journeyId === "string" ? (o.journeyId as DareStore["journeyId"]) : base.journeyId,
-    version: 5,
+    version: 6,
   };
 
   if (o.journeyProgress && typeof o.journeyProgress === "object") {
@@ -151,11 +164,43 @@ function migrate(raw: unknown): DareStore {
     merged.journeyStartedAt = o.journeyStartedAt as DareStore["journeyStartedAt"];
   }
 
-  // v4: preferencias de notificación. Se mergean sobre el default para que un
-  // store v3 (que nunca escribió el campo) reciba valores por defecto, y para
-  // que un v4 parcial complete los campos que falten (idempotencia).
+  // v4/v5: preferencias de notificación. Un store v3 nunca las escribió →
+  // recibe el default. Un v4 traía UNA franja (`{hour,minute,lastShown}`): se
+  // promueve a la MAÑANA y la tarde recibe su default. Un v5 (con `morning`/
+  // `evening`) se mergea franja a franja para completar campos que falten
+  // (idempotencia).
   if (o.notifications && typeof o.notifications === "object" && !Array.isArray(o.notifications)) {
-    merged.notifications = { ...base.notifications, ...(o.notifications as object) };
+    const n = o.notifications as Record<string, unknown>;
+    const enabled = typeof n.enabled === "boolean" ? n.enabled : base.notifications.enabled;
+    const slot = (raw: unknown, def: DareStore["notifications"]["morning"]) =>
+      raw && typeof raw === "object" && !Array.isArray(raw)
+        ? { ...def, ...(raw as object) }
+        : def;
+    if ("morning" in n || "evening" in n) {
+      // Forma v5.
+      merged.notifications = {
+        enabled,
+        morning: slot(n.morning, base.notifications.morning),
+        evening: slot(n.evening, base.notifications.evening),
+      };
+    } else {
+      // Forma v4 (una sola hora) → franja de la mañana; tarde por defecto.
+      merged.notifications = {
+        enabled,
+        morning: {
+          hour: typeof n.hour === "number" ? n.hour : base.notifications.morning.hour,
+          minute: typeof n.minute === "number" ? n.minute : base.notifications.morning.minute,
+          lastShown: typeof n.lastShown === "string" ? n.lastShown : "",
+        },
+        evening: { ...base.notifications.evening },
+      };
+    }
+  }
+
+  // v5: estado del nudge de instalación. Un store anterior no lo tenía →
+  // default; uno v5 parcial completa los campos que falten.
+  if (o.install && typeof o.install === "object" && !Array.isArray(o.install)) {
+    merged.install = { ...base.install, ...(o.install as object) };
   }
 
   return merged;
@@ -166,8 +211,10 @@ export function load(): DareStore {
     const cur = localStorage.getItem(KEY);
     if (cur) {
       const parsed = JSON.parse(cur);
-      return parsed && parsed.version === 5 ? (parsed as DareStore) : migrate(parsed);
+      return parsed && parsed.version === 6 ? (parsed as DareStore) : migrate(parsed);
     }
+    const v5 = localStorage.getItem(KEY_V5);
+    if (v5) return migrate(JSON.parse(v5));
     const v4 = localStorage.getItem(KEY_V4);
     if (v4) return migrate(JSON.parse(v4));
     const v3 = localStorage.getItem(KEY_V3);
@@ -193,6 +240,7 @@ export function save(store: DareStore): void {
 export function clearStore(): void {
   try {
     localStorage.removeItem(KEY);
+    localStorage.removeItem(KEY_V5);
     localStorage.removeItem(KEY_V4);
     localStorage.removeItem(KEY_V3);
     localStorage.removeItem(KEY_V2);

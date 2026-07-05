@@ -66,6 +66,14 @@ export const DARES: Dare[] = [
     trigger: "Low energy still counts.", companion: "Quiet streets.", proof: "Chose calm over spiraling.",
     effects: { Calm: 2, Mood: 1 }, scienceId: "walking-outdoors",
     steps: ["Coat on, headphones optional", "Walk around the block, slow", "Let the day settle", "Come home lighter"] },
+  { id: "stair-climb", title: "Stair Climb", cat: "walk", min: 12, level: "Medium", energy: [5, 9], locs: ["outside", "home"],
+    trigger: "Take the stairs on purpose.", companion: "One driving song.", proof: "Used the climb as fuel.",
+    effects: { Energy: 3, Strength: 1, Mood: 1 }, scienceId: "walking-outdoors",
+    steps: ["Find stairs — building, metro, hill steps", "Climb at a steady pace", "Walk back down to recover", "Repeat until the song ends"] },
+  { id: "hill-repeats", title: "Hill Repeats", cat: "forest", min: 20, level: "Strong", energy: [7, 10], locs: ["outside", "forest"],
+    trigger: "Let the hill do the work.", companion: "Your loudest playlist.", proof: "Chose the harder route.",
+    effects: { Energy: 3, Strength: 2, Mood: 2 }, scienceId: "walking-outdoors",
+    steps: ["Warm up: 5 min easy walk to a hill", "Walk up briskly, easy back down", "Repeat 4–6 times", "Cool down on the flat"] },
 
   // ---------------- DUMBBELLS (de pie / sentado — nunca manos en el suelo) ----------------
   { id: "iron-first-weight", title: "First Weight", cat: "dumbbells", min: 12, level: "Medium", energy: [4, 9], locs: ["home"],
@@ -84,6 +92,14 @@ export const DARES: Dare[] = [
     trigger: "Start first. Feel better second.", companion: "Coffee after.", proof: "Chose strength without drama.",
     effects: { Strength: 2, Energy: 1 }, scienceId: "dumbbells",
     steps: ["Start the coffee", "While it brews: squats, curls, presses", "3 easy sets, nothing heroic", "Drink the coffee you earned"] },
+  { id: "kettlebell-flow", title: "Kettlebell Flow", cat: "dumbbells", min: 14, level: "Medium", energy: [5, 9], locs: ["home"],
+    trigger: "No gym. Just one weight.", companion: "Podcast or playlist.", proof: "Moved one weight with control.",
+    effects: { Strength: 3, Energy: 2, Confidence: 2 }, scienceId: "strength-training",
+    steps: ["One kettlebell or dumbbell", "10 two-hand swings, hips lead", "10 goblet squats", "8 shoulder presses each side", "Three rounds, rest as needed"] },
+  { id: "band-strength", title: "Band Strength", cat: "dumbbells", min: 12, level: "Easy", energy: [3, 8], locs: ["home"],
+    trigger: "One band. Standing only.", companion: "Next episode of your series.", proof: "Built strength in small sets.",
+    effects: { Strength: 2, Energy: 1 }, scienceId: "dumbbells",
+    steps: ["Loop a resistance band under both feet", "Rows to the ribs × 12", "Overhead presses × 10", "Standing curls × 12", "Two calm rounds"] },
 
   // ---------------- CARRY (fuerza funcional, sin suelo) ----------------
   { id: "carry-strength", title: "Carry Strength", cat: "carry", min: 14, level: "Medium", energy: [4, 9], locs: ["home"],
@@ -105,7 +121,25 @@ export const DARES: Dare[] = [
     effects: { Energy: 3, Strength: 2, Mood: 2 }, scienceId: "tabata",
     steps: ["20 seconds on / 10 seconds off, weights in hand", "Curls", "Shoulder press", "Goblet squat", "Repeat the circuit until 8 minutes end"] },
 
+  // ---------------- DANCE / SWEATY (de pie, ritmo — nunca suelo) ----------------
+  { id: "dance-cardio", title: "Dance Cardio", cat: "tabata", min: 12, level: "Medium", energy: [5, 10], locs: ["home"],
+    trigger: "Boss playlist. Eight minutes.", companion: "Your loudest playlist.", proof: "Turned music into movement.",
+    effects: { Energy: 3, Mood: 3, Confidence: 1 }, scienceId: "music-effort",
+    steps: ["Pick three songs that move you", "No choreography — just keep moving", "Big arms, loose hips, light feet", "Stop when the third song ends"] },
+  { id: "sweat-eight", title: "The Sweaty Eight", cat: "tabata", min: 8, level: "Medium", energy: [5, 10], locs: ["home"],
+    trigger: "Eight minutes. No negotiation.", companion: "Boss playlist.", proof: "Raised my own pulse on purpose.",
+    effects: { Energy: 3, Mood: 2, Strength: 1 }, scienceId: "tabata",
+    steps: ["20 seconds on / 10 off", "Round 1 — fast feet", "Round 2 — squat to reach", "Round 3 — shadowboxing", "Round 4 — knees up", "Eight minutes, done before your brain argues"] },
+
   // ---------------- FITBOXING ----------------
+  { id: "fitboxing-flow", title: "Fitboxing Flow", cat: "fitboxing", min: 15, level: "Medium", energy: [5, 9], locs: ["home"],
+    trigger: "Hit resistance back.", companion: "High-energy playlist.", proof: "Turned stress into movement.",
+    effects: { Energy: 3, Mood: 3, Confidence: 2 }, scienceId: "fitboxing",
+    steps: ["Feet apart, hands up", "Jab–cross for one song", "Add a slip between rounds", "Hooks for the last song", "Shake the arms out"] },
+  { id: "combo-rounds", title: "Combo Rounds", cat: "fitboxing", min: 10, level: "Medium", energy: [5, 9], locs: ["home", "outside"],
+    trigger: "One combo at a time.", companion: "One track on repeat.", proof: "Turned stress into movement.",
+    effects: { Energy: 3, Mood: 2, Confidence: 1 }, scienceId: "fitboxing",
+    steps: ["Learn one combo: jab, cross, hook", "Three rounds of 90 seconds", "Rest 30 seconds between", "Speed up only on the last round"] },
   { id: "round-one", title: "Round One", cat: "fitboxing", min: 30, level: "Strong", energy: [7, 10], locs: ["gym"],
     trigger: "Hit resistance back.", companion: "Class energy.", proof: "Turned stress into movement.",
     effects: { Energy: 3, Mood: 3, Confidence: 2 }, scienceId: "fitboxing",

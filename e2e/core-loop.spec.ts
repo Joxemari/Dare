@@ -112,21 +112,22 @@ test("Journey: Begin explícito, milestones accionables + tabs Progress/You", as
   await page.getByRole("button", { name: "Journey", exact: true }).click();
   await page.getByRole("button", { name: /Begin Journey/ }).click();
 
-  // sin Dream Reward → setup; al elegirlo, el Journey arranca y muestra el plan
-  await expect(page.getByText(/What would make finishing/)).toBeVisible();
-  await page.getByText("Painting class").click();
+  // sin Dream Reward → setup; al elegirlo, el Journey arranca y muestra el plan.
+  // El Journey en foco por defecto es Iron Quiet (MVP, physical-energy-first).
+  await expect(page.getByText(/What would feeling stronger/)).toBeVisible();
+  await page.getByText("New training top").click();
   await expect(page.getByText("The days ahead")).toBeVisible();
   await expect(page.getByText(/milestones completed/).first()).toBeVisible();
 
   // briefing del día actual: contenido rico + selector de variante ◌/◆/⟁
   await page.getByText("Day 1", { exact: true }).click();
-  await expect(page.getByText(/Just shoes/)).toBeVisible(); // Trigger del día (sólo en el modal)
+  await expect(page.getByText(/No gym\. Just two weights/)).toBeVisible(); // Trigger del día (sólo en el modal)
   await expect(page.getByRole("button", { name: /Real/ })).toBeVisible();
   await page.getByRole("button", { name: /Soft/ }).click(); // cambiar de variante
   await page.getByRole("button", { name: "✕" }).click();
 
   // abrir un milestone (Letter) y completarlo — arregla el "Start" muerto
-  await page.getByText("You don't have a motivation problem").click();
+  await page.getByText("You don't have a discipline problem.").click();
   await expect(page.getByRole("button", { name: "Mark as read" })).toBeVisible();
   await page.getByRole("button", { name: "Mark as read" }).click();
 

@@ -16,7 +16,7 @@ además de la operativa de desarrollo. No es solo una lista de comandos.
 - **Tailwind CSS v4** vía `@tailwindcss/vite`; los tokens viven en `src/index.css`.
 - **Vitest** para los tests.
 - Fuentes autoalojadas con `@fontsource` (Cormorant Garamond + Space Grotesk); sin CDN de Google.
-- Persistencia en **`localStorage`**, esquema versionado (v5) con migración.
+- Persistencia en **`localStorage`**, esquema versionado (v6) con migración.
 - **PWA instalable** sin dependencias extra (manifest estático + service worker
   a mano); offline y "añadir a inicio". Ver sección *PWA* más abajo.
 - Sin router: las pantallas son estado, no rutas.
@@ -57,10 +57,13 @@ concentran en la frontera (hook + `storage`), no repartidos por las pantallas.
 ```
 src/
   data/        Datos de dominio (constantes, sin lógica): dares, wildcards,
-               journeys (planes de 7 días + milestones tipados), tarot,
+               modes (MovementMode + CAT_MODE: capa de "tipo de movimiento"
+               sobre las categorías), journeys (planes de 7 días + milestones
+               tipados; MVP_JOURNEY_IDS marca los 4 ofrecibles), tarot,
                symbols (mapa central de glifos), science (biblioteca),
                traits (BADGES: hitos difíciles; persisten bajo la clave
-               `traits` del store), rewards (treats/dates/dream,
+               `traits` del store), rewards (treats etiquetados por
+               contexto — `fits`/`avoid` por categoría —, dates, dream;
                antes draws), briefings (biblioteca de "Today's Briefing":
                consejos inspirados en personas conocidas + hábito real),
                icons, colors.
@@ -71,7 +74,10 @@ src/
                                   qué se evita (avoiding) + evitar rechazados
                  achievements.ts  earnedTraits() — qué traits gana un dare
                  prng.ts          PRNG con semilla (mulberry32), reproducible
-                 random.ts        sample() y rollTreat() (usan Math.random)
+                 random.ts        sample() (Math.random) y rollTreat(cat, rand):
+                                  treat draw consciente del contexto (excluye
+                                  `avoid`, prima `fits` ×3; rand inyectable →
+                                  testeable con semilla)
                  date.ts          helpers de fecha local (todayStr, daysBetween)
                  lookup.ts        búsquedas sobre los datos (findDare, findCard)
                  contentSchema.ts validateDare(): reglas duras del contenido
@@ -80,15 +86,22 @@ src/
                                   de contenido generativo.
                  generationInput.ts  buildGenerationInput(): resume el store en
                                   la señal de feedback que alimenta la generación
+                 recommend.ts     recommendJourney(): qué Journey del MVP
+                                  destacar HOY en Today según el check-in
+                                  (estado+energía). Puro, prioriza los activos
                  share.ts         capa social: texto/payload PUROS para compartir
                                   la Daily Card vía Web Share API (ver más abajo)
                  briefing.ts      "Today's Briefing": elige un consejo inspirado
                                   en alguien conocido (biblioteca `briefings`)
                                   para el widget Y el recordatorio (buildBriefing/
-                                  buildReminder) + reminderDue(). Puro, seeded por
+                                  buildReminder) + dueSlot() (qué franja del
+                                  recordatorio toca: mañana/tarde). Puro, seeded por
                                   fecha (ver más abajo)
+                 install.ts       decisión PURA del nudge "añadir a inicio" (PWA):
+                                  isIOS/isInStandaloneMode/installOffer (ver más
+                                  abajo)
                Frontera con efectos (I/O), aisladas a propósito:
-                 storage.ts    load/save/migrate sobre localStorage (v5)
+                 storage.ts    load/save/migrate sobre localStorage (v6)
                  useDare.ts    hook de React: estado de la app + orquestación
                  feedback.ts   vibración (navigator.vibrate) + sonido sintetizado
                                (Web Audio, sin assets). Impuro; no se testea.
@@ -127,6 +140,12 @@ Start. En el hook: `startQuickCheckin`/`runQuickCheckin` (mapea el rápido a un
 `Checkin` de contexto casa, escalando 1-5→1-10 y derivando el estado);
 `anotherDare` **rechaza** el actual (no repetir pronto) y reabre el check-in.
 
+Con **varios Journeys activos**, `ActiveJourneyList` prioriza el Journey
+recomendado por el check-in (`recommendJourney` en `lib/recommend.ts`: energía
+baja → Still Water, con ganas → Iron Quiet, atascado → Wild Ground, con energía
+alta → Bright Pulse, overwhelmed → Still Water, returning → el activo más suave),
+lo sube y lo marca (`· today`).
+
 El **card pull del día** (tarot) es ahora **inline en la parte alta de Today**
 (`DailyCardDraw`); elegir una de las 3 cartas abre la pantalla `Card` (revelado a
 pantalla completa) y al volver queda una miniatura. El check-in COMPLETO
@@ -154,7 +173,12 @@ significado, no premios por cada acción; en el store persisten bajo la clave
 **Companion** (recompensa durante el dare) · **Milestones** (no Marks) ·
 **Momentum** (no flexible streak). Los Badges se ganan raramente: la mayoría de
 Dares NO desbloquean ninguno, y la completion muestra COMO MUCHO uno (el más
-importante; el resto quedan en Progress). No mostrar XP,
+importante; el resto quedan en Progress). Dos vías, sin spam: **capstone** —
+al terminar un Journey se otorga UN badge deliberado (su `identity`: First
+Mover, Quiet Builder…), con reveal premium (`.badge-reveal`) en la completion;
+y **badges por umbral** (`achievements.ts`) que caen por hitos acumulados
+(3 del mismo tipo, 3 días distintos, un Strong…), nunca por cada Dare. Así un
+Journey deja más de un badge sin premiar cada acción. No mostrar XP,
 niveles, "streak failed", calorías ni "burn". El sistema de recompensas está
 separado a propósito: *Trigger* (antes) · *Companion* (durante) · *Treat*
 (después) · *Date* (semanal) · *Dream Reward* (al terminar el Journey).
@@ -175,13 +199,60 @@ milestone: `letter/goal/action/motivator/science/proof/reflection/badge`. Los
 milestones son accionables (modal `MilestoneModal`): cada tipo tiene su CTA real
 y persiste en `store.milestones`.
 
-**Set final: 7 Journeys** (`JourneyId`), cada uno con símbolo, color propio
-(`JOURNEY_COLOR`) y Badge final (`identity`, 1 por Journey; su id existe también
-como Trait para el render del anillo). Los ids internos `ember/iron/water` se
-conservan (no romper datos guardados): **First Flame ✦** (slot `ember`),
-**Iron Quiet △** (`iron`), **Still Water ☾** (`water`), **Clear Signal ◇**
-(`clear`), **Steady Current ⌁** (`current`), **Wild Ground ↟** (`wild`),
-**Quiet Fire ⟁** (`fire`). Todos tienen `plan` completo (ya no hay placeholders).
+**MVP: 4 Journeys ofrecibles** — DARE es **physical-energy-first**: el objetivo
+es ayudar a construir el hábito de moverse (fuerza, cardio, aire libre,
+recuperación) sin aburrimiento. El picker (`Journeys.tsx`) y la lista de Today
+solo ofrecen estos 4 (`MVP_JOURNEY_IDS = ["iron","pulse","wild","water"]`):
+
+- **Iron Quiet △** (`iron`) — fuerza: mancuernas, kettlebell, carries. Sin gym.
+- **Bright Pulse ◆** (`pulse`) — cardio divertido: fitboxing, shadowboxing,
+  standing tabata, dance cardio, sesiones cortas y sudadas. **Journey nuevo.**
+- **Wild Ground ↟** (`wild`) — fuera: caminar, luz, bosque, rutas, colinas,
+  escaleras, microaventuras.
+- **Still Water ☾** (`water`) — recuperación: piscina, movilidad suave,
+  respiración, apagado de la noche.
+
+Cada Journey tiene símbolo, color propio (`JOURNEY_COLOR`) y Badge final
+(`identity`, 1 por Journey; su id existe también como Trait para el render del
+anillo). El de Bright Pulse es **Bright Mover** (`bright-mover`).
+
+**Roadmap (en datos, NO empezables).** Los otros 4 del set histórico se
+conservan en `JOURNEYS` (`ROADMAP_JOURNEYS`) como conceptos de roadmap y para no
+romper el progreso guardado: **First Flame ✦** (`ember`, hoy concepto de
+onboarding/primera activación), **Clear Signal ◇** (`clear`, foco),
+**Steady Current ⌁** (`current`, consistencia), **Quiet Fire ⟁** (`fire`,
+coraje). En el picker aparecen al final como **"Coming soon"**: solo un preview
+(nombre, tag, promesa y la estructura de capítulos), sin CTA — no se pueden
+empezar. Los ids internos `ember/iron/water` se conservan (no romper datos
+guardados). Al reintroducir uno, basta con añadir su id a `MVP_JOURNEY_IDS`.
+
+**Contenido de los Journeys del MVP** — estándar de calidad (aplicado a los 4):
+las *letters* citan trabajos y autores concretos (BJ Fogg, Wendy Wood, Katy
+Milkman, James Clear, Bandura, Tabata, Gibala, Karageorghis, Kelly McGonigal,
+Stuart Brown, los Kaplan, Qing Li, Oppezzo, Keltner, Benson, el trial de
+cyclic sighing de Stanford 2023, Wallace J. Nichols, Cal Newport, Masicampo &
+Baumeister, Matthew Walker…); cada capítulo incluye *setup actions* que cambian
+conducta (pesos a la vista, mínimo de dos reps, temptation bundle, lift log,
+anclar el hueco diario, three-song ladder, invitar a alguien, agendar el agua,
+shutdown shelf…); la ciencia va con referencias pero lenguaje prudente ("is
+associated with", "may support"); y los *proofs* son específicos, nunca de
+relleno. La biblioteca (`science.ts`) tiene fichas reutilizables para esto
+(habit-automaticity, temptation-bundling, progressive-overload, grip-longevity,
+exercise-snacks, awe-walks, cyclic-sighing, shutdown-ritual, blue-mind…).
+
+**Modos de movimiento** (`src/data/modes.ts`): `MovementMode` (Strong · Sweaty ·
+Outside · Water · Recovery · Soft · Play · Social · Travel) es una capa por
+encima de las categorías (`CAT_MODE`). Regla **anti-aburrimiento**: el generador
+penaliza repetir el mismo MODO más de dos veces seguidas (además de la
+penalización por `Cat`). Cada Journey rota modos, companions y treats a lo largo
+de sus 7 días para no sentirse repetitivo.
+
+**Ejercicios permitidos/prohibidos.** Nunca: push-ups, planks, burpees, mountain
+climbers, trabajo de suelo con manos apoyadas, HIIT largo, lenguaje de calorías/
+peso/vergüenza (lo refuerza `contentSchema` + `data.test.ts`). Permitido:
+mancuernas, kettlebells, bandas, carries, sentadillas goblet, zancadas, press,
+remo, curls, shadowboxing, fitboxing, padel, natación, caminar, colinas,
+escaleras, dance cardio, movilidad de pie.
 
 **Variantes de dificultad por día** (`DayPlan`): `soft` (◌ baja energía),
 `dare`/`real` (◆ recomendada), `bold` (⟁ más dura), más `trigger`, `companion`,
@@ -193,17 +264,35 @@ with", "research suggests"); sin claims médicos. El helper puro `dayVariants(p)
 **Briefing de día** (`DayModal`): en la pantalla Journey, tocar un día hecho o el
 actual abre su plan — selector ◌/◆/⟁ (efímero, por defecto Real), Trigger,
 Companion, Treat, Proof y la ficha de ciencia. Los días futuros siguen sellados
-(no accionables). El timeline usa "Day N" (no Today/Tomorrow). Pendiente: persistir
-la variante elegida por día (necesitaría subir la versión del store) y llevar la
-ficha de ciencia del día a Today.
+(no accionables). El timeline usa "Day N" (no Today/Tomorrow).
 
 **Arranque explícito y multi-journey.** Ningún Journey arranca solo: el
 onboarding lleva a Today sin activar nada. Un Journey se empieza pulsando
 "Begin Journey" en la pestaña Journey (`startJourney` → si falta Dream Reward,
 su setup primero). Pueden estar **varios activos a la vez**
-(`store.activeJourneyIds`): arrancar uno no detiene otro; Today ofrece una lane
-("Choose your lane") si hay más de uno. El progreso/completion de un Journey
-solo cuenta si está activo.
+(`store.activeJourneyIds`): arrancar uno no detiene otro. El progreso/completion
+de un Journey solo cuenta si está activo.
+
+**Ciclo de vida: launch · pause · resume · cancel** (acciones del hook). *Begin*
+activa (`activateJourney`, sella `journeyStartedAt`). *Pause* (`pauseJourney`)
+lo saca de `activeJourneyIds` pero **conserva** progreso, milestones y Dream
+Reward → reanudable. *Resume* (`resumeJourney`) lo devuelve a activos sin tocar
+nada. *Cancel* (`cancelJourney`) **resetea el sprint**: progreso a 0, borra los
+milestones del Journey (`journeyMilestoneIds`), lo saca de completados y borra
+`journeyStartedAt` (conserva el Dream Reward). "Pausado" se distingue de "sin
+empezar" por la presencia de `journeyStartedAt`. Los controles viven en la
+pantalla Journey (Pause/Cancel activo; Resume/Cancel pausado, con confirmación
+inline para cancelar); el picker muestra el estado ("Paused · Day N of 7").
+
+**Today's plan (acción prescrita del día).** Con Journeys activos, Today lista
+para cada uno la **acción de HOY** del plan (`todaysDayPlan(j, daysDone)` →
+`plan[daysDone]`, o null si el sprint está completo): "Day N · título" + un botón
+que lanza el Dare prescrito de ese día directamente al Detail
+(`startJourneyDay`, pone el Journey en foco para que completar avance SU sprint;
+si el día no fija `dareId`, cae al check-in). Así se ve de un vistazo qué toca
+hoy de cada Journey en marcha (p. ej. fuerza de Iron Quiet + respiración de Still
+Water). Con más de uno, sube y marca (`· today`) el recomendado por el check-in
+("choose your lane").
 
 **Capítulos por COMPLETADO, no por calendario** (`chapterState` /
 `unlockedChapterCount` / `currentChapter` en `journeys.ts`): el capítulo I nace
@@ -270,30 +359,58 @@ local** (notificación). Reparto según la regla del repo (puro vs. frontera):
 - **`src/data/briefings.ts`** — datos de dominio SIN lógica: la biblioteca
   `BRIEFINGS` (persona + insight + acción + símbolo).
 - **`src/lib/briefing.ts`** — PURO y testeado (`briefing.test.ts`).
-  `buildBriefing()` elige una entrada de la biblioteca; `buildReminder()` deriva
-  el título/cuerpo de la notificación; `reminderDue()` decide (recibiendo `now`)
-  si toca avisar. La elección se hace con un **PRNG sembrado por la FECHA**
-  (`mulberry32`), así el briefing es **estable dentro del día** y cambia cada día
-  (y los tests son reproducibles). Un test *guard* prohíbe
-  XP/level/streak/badge/calorie/burn **y "draw a card"**.
+  `buildBriefing()` elige una entrada de la biblioteca `BRIEFINGS`;
+  `buildReminder(input, slot)` deriva el título/cuerpo de la notificación (el
+  título varía por franja: la tarde dice *"Still time today"* sin culpar);
+  `dueSlot()` decide (recibiendo `now`) **qué franja toca** avisar
+  (`"morning"`/`"evening"`/`null`). **Dos empujones al día**: la mañana dispara en
+  su ventana `[hora_mañana, hora_tarde)` y la tarde a partir de su hora (con
+  prioridad, para no reavisar una mañana ya pasada al abrir de noche); cada franja
+  lleva su propio `lastShown` (dedupe independiente). La elección se hace con un
+  **PRNG sembrado por la FECHA** (`mulberry32`), así el briefing es **estable
+  dentro del día** y cambia cada día (y los tests son reproducibles). Un test
+  *guard* prohíbe XP/level/streak/badge/calorie/burn **y "draw a card"**.
 - **`src/lib/notify.ts`** — frontera con efectos (impura, no testeada, como
   `feedback.ts`): permiso (`Notification`), y `showReminderNotification()` vía
   `serviceWorker.ready.showNotification` (fallback a `new Notification`). El clic
   lo maneja `public/sw.js` (`notificationclick` → enfoca/abre la app).
 - **`src/lib/useDare.ts`** — orquesta: expone el `briefing` derivado, las acciones
-  (`enableNotifications`/`disableNotifications`/`setNotificationTime`) y un efecto
-  que comprueba `reminderDue` al montar, al enfocar la pestaña y **cada minuto
-  mientras la app está viva**; al disparar, sella `notifications.lastShown` (dedupe
-  diario).
+  (`enableNotifications`/`disableNotifications`/`setNotificationSlot(slot,h,m)`) y
+  un efecto que comprueba `dueSlot` al montar, al enfocar la pestaña y **cada
+  minuto mientras la app está viva**; al disparar, sella **solo** el `lastShown`
+  de la franja avisada (dedupe diario por franja).
 - **`src/components/Briefing.tsx`** (presentacional; se muestra detrás de
   Today's Door al abrirla) y la sección **"Daily reminder"** de
-  `src/screens/You.tsx` (toggle + hora + estado del permiso).
+  `src/screens/You.tsx` (toggle + **dos horas**, mañana/tarde + estado del
+  permiso).
 
 **Límite honesto (sin backend):** es un recordatorio **LOCAL**, fiable mientras la
 pestaña vive. El **push con la app cerrada** exige servidor push + VAPID → queda
 **diferido** a cuando DARE tenga backend. Igual, los **widgets nativos** de
 pantalla de inicio no existen para una PWA; por eso el "widget" es la tarjeta
 in-app. Las preferencias viven en `store.notifications` (ver *Datos persistidos*).
+
+### Nudge de instalación (PWA) — proteger el localStorage
+
+En **iOS**, una web **no instalada** pierde el `localStorage` a los ~7 días de
+inactividad (Safari lo desaloja) → se borraría el progreso del Journey. Por eso
+DARE **empuja a instalar** ("Add to Home Screen"), lo que hace el almacenamiento
+duradero. Reparto según la regla del repo (lógica pura vs. efectos):
+
+- **`src/lib/install.ts`** — PURO y testeado (`install.test.ts`): `isIOS(ua)`,
+  `isInStandaloneMode(display, ios)` y `installOffer(input)` → `"prompt"` (hay
+  `beforeinstallprompt` capturado: instalación de 1 toque), `"ios-manual"` (iOS
+  sin ese evento: instrucciones Compartir → Add to Home Screen) o `"none"`. No
+  molesta el día 1 (exige algo que perder: ≥1 proof o journey activo) y se
+  **silencia** una temporada (14 días) tras un descarte.
+- **`src/lib/useDare.ts`** — frontera: captura `beforeinstallprompt`/`appinstalled`,
+  detecta standalone, expone `installNudge` (respeta umbral+silencio, para el
+  banner de Reentry), `installSettings` (siempre que NO esté instalada, para
+  Ajustes) y las acciones `promptInstall`/`dismissInstall`.
+- **`src/components/InstallBanner.tsx`** — presentacional (recibe la decisión ya
+  tomada). Se monta en **`src/screens/Reentry.tsx`** (quien vuelve tras una
+  ausencia es justo el de mayor riesgo de desalojo) y en la sección de Ajustes de
+  **`src/screens/You.tsx`**. NO se muestra en Today (se mantiene mínimo).
 
 ### PWA (instalable + offline)
 
@@ -332,8 +449,10 @@ que `index.html` enlaza manifest + apple-touch-icon.
   del día, daily card, proof library, momentum, badges (clave `traits`),
   `smallVersionUses`, identidades, milestones, companion shelf, boss playlist,
   planned dares (destinos) + Planned Dares (`darePlans`) + Dares rechazados
-  (`rejectedDares`), dates, historial de treats, feedback y las preferencias de
-  notificación). Lo *derivable* (p. ej. el scoring de un dare, el nº de proofs,
+  (`rejectedDares`), dates, historial de treats, feedback, las preferencias de
+  notificación (dos franjas) y el estado del nudge de instalación (`install`:
+  `dismissedAt`/`installedAt`)). Lo *derivable* (p. ej. el scoring de un dare, el
+  nº de proofs,
   la identidad actual, el capítulo desbloqueado, **el briefing del día**) se
   recalcula, no se guarda.
 - **Guarda referencias, no copias.** Persiste **identificadores** (p. ej. el `id`
@@ -341,8 +460,8 @@ que `index.html` enlaza manifest + apple-touch-icon.
   vía `lookup.ts`) al leer. Así, cambiar el contenido de un dato no rompe los
   datos antiguos guardados. Copiar el objeto entero dentro del store obliga a
   migrar en cuanto cambie su forma.
-- **Versionado de la forma + migración:** el store lleva `version` (hoy `5`) bajo
-  la clave `dare:v5`. `storage.ts` migra cualquier forma antigua/desconocida a v5
+- **Versionado de la forma + migración:** el store lleva `version` (hoy `6`) bajo
+  la clave `dare:v6`. `storage.ts` migra cualquier forma antigua/desconocida a v6
   mergeando sobre `defaultStore()` (ver `migrate()`), de modo que un campo que un
   build viejo nunca escribió recibe un valor por defecto. v2→v3 renombra el
   vocabulario del prototipo al de producto (streak→momentum, rewardDraws→treats,
@@ -350,12 +469,19 @@ que `index.html` enlaza manifest + apple-touch-icon.
   modelo multi-journey y el recordatorio diario: como un store v3 nunca tuvo
   `activeJourneyIds`, se **deriva** (cualquier Journey con progreso > 0 o
   completado se marca activo), así un usuario existente no pierde su Journey en
-  curso; y `notifications` recibe su valor por defecto al mergear. v4→v5 añade los
-  **Planned Dares** (`darePlans`: Dares concretos apartados para más tarde, guardan
-  el `id` del Dare + cuándo vencen) y el registro de **Dares rechazados**
-  (`rejectedDares`, para no repetir pronto lo descartado con "Another dare"); ambos
-  son campos nuevos → reciben `[]` al mergear (nada que remapear). La migración es
-  **idempotente**: aplicarla a un store ya v5 lo deja igual. Si cambia la forma,
+  curso; y `notifications` recibe su valor por defecto al mergear.
+  **v4→v5→v6 (nota de unión):** hubo DOS "v5" en ramas paralelas que aquí se
+  unifican en **v6**. Una v5 añadió los **Planned Dares** (`darePlans`: Dares
+  concretos apartados para más tarde, guardan el `id` del Dare + cuándo vencen) y
+  el registro de **Dares rechazados** (`rejectedDares`, para no repetir pronto lo
+  descartado con "Another dare"). La otra v5 añadió el recordatorio de **dos
+  franjas** + el **nudge de instalación** (`install`). v6 cubre AMBAS: los campos
+  nuevos (`darePlans`/`rejectedDares`/`install`) reciben su default al mergear si
+  faltan, y el `notifications` de UNA sola hora (v4 o la v5 de Planned Dares) se
+  **promueve** a la franja de la **mañana** (conservando la hora y su `lastShown`)
+  mientras la **tarde** recibe el default (18:00). Un store guardado por cualquiera
+  de las dos v5 (o un v4) migra a v6 sin pérdida. La migración es
+  **idempotente**: aplicarla a un store ya v6 lo deja igual. Si cambia la forma,
   **hay que subir la versión y ampliar la migración en la misma PR.**
 - **Defensivo ante datos corruptos:** si el JSON no parsea, se arranca limpio con
   `defaultStore()` en vez de romper.
