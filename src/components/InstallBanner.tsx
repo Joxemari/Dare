@@ -41,8 +41,6 @@ export function InstallBanner({
         gap: 14,
         alignItems: "flex-start",
         textAlign: "left",
-        border: `1px solid ${C.gold}44`,
-        background: `radial-gradient(120% 120% at 0% 0%, ${C.gold}14 0%, transparent 60%), ${C.card}`,
       }}
     >
       <div
@@ -52,11 +50,11 @@ export function InstallBanner({
           height: 34,
           flexShrink: 0,
           borderRadius: 10,
-          border: `1px solid ${C.gold}66`,
+          border: `1px solid ${C.line}`,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          color: C.gold,
+          color: C.green,
           fontSize: 15,
         }}
       >
