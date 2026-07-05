@@ -24,8 +24,9 @@ async function enterApp(page: Page) {
   await expect(page.getByText("You don't need")).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("button", { name: "Enter DARE" }).click();
-  // Today mínimo: SOLO el Dare como héroe. Sin carta, sin puerta/briefing,
-  // sin arrancar Journey.
+  // Today mínimo: masthead de contexto ("One dare today.") + el Dare como
+  // héroe. Sin carta, sin puerta/briefing, sin arrancar Journey.
+  await expect(page.getByText("One dare today.")).toBeVisible();
   await expect(page.getByText("YOUR DARE OF THE DAY")).toBeVisible();
 }
 

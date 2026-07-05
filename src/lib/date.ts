@@ -16,3 +16,22 @@ export function daysBetween(a: string, b: string): number {
   const tb = Date.UTC(by, bm - 1, bd);
   return Math.round((tb - ta) / 86400000);
 }
+
+const WEEKDAYS = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+const MONTHS = [
+  "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
+  "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER",
+];
+
+/** Masthead date label, inglés + mayúsculas (la UI va en inglés): "SUNDAY 5 JULY".
+ *  Nombres fijos, sin depender del locale del navegador (determinista/testeable). */
+export function formatDayLabel(d: Date = new Date()): string {
+  return `${WEEKDAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+}
+
+/** Saludo según la hora local: mañana / tarde / noche. Puro (recibe la hora). */
+export function greetingFor(hour: number): string {
+  if (hour >= 5 && hour < 12) return "Good morning";
+  if (hour >= 12 && hour < 18) return "Good afternoon";
+  return "Good evening";
+}
