@@ -101,10 +101,14 @@ export function generateDare(
   // novedad ("Go somewhere different" / "Surprise me") suben la probabilidad.
   const wildChance = vibeConfig(ci.vibe)?.novelty ? 0.34 : 0.18;
   if (ci.time >= 10 && ci.energy >= 3 && Math.random() < wildChance) {
-    const wpool = WILDCARDS.filter((w) => w.min <= ci.time + 2 && at(w));
+    // Un Dare rechazado ("Another dare") es una exclusión DURA: se quita del
+    // pool de wildcards antes de comprobar si queda alguno, para no devolverlo
+    // ni siquiera como último recurso (si es el único wildcard de la zona,
+    // cae al scoring en vez de volver a ofrecerlo). "Reciente" sí es blando.
+    const wpool = WILDCARDS.filter((w) => w.min <= ci.time + 2 && at(w) && !rejectedIds.includes(w.id));
     if (wpool.length) {
-      // no repitas el último wildcard ni uno rechazado si hay alternativas
-      const fresh = wpool.filter((w) => !recentIds.includes(w.id) && !rejectedIds.includes(w.id));
+      // no repitas el último wildcard si hay alternativas frescas
+      const fresh = wpool.filter((w) => !recentIds.includes(w.id));
       const from = fresh.length ? fresh : wpool;
       const dare = from[Math.floor(Math.random() * from.length)];
       return {
