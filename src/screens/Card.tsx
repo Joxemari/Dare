@@ -1,9 +1,13 @@
+import { useState } from "react";
 import { C } from "../data/colors";
 import { SYMBOLS } from "../data/symbols";
 import { TarotArt } from "../components/TarotArt";
 import { ShareCardButton } from "../components/ShareCardButton";
 import { cardRevealFeedback } from "../lib/feedback";
 import type { DareApp } from "../lib/useDare";
+
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
 /** Ritual de la carta del día. Dos estados:
 
@@ -17,6 +21,16 @@ import type { DareApp } from "../lib/useDare";
 export function Card({ app }: { app: DareApp }) {
   const { card, cardOptions } = app;
   const go = () => app.setScreen("home");
+  // Al continuar desde el revelado, la carta "viaja" hacia la esquina de You
+  // (abajo-derecha, donde vive el icono You en Today) para que se entienda que
+  // NO se pierde: queda guardada en You. Respeta prefers-reduced-motion.
+  const [tucking, setTucking] = useState(false);
+  const continueToYou = () => {
+    if (tucking) return;
+    if (prefersReducedMotion()) return go();
+    setTucking(true);
+    setTimeout(go, 520);
+  };
   // Saltar el ritual: marca el día como resuelto para que no reaparezca hoy.
   const skip = () => app.skipCardIntro();
 
@@ -75,7 +89,7 @@ export function Card({ app }: { app: DareApp }) {
   return (
     <div
       className="dare-root"
-      onClick={go}
+      onClick={continueToYou}
       role="button"
       aria-label="Continue"
       style={{
@@ -89,21 +103,40 @@ export function Card({ app }: { app: DareApp }) {
         padding: 20,
       }}
     >
-      {/* width limita también la altura: la carta es 2:3, así que 54vh de ancho
-          ⇒ ~81vh de alto, dejando sitio al hint sin recortar en pantallas bajas. */}
-      <div className="flip" style={{ width: "min(94vw, 54vh)" }}>
-        <TarotArt id={card.id} width="100%" radius={18} alt={`${card.num} · ${card.name}`} />
+      {/* Contenedor externo: hace el "viaje" a You (translate + scale + fade).
+          width limita también la altura: la carta es 2:3, así que 54vh de ancho
+          ⇒ ~81vh de alto, dejando sitio al hint sin recortar en pantallas bajas.
+          La `flip` interna es la animación de revelado (una vez, al montar). */}
+      <div
+        style={{
+          width: "min(94vw, 54vh)",
+          transition: "transform .5s cubic-bezier(.5,0,.65,1), opacity .5s ease-in",
+          transform: tucking ? "translate(38vw, 46vh) scale(.14)" : "none",
+          opacity: tucking ? 0.1 : 1,
+        }}
+      >
+        <div className="flip">
+          <TarotArt id={card.id} width="100%" radius={18} alt={`${card.num} · ${card.name}`} />
+        </div>
       </div>
 
       {/* Compartir: para el tap del contenedor (que navega a Home) para que
-          pulsar Share no salga de la pantalla. */}
-      <div onClick={(e) => e.stopPropagation()}>
-        <ShareCardButton card={card} />
-      </div>
+          pulsar Share no salga de la pantalla. Se oculta durante el "viaje". */}
+      {!tucking && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <ShareCardButton card={card} />
+        </div>
+      )}
 
-      <p className="lbl pulse" style={{ color: C.dim }}>
-        Tap to continue
-      </p>
+      {tucking ? (
+        <p className="lbl" style={{ color: C.gold }}>
+          Saved in You {SYMBOLS.spark}
+        </p>
+      ) : (
+        <p className="lbl pulse" style={{ color: C.dim }}>
+          Tap to continue
+        </p>
+      )}
     </div>
   );
 }
