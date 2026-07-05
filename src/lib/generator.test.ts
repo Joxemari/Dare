@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { generateDare, generateJourneyDayDare, allowedLocs, currentToDareLocs, destToDareLoc, recentDareIds } from "./generator";
+import { generateDare, generateJourneyDayDare, energyForState, allowedLocs, currentToDareLocs, destToDareLoc, recentDareIds } from "./generator";
 import { DARES } from "../data/dares";
 import { journeyById } from "../data/journeys";
 import { mulberry32 } from "./prng";
@@ -169,6 +169,30 @@ describe("generateDare", () => {
     const ci: Checkin = { energy: 3, time: 10, loc: "home", dest: null, state: "tired", focus: 2, avoiding: "mind" };
     const { why } = generateDare(ci, [], {}, ember);
     expect(why.length).toBeGreaterThan(0);
+  });
+});
+
+describe("energyForState", () => {
+  it("deriva energía coherente del estado mental (el check-in ya no la pregunta)", () => {
+    // tired/blocked bajan (arranque de baja fricción), active sube, normal medio
+    expect(energyForState("tired")).toBeLessThanOrEqual(3);
+    expect(energyForState("blocked")).toBeLessThanOrEqual(3);
+    expect(energyForState("active")).toBeGreaterThanOrEqual(8);
+    expect(energyForState("normal")).toBeGreaterThan(energyForState("tired"));
+    expect(energyForState("stressed")).toBeLessThan(energyForState("normal"));
+  });
+
+  it("energía baja (tired) selecciona un Dare no-Strong (intensidad coherente)", () => {
+    // tired → energía derivada baja → el generador evita niveles Strong
+    for (let i = 0; i < 30; i++) {
+      const { dare } = generateDare(
+        { energy: energyForState("tired"), time: 10, loc: "home", dest: null, state: "tired" },
+        [],
+        {},
+        ember,
+      );
+      expect(dare.level).not.toBe("Strong");
+    }
   });
 });
 
