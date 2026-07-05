@@ -195,10 +195,14 @@ describe("completion de Journey por milestones (dispara la celebración)", () =>
 });
 
 describe("Expected Effect — perfiles ricos y distintos por Dare", () => {
-  it("cada Dare muestra entre 3 y 5 efectos (nunca pobre ni saturado)", () => {
+  // Cota SUPERIOR para todo el corpus: Expected Effect nunca satura (la UI de
+  // `Effects` está diseñada para 3–5 filas). NO imponemos una cota inferior
+  // global: el spec permite que un Dare "muy estrecho" de recuperación muestre
+  // pocos efectos (p. ej. un micro-respiro), y `contentSchema` solo exige ≥1.
+  it("ningún Dare satura Expected Effect (máximo 5 efectos)", () => {
     for (const d of ALL) {
       const n = Object.keys(d.effects).length;
-      expect(n >= 3 && n <= 5, `${d.id} tiene ${n} efectos`).toBe(true);
+      expect(n >= 1 && n <= 5, `${d.id} tiene ${n} efectos`).toBe(true);
     }
   });
 
@@ -208,13 +212,24 @@ describe("Expected Effect — perfiles ricos y distintos por Dare", () => {
     expect(keys.some((k) => !["Calm", "Mood"].includes(k)), "pine-reset solo Calm/Mood").toBe(true);
   });
 
-  it("cada familia de Dare tiene su efecto característico", () => {
-    const eff = (id: string) => DARES.find((d) => d.id === id)!.effects;
-    expect(eff("pine-reset").Stress).toBeGreaterThan(0); // forest → alivio de estrés
-    expect(eff("iron-first-weight").Strength).toBeGreaterThan(0); // strength
-    expect(eff("water-reset").Recovery).toBeGreaterThan(0); // pool/recovery
-    expect(eff("micro-tabata").Momentum).toBeGreaterThan(0); // tabata
-    expect(eff("the-unblock").Focus).toBeGreaterThan(0); // focus/admin
+  // Los Dares representativos de cada familia (los que enriquecimos en este
+  // pase) son ricos —3+ efectos— y con su efecto característico. Se comprueba
+  // por Dare concreto, no sobre TODO el corpus, para no chocar con Dares
+  // estrechos legítimos que añada el pipeline de contenido.
+  it("cada familia de Dare tiene un perfil rico y su efecto característico", () => {
+    const rep = (id: string) => DARES.find((d) => d.id === id)!;
+    const checks: [string, keyof import("../types").EffectMap][] = [
+      ["pine-reset", "Stress"], // forest → alivio de estrés
+      ["iron-first-weight", "Strength"], // strength
+      ["water-reset", "Recovery"], // pool/recovery
+      ["micro-tabata", "Momentum"], // tabata
+      ["the-unblock", "Focus"], // focus/admin
+    ];
+    for (const [id, key] of checks) {
+      const d = rep(id);
+      expect(Object.keys(d.effects).length, `${id} pobre`).toBeGreaterThanOrEqual(3);
+      expect(d.effects[key], `${id} sin ${key}`).toBeGreaterThan(0);
+    }
   });
 });
 
