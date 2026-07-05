@@ -137,3 +137,66 @@ export function validateDare(d: unknown, ctx: ValidateCtx): string[] {
 
   return errs;
 }
+
+/* ============================================================
+   Wildcards y Treats — misma red de seguridad, otros tipos de
+   contenido auto-proponible (ver docs/content-pipeline.md).
+   ============================================================ */
+
+/** Un wildcard es un Dare con `wild: true` (pool aparte, revelado en dorado). */
+export function validateWildcard(d: unknown, ctx: ValidateCtx): string[] {
+  const errs = validateDare(d, ctx);
+  if (typeof d === "object" && d !== null && (d as Partial<Dare>).wild !== true) {
+    errs.push("un wildcard debe llevar wild: true");
+  }
+  return errs;
+}
+
+export const TIERS_VALID = ["common", "rare", "golden"] as const;
+export const TREAT_SPECIALS = ["golden", "date", "dreamBoost", "choose"] as const;
+
+export interface ValidateTreatCtx {
+  /** textos de treats ya existentes (dedup). */
+  existingTexts?: Iterable<string>;
+}
+
+/**
+ * Valida un Treat propuesto (recompensa corta post-Dare). PURA.
+ * Forma: `{ tier, text, fits?, avoid?, special? }`. `tier` es opcional en el
+ * tipo `Treat` (es la clave del record en datos), pero una propuesta DEBE
+ * indicarlo para saber en qué bucket entra.
+ */
+export function validateTreat(t: unknown, ctx: ValidateTreatCtx = {}): string[] {
+  const errs: string[] = [];
+  if (typeof t !== "object" || t === null) return ["no es un objeto"];
+  const x = t as Record<string, unknown>;
+
+  if (typeof x.text !== "string" || x.text.trim().length === 0) {
+    errs.push("falta text");
+  } else {
+    if (new Set(ctx.existingTexts ?? []).has(x.text.trim())) errs.push(`treat duplicado: "${x.text}"`);
+    const hay = x.text.toLowerCase();
+    for (const b of BANNED_VOCAB) {
+      const re = new RegExp(`\\b${b.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`);
+      if (re.test(hay)) errs.push(`usa vocabulario prohibido "${b}"`);
+    }
+  }
+
+  // tier: obligatorio en una propuesta (define el bucket).
+  if (!(TIERS_VALID as readonly string[]).includes(x.tier as string)) errs.push(`tier inválido: ${x.tier}`);
+
+  for (const key of ["fits", "avoid"] as const) {
+    const v = x[key];
+    if (v === undefined) continue;
+    if (!Array.isArray(v)) { errs.push(`${key} debe ser array`); continue; }
+    for (const c of v) if (!(CATS_VALID as readonly string[]).includes(c as string)) errs.push(`${key}: cat inválida ${c}`);
+  }
+
+  if (x.special !== undefined && !(TREAT_SPECIALS as readonly string[]).includes(x.special as string)) {
+    errs.push(`special inválido: ${x.special}`);
+  }
+  // Un treat golden es el único que puede (y suele) llevar `special`.
+  if (x.special !== undefined && x.tier !== "golden") errs.push("special solo en treats golden");
+
+  return errs;
+}

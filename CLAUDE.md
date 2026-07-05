@@ -76,10 +76,10 @@ src/
                                   testeable con semilla)
                  date.ts          helpers de fecha local (todayStr, daysBetween)
                  lookup.ts        búsquedas sobre los datos (findDare, findCard)
-                 contentSchema.ts validateDare(): reglas duras del contenido
-                                  (schema, rangos, ids aditivos, ejercicios y
-                                  vocabulario prohibidos). Red del pipeline
-                                  de contenido generativo.
+                 contentSchema.ts validateDare/validateWildcard/validateTreat():
+                                  reglas duras del contenido (schema, rangos, ids
+                                  aditivos, ejercicios y vocabulario prohibidos).
+                                  Red del pipeline de contenido generativo.
                  generationInput.ts  buildGenerationInput(): resume el store en
                                   la señal de feedback que alimenta la generación
                  recommend.ts     recommendJourney(): qué Journey del MVP
@@ -135,13 +135,30 @@ sigue accesible desde un link discreto y abre el Detail.
 
 ### Contenido generativo (pipeline de PRs, no runtime)
 
-El contenido nuevo (Dares) se **propone en el pipeline**, no en el navegador:
+El contenido nuevo se **propone en el pipeline**, no en el navegador:
 `scripts/generate-content.mjs` (workflow semanal `content.yml`) redacta
 propuestas en `src/data/_proposed/week-<AAAA-Www>.ts`, que pasan por la MISMA
-compuerta que el corpus vivo — `validateDare` vía `npm test` — antes de abrir una
-PR para tu validación humana. La generación es **aditiva** (ids nuevos, nunca
-mutar/borrar los existentes: romperia las referencias guardadas). El feedback del
-usuario (`buildGenerationInput`) alimenta el prompt. Detalle completo en
+compuerta que el corpus vivo (`npm test`) antes de abrir una PR para tu
+validación humana. La generación es **aditiva** (ids nuevos, nunca mutar/borrar
+los existentes: romperia las referencias guardadas).
+
+**Qué se auto-propone y qué no** (regla de producto): la generación cubre solo
+lo que es aditivo por `id`/texto, lo valida un validador automático y no es
+sensible ni columna vertebral:
+
+- **Auto-proponible** (compuerta en `_proposed/proposed.test.ts`):
+  - **Dares** → `PROPOSED`, validados por `validateDare`.
+  - **Wildcards** → `PROPOSED_WILDCARDS`, `validateWildcard` (Dare + `wild:true`).
+  - **Treats** → `PROPOSED_TREATS` (`{ tier, text, fits?, avoid?, special? }`),
+    `validateTreat` (tier válido, cats reales, `special` solo en golden, sin
+    vocabulario prohibido, sin duplicar texto).
+- **Human-first** (la generación NO los toca autónomamente): **Journeys**
+  (columna vertebral: ids con migración, milestones estables, badge) y las
+  **fichas de Ciencia** (claims de salud). Como mucho, borrador asistido en PR.
+
+El feedback del usuario (`buildGenerationInput`) alimenta el prompt. Al aprobar:
+promocionar (Dares/Wildcards → `dares.ts`/`wildcards.ts`, Treats → `rewards.ts`
+por `tier`) y borrar el fichero de `_proposed/`. Detalle en
 `docs/content-pipeline.md`.
 
 ### Vocabulario del producto (UI en inglés)
