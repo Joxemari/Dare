@@ -5,6 +5,7 @@ import type {
   Cat,
   Checkin,
   CompanionShelf,
+  CompanionVibe,
   Dare,
   DarePlan,
   DareStore,
@@ -53,9 +54,11 @@ export type DraftCheckin = {
   loc: Checkin["loc"] | null;
   dest: Dest | "none" | null;
   state: Checkin["state"] | null;
+  /** "¿Qué lo haría menos aburrido hoy?" — opcional (null = surprise). */
+  vibe: CompanionVibe | null;
 };
 
-const emptyDraft: DraftCheckin = { energy: null, time: null, loc: null, dest: null, state: null };
+const emptyDraft: DraftCheckin = { energy: null, time: null, loc: null, dest: null, state: null, vibe: null };
 const FB_DELAY = 30 * 60 * 1000; // 30 minutos
 /** Check-in por defecto para "Just dare me" sin check-in previo:
  *  corto, de baja fricción, inmediato. */
@@ -627,9 +630,16 @@ export function useDare() {
   function finishDare() {
     if (!currentDare || currentDare.completed) return;
     const d: Dare = currentDare.dare;
-    // El treat conoce el CONTEXTO: la categoría del Dare recién hecho
-    // (nada de "un café sentado" tras un paseo por el bosque).
-    const roll = rollTreat(d.cat);
+    // Treat CONSCIENTE DEL CONTEXTO y SESGADO. Dos intenciones combinadas:
+    //  - contexto: la categoría del Dare recién hecho (nada de "un café sentado"
+    //    tras un paseo por el bosque) → `d.cat`.
+    //  - sesgo (temptation bundling / ciencia del hábito): premia fuerte
+    //    completar con poca motivación y probar una categoría nueva → `treatBoost`.
+    const ci = store.lastCheckin;
+    const lowMotivation = !!ci && (ci.energy <= 3 || ci.state === "blocked" || ci.state === "tired");
+    const newCategory = (store.catCounts[d.cat] || 0) === 0;
+    const treatBoost = (lowMotivation ? 0.5 : 0) + (newCategory ? 0.5 : 0);
+    const roll = rollTreat(d.cat, treatBoost);
     const counts = { ...store.catCounts, [d.cat]: (store.catCounts[d.cat] || 0) + 1 };
     const completedBefore = todaysToday.filter((e) => e.completedAt !== null).length;
     const isFirstToday = completedBefore === 0;

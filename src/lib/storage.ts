@@ -67,17 +67,22 @@ export function defaultStore(): DareStore {
  *   su Journey en curso. También se añade `notifications`, que un store v3 no
  *   escribió nunca → recibe el default al mergear sobre `defaultStore()`.
  *
- * v4 → v5/v6: NOTA — hubo DOS "v5" en ramas paralelas que aquí se unifican en
- *   v6. Una v5 añadió Planned Dares (`darePlans`) + Dares rechazados
- *   (`rejectedDares`); la otra v5 añadió el recordatorio de DOS franjas +
- *   nudge de instalación (`install`). Un store guardado por CUALQUIERA de las
- *   dos v5 (o por un v4) migra a v6 sin pérdida porque el merge cubre ambos:
+ * v4 → v5/v6: NOTA — hubo VARIAS "v5" en ramas paralelas que aquí se unifican en
+ *   v6. Los cambios de forma de cada una:
+ *   - Planned Dares (`darePlans`) + Dares rechazados (`rejectedDares`).
+ *   - recordatorio de DOS franjas + nudge de instalación (`install`).
+ *   - Companions (temptation bundling): campo OPCIONAL `vibe` en cada `Checkin`.
+ *   Un store guardado por CUALQUIERA de esas v5 (o por un v4) migra a v6 sin
+ *   pérdida porque el merge defensivo de abajo cubre todos:
  *   - Planned Dares / rechazados: campos NUEVOS → `[]` al mergear si faltan.
- *   - `notifications`: si trae UNA sola hora (v4 o la v5 de Planned Dares) se
+ *   - `notifications`: si trae UNA sola hora (v4, o la v5 de Planned Dares) se
  *     promueve a la franja de la MAÑANA y la TARDE recibe el default (18:00);
  *     si ya trae `morning`/`evening` se mergea franja a franja.
  *   - `install`: campo NUEVO → default si falta.
- *   Idempotente: aplicada a un store ya v6 lo deja igual.
+ *   - `vibe`: campo OPCIONAL en cada Checkin → los check-ins sin él se leen como
+ *     `undefined` (= surprise), sin transformar nada.
+ *   Se sube a v6 para desambiguar cualquier "v5" heterogénea. Idempotente:
+ *   aplicada a un store ya v6 lo deja igual.
  */
 function migrate(raw: unknown): DareStore {
   const base = defaultStore();

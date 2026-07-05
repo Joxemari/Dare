@@ -64,20 +64,26 @@ src/
                traits (BADGES: hitos difíciles; persisten bajo la clave
                `traits` del store), rewards (treats etiquetados por
                contexto — `fits`/`avoid` por categoría —, dates, dream;
-               antes draws), briefings (biblioteca de "Today's Briefing":
-               consejos inspirados en personas conocidas + hábito real),
-               icons, colors.
+               antes draws), companions (catálogo de companions +
+               config de vibes; temptation bundling), briefings (biblioteca
+               de "Today's Briefing": consejos inspirados en personas
+               conocidas + hábito real), icons, colors.
   lib/         Lógica. La mayoría son funciones PURAS y deterministas:
                  generator.ts     selección del dare (scoring, no if/else),
                                   con contexto+destino del check-in completo
                                   y, en el check-in rápido de Today, foco +
                                   qué se evita (avoiding) + evitar rechazados
                  achievements.ts  earnedTraits() — qué traits gana un dare
+                 companions.ts    sistema de Companions (temptation bundling):
+                                  clasifica/resuelve el companion de un dare,
+                                  lo ROTA por fecha, y vibeBonus() sesga el
+                                  generador según el vibe del check-in
                  prng.ts          PRNG con semilla (mulberry32), reproducible
-                 random.ts        sample() (Math.random) y rollTreat(cat, rand):
-                                  treat draw consciente del contexto (excluye
-                                  `avoid`, prima `fits` ×3; rand inyectable →
-                                  testeable con semilla)
+                 random.ts        sample() (Math.random) y rollTreat(cat, boost,
+                                  rand): treat draw consciente del contexto
+                                  (excluye `avoid`, prima `fits` ×3) y SESGADO
+                                  por `boost` (baja motivación/novedad); rand
+                                  inyectable → testeable con semilla
                  date.ts          helpers de fecha local (todayStr, daysBetween)
                  lookup.ts        búsquedas sobre los datos (findDare, findCard)
                  contentSchema.ts validateDare(): reglas duras del contenido
@@ -182,6 +188,35 @@ Journey deja más de un badge sin premiar cada acción. No mostrar XP,
 niveles, "streak failed", calorías ni "burn". El sistema de recompensas está
 separado a propósito: *Trigger* (antes) · *Companion* (durante) · *Treat*
 (después) · *Date* (semanal) · *Dream Reward* (al terminar el Journey).
+
+### Companions — recompensa DURANTE (temptation bundling)
+
+El **Companion** NO es un personaje ni decoración: es una **recompensa
+simultánea** que hace la actividad menos aburrida MIENTRAS ocurre. Es *temptation
+bundling* (Nudge): emparejar algo que "deberías" hacer (esfuerzo) con algo que
+"quieres" (placer). Regla dura: **el companion pasa DURANTE el Dare, nunca antes**
+(«ves el episodio SOLO mientras haces las sentadillas» — ese es el anzuelo). Cinco
+familias (`CompanionCategory`): *entertainment* (Netflix/YouTube/podcast/
+audiobook/playlist), *social* (llamar a alguien, clase con gente), *sensory*
+(café, vela, sauna, ducha caliente, sol), *novelty* (ruta/clase/deporte/sitio
+nuevo), *identity* ("Hot Walk Mode", "Strong Woman Mode", "Boxing Girl Mode").
+
+Reparto (regla del repo): el **catálogo** y la config de vibes viven en
+`data/companions.ts`; la **lógica** (clasificar, resolver, ROTAR por fecha, sesgar
+el generador) en `lib/companions.ts` (puro, testeado); la **UI** (chip + label +
+nota + regla "during only") solo presenta. `resolveCompanion` elige un companion
+concreto y accionable rotándolo por fecha para no aburrir.
+
+**Vibe del check-in** (`CompanionVibe`): la pantalla de check-in pregunta *"What
+would make this less boring today?"* (watch/listen/talk/elsewhere/aesthetic/
+social/brutal/surprise). Es **opcional** (no bloquea "Get my dare"); `vibeBonus`
+sesga el generador hacia esa familia de companion y los vibes de novedad suben la
+tasa de wildcards. El vibe se persiste en el `Checkin` (campo opcional `vibe`).
+
+**Variabilidad de la recompensa** (spec): el pool de Treats y Date ideas es amplio
+a propósito, y `rollTreat(boost)` **sesga** la tirada hacia mejores treats cuando
+el Dare lo merece — completar con **poca motivación** (energía baja / blocked /
+tired) o probar una **categoría nueva** (premiar la novedad, no solo la racha).
 
 ### Símbolos (`src/data/symbols.ts`)
 
@@ -476,8 +511,9 @@ que `index.html` enlaza manifest + apple-touch-icon.
   planned dares (destinos) + Planned Dares (`darePlans`) + Dares rechazados
   (`rejectedDares`), dates, historial de treats, feedback, las preferencias de
   notificación (dos franjas) y el estado del nudge de instalación (`install`:
-  `dismissedAt`/`installedAt`)). Lo *derivable* (p. ej. el scoring de un dare, el
-  nº de proofs,
+  `dismissedAt`/`installedAt`)). Los check-ins guardan también el **vibe** de
+  companion elegido (campo opcional en `Checkin`). Lo *derivable* (p. ej. el
+  scoring de un dare, el companion concreto resuelto, el nº de proofs,
   la identidad actual, el capítulo desbloqueado, **el briefing del día**) se
   recalcula, no se guarda.
 - **Guarda referencias, no copias.** Persiste **identificadores** (p. ej. el `id`
@@ -495,17 +531,20 @@ que `index.html` enlaza manifest + apple-touch-icon.
   `activeJourneyIds`, se **deriva** (cualquier Journey con progreso > 0 o
   completado se marca activo), así un usuario existente no pierde su Journey en
   curso; y `notifications` recibe su valor por defecto al mergear.
-  **v4→v5→v6 (nota de unión):** hubo DOS "v5" en ramas paralelas que aquí se
+  **v4→v5→v6 (nota de unión):** hubo VARIAS "v5" en ramas paralelas que aquí se
   unifican en **v6**. Una v5 añadió los **Planned Dares** (`darePlans`: Dares
   concretos apartados para más tarde, guardan el `id` del Dare + cuándo vencen) y
   el registro de **Dares rechazados** (`rejectedDares`, para no repetir pronto lo
-  descartado con "Another dare"). La otra v5 añadió el recordatorio de **dos
-  franjas** + el **nudge de instalación** (`install`). v6 cubre AMBAS: los campos
-  nuevos (`darePlans`/`rejectedDares`/`install`) reciben su default al mergear si
-  faltan, y el `notifications` de UNA sola hora (v4 o la v5 de Planned Dares) se
-  **promueve** a la franja de la **mañana** (conservando la hora y su `lastShown`)
-  mientras la **tarde** recibe el default (18:00). Un store guardado por cualquiera
-  de las dos v5 (o un v4) migra a v6 sin pérdida. La migración es
+  descartado con "Another dare"). Otra v5 añadió el recordatorio de **dos
+  franjas** + el **nudge de instalación** (`install`). Otra v5 añadió los
+  **Companions** (campo **opcional** `vibe` en cada `Checkin`). v6 cubre TODAS:
+  los campos nuevos (`darePlans`/`rejectedDares`/`install`) reciben su default al
+  mergear si faltan; el `notifications` de UNA sola hora (v4 o la v5 de Planned
+  Dares) se **promueve** a la franja de la **mañana** (conservando la hora y su
+  `lastShown`) mientras la **tarde** recibe el default (18:00); y los check-ins
+  sin `vibe` se leen tal cual (sin `vibe` = surprise), sin transformar nada. Un
+  store guardado por cualquiera de esas v5 (o un v4) migra a v6 sin pérdida. La
+  migración es
   **idempotente**: aplicarla a un store ya v6 lo deja igual. Si cambia la forma,
   **hay que subir la versión y ampliar la migración en la misma PR.**
 - **Defensivo ante datos corruptos:** si el JSON no parsea, se arranca limpio con

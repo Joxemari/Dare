@@ -4,12 +4,13 @@ import { CAT_ICO } from "../data/icons";
 import { SYMBOLS, SECTION_SYM } from "../data/symbols";
 import { findScience } from "../data/science";
 import { Ico } from "../components/Ico";
-import { Meta, companionWord } from "../components/Meta";
+import { Meta } from "../components/Meta";
 import { Effects } from "../components/Effects";
 import { PlanForLater } from "../components/PlanForLater";
 import { wrap, pad } from "../components/layout";
-import type { Dare } from "../types";
+import { resolveCompanion } from "../lib/companions";
 import type { DareApp } from "../lib/useDare";
+import type { Dare } from "../types";
 
 /** Resumen "What this is": usa el summary del Dare o deriva un fallback. */
 function dareSummary(d: Dare): string {
@@ -21,36 +22,6 @@ function dareSummary(d: Dare): string {
 function firstSentence(text: string): string {
   const i = text.indexOf(". ");
   return i === -1 ? text : text.slice(0, i + 1);
-}
-
-/** Nota explicativa del Companion (por qué acompañar la acción ayuda). */
-function companionNote(d: Dare): string {
-  switch (companionWord(d)) {
-    case "Silence":
-    case "Quiet":
-      return "Fewer inputs to process means less friction. Use the quiet as part of the reset.";
-    case "Podcast":
-    case "Audiobook":
-      return "Something to listen to lowers how hard the effort feels, so starting and continuing is easier.";
-    case "Netflix":
-      return "Pair the effort with a show you already want to watch — the reward is built in, so you show up.";
-    case "Playlist":
-    case "Album":
-    case "Music":
-      return "Music you like lowers perceived effort and sets the pace, so your brain negotiates less.";
-    case "Coffee":
-      return "A small reward waiting at the end turns the action into something you get to do, not have to.";
-    case "Friend":
-      return "Doing it with someone adds connection and accountability — play, not homework.";
-    case "Daylight":
-      return "Daylight itself is the companion: it lifts alertness and helps set your body clock.";
-    case "Timer":
-      return "A short timer makes the ask finite: you only owe it those minutes, which is easy to start.";
-    case "Water":
-      return "A concrete first prop lowers the bar — grab it and you've already begun.";
-    default:
-      return "A concrete, ready object makes the first move obvious — so you're far more likely to begin.";
-  }
 }
 
 function Section({ symKey, title, color, children }: { symKey: keyof typeof SECTION_SYM; title: string; color?: string; children: ReactNode }) {
@@ -70,6 +41,12 @@ export function Detail({ app }: { app: DareApp }) {
   const d = app.currentDare.dare;
   const why = app.currentDare.why;
   const col = colorOf(d);
+  // Companion concreto y rotado por día (temptation bundling): sesgado por el
+  // vibe del último check-in, estable dentro del día vía la fecha del Dare.
+  const comp = resolveCompanion(d, {
+    vibe: app.store.lastCheckin?.vibe,
+    seed: app.currentDare.entry.date,
+  });
   const science = findScience(d.scienceId);
   // Trigger como PRIMER paso práctico dentro de Steps (ya no es sección propia).
   const steps = d.trigger ? [`Notice: ${d.trigger}`, ...d.steps] : d.steps;
@@ -119,10 +96,14 @@ export function Detail({ app }: { app: DareApp }) {
             <p style={{ fontSize: 14.5, lineHeight: 1.55, color: C.text }}>{dareSummary(d)}</p>
           </Section>
 
-          {/* 2 · Companion (concreto + por qué ayuda) */}
-          <Section symKey="companion" title="Companion" color={C.purple}>
-            <p style={{ fontSize: 14, color: C.text, marginBottom: 6 }}>{d.companion}</p>
-            <p style={{ fontSize: 13, lineHeight: 1.55, color: C.dim }}>{companionNote(d)}</p>
+          {/* 2 · Companion — recompensa CONCRETA y DURANTE la acción (temptation
+              bundling): resolveCompanion elige uno concreto rotado por fecha. */}
+          <Section symKey="companion" title={`Companion · ${comp.word}`} color={C.purple}>
+            <p className="serif" style={{ fontSize: 16, color: C.text, marginBottom: 6 }}>{comp.label}</p>
+            <p style={{ fontSize: 13, lineHeight: 1.55, color: C.dim, marginBottom: 8 }}>{comp.note}</p>
+            <p className="lbl" style={{ fontSize: 9, color: C.gold }}>
+              {SYMBOLS.spark} During the dare only — that's the hook.
+            </p>
           </Section>
 
           {/* 3 · Expected Effect */}

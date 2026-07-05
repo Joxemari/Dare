@@ -109,6 +109,21 @@ describe("migrate (v2/v3/v4/v5 → v6)", () => {
     expect(m.install).toEqual({ dismissedAt: "", installedAt: "" });
   });
 
+  it("v4 → v6: conserva check-ins guardados (el `vibe` opcional queda undefined)", () => {
+    const v4 = {
+      ...defaultStore(),
+      version: 4 as unknown as 6, // simula un store guardado por un build v4
+      onboarded: true,
+      lastCheckin: { energy: 6, time: 20, loc: "home", dest: null, state: "normal" },
+      checkins: [{ energy: 6, time: 20, loc: "home", dest: null, state: "normal", date: "2026-07-04" }],
+    };
+    const m = migrate(v4);
+    expect(m.version).toBe(6);
+    expect(m.lastCheckin).toEqual({ energy: 6, time: 20, loc: "home", dest: null, state: "normal" });
+    expect(m.lastCheckin?.vibe).toBeUndefined();
+    expect(m.checkins).toHaveLength(1);
+  });
+
   it("v4 → v6: un store v4 sin Planned Dares recibe los campos por defecto", () => {
     const v4 = { ...defaultStore(), version: 4 as unknown as 6, onboarded: true };
     delete (v4 as Record<string, unknown>).darePlans;

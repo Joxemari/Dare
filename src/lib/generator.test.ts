@@ -105,6 +105,30 @@ describe("generateDare", () => {
     expect(dare.cat).toBe("small");
   });
 
+  it("el vibe 'watch' hace más probable un Dare con companion de entretenimiento", () => {
+    // en casa, energía media, tiempo cómodo → hay dumbbells/tabata (Netflix/playlist)
+    const at = { ...base, energy: 7, time: 20, loc: "home" as const, state: "normal" as const };
+    let watchHits = 0;
+    let neutralHits = 0;
+    const ent = new Set(["dumbbells", "tabata", "carry"]);
+    for (let i = 0; i < 80; i++) {
+      if (ent.has(generateDare({ ...at, vibe: "watch" }, [], {}, ember).dare.cat)) watchHits++;
+      if (ent.has(generateDare({ ...at, vibe: null }, [], {}, ember).dare.cat)) neutralHits++;
+    }
+    expect(watchHits).toBeGreaterThan(neutralHits);
+  });
+
+  it("los vibes de novedad ('surprise'/'elsewhere') suben la tasa de wildcards", () => {
+    const at = { ...base, energy: 8, time: 20, loc: "park" as const, state: "active" as const };
+    let neutralWild = 0;
+    let noveltyWild = 0;
+    for (let i = 0; i < 200; i++) {
+      if (generateDare({ ...at, vibe: null }, [], {}, ember).dare.wild) neutralWild++;
+      if (generateDare({ ...at, vibe: "surprise" }, [], {}, ember).dare.wild) noveltyWild++;
+    }
+    expect(noveltyWild).toBeGreaterThan(neutralWild);
+  });
+
   it("evita un Dare rechazado si hay alternativas", () => {
     withSeededRandom(0xda2e, () => {
       const ci: Checkin = { ...base, energy: 6, time: 20, loc: "home", state: "normal" };
