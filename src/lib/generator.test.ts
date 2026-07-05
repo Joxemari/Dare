@@ -2,7 +2,22 @@ import { describe, it, expect } from "vitest";
 import { generateDare, allowedLocs, currentToDareLocs, destToDareLoc, recentDareIds } from "./generator";
 import { DARES } from "../data/dares";
 import { journeyById } from "../data/journeys";
+import { mulberry32 } from "./prng";
 import type { Checkin } from "../types";
+
+/** Ejecuta `fn` con `Math.random` sembrado (mulberry32) y lo restaura después.
+ *  Vuelve determinista un test que, por el jitter aleatorio del scoring del
+ *  generador, era flaky (el recuento variaba de corrida en corrida). */
+function withSeededRandom<T>(seed: number, fn: () => T): T {
+  const orig = Math.random;
+  const rand = mulberry32(seed);
+  Math.random = () => rand();
+  try {
+    return fn();
+  } finally {
+    Math.random = orig;
+  }
+}
 
 const ember = journeyById("ember");
 const base: Checkin = { energy: 6, time: 20, loc: "home", dest: null, state: "normal" };
@@ -115,16 +130,18 @@ describe("generateDare", () => {
   });
 
   it("evita un Dare rechazado si hay alternativas", () => {
-    const ci: Checkin = { ...base, energy: 6, time: 20, loc: "home", state: "normal" };
-    const options = new Set<string>();
-    for (let i = 0; i < 30; i++) options.add(generateDare(ci, [], {}, ember).dare.id);
-    expect(options.size).toBeGreaterThan(1);
-    const [rejected] = [...options];
-    let hits = 0;
-    for (let i = 0; i < 60; i++) {
-      if (generateDare(ci, [], {}, ember, [], [rejected]).dare.id === rejected) hits++;
-    }
-    expect(hits).toBeLessThan(10);
+    withSeededRandom(0xda2e, () => {
+      const ci: Checkin = { ...base, energy: 6, time: 20, loc: "home", state: "normal" };
+      const options = new Set<string>();
+      for (let i = 0; i < 30; i++) options.add(generateDare(ci, [], {}, ember).dare.id);
+      expect(options.size).toBeGreaterThan(1);
+      const [rejected] = [...options];
+      let hits = 0;
+      for (let i = 0; i < 60; i++) {
+        if (generateDare(ci, [], {}, ember, [], [rejected]).dare.id === rejected) hits++;
+      }
+      expect(hits).toBeLessThan(10);
+    });
   });
 
   it("la evitación empuja hacia la categoría que hace contacto", () => {

@@ -2,7 +2,7 @@ import { C, CATS } from "../data/colors";
 import { CAT_ICO } from "../data/icons";
 import { SYMBOLS } from "../data/symbols";
 import { TRAITS, findTrait } from "../data/traits";
-import { SPRINT_DAYS } from "../data/journeys";
+import { milestoneProgress } from "../data/journeys";
 import { findDare } from "../lib/lookup";
 import { todayStr } from "../lib/date";
 import { Ico } from "../components/Ico";
@@ -20,9 +20,11 @@ const WHEN_LABEL: Record<PlanWhen, string> = {
 };
 
 export function Progress({ app }: { app: DareApp }) {
-  const { store, catFeedback, proofCount, currentIdentity, journey, daysDone, dreamReward, isJourneyActive } = app;
+  const { store, catFeedback, proofCount, currentIdentity, journey, dreamReward, isJourneyActive } = app;
   const identity = findTrait(currentIdentity);
-  const remaining = Math.max(0, SPRINT_DAYS - daysDone);
+  // Dream Reward por MILESTONES (coherente con el trigger de completion), no por
+  // días de calendario.
+  const mp = milestoneProgress(journey, store.milestones);
 
   // Semana de CALENDARIO (Today / Tomorrow / días de la semana), distinta de la
   // línea de tiempo Day 1..7 del Journey. Muestra lo hecho hoy y lo planeado.
@@ -192,10 +194,10 @@ export function Progress({ app }: { app: DareApp }) {
               </p>
               <p style={{ fontSize: 14, marginBottom: 8 }}>{dreamReward}</p>
               <div style={{ height: 4, background: C.line, borderRadius: 99, marginBottom: 6 }}>
-                <div style={{ height: 4, width: `${(daysDone / SPRINT_DAYS) * 100}%`, background: C.gold, borderRadius: 99 }} />
+                <div style={{ height: 4, width: `${mp.pct}%`, background: C.gold, borderRadius: 99 }} />
               </div>
               <p style={{ fontSize: 11.5, color: C.dim }}>
-                {journey.name} · {remaining} {remaining === 1 ? "Dare" : "Dares"} remaining
+                {journey.name} · {mp.done === mp.total ? "unlocked" : `${mp.done}/${mp.total} milestones`}
               </p>
             </div>
           )}

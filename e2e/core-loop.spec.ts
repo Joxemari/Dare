@@ -69,6 +69,10 @@ test("Today: Door→Briefing + Your Dare tras check-in rápido, loop sin errores
   await expect(page.getByText("Dare completed.")).toBeVisible();
   await expect(page.getByText("Treat unlocked.")).toBeVisible();
 
+  // el Treat es el héroe: se revela de un toque; la feedback aparece tras revelar.
+  // La tarjeta tiene animación `pulse` (nunca "stable"): forzamos el click.
+  await page.getByText("Tap to reveal").click({ force: true });
+
   // no debe aparecer XP en ninguna parte visible de la completion
   const body = (await page.locator("body").innerText()).toLowerCase();
   expect(body).not.toMatch(/\bxp\b/);
@@ -112,22 +116,20 @@ test("Journey: Begin explícito, milestones accionables + tabs Progress/You", as
   await page.getByRole("button", { name: "Journey", exact: true }).click();
   await page.getByRole("button", { name: /Begin Journey/ }).click();
 
-  // sin Dream Reward → setup; al elegirlo, el Journey arranca y muestra el plan.
+  // sin Dream Reward → setup; al elegirlo, el Journey arranca y muestra capítulos.
   // El Journey en foco por defecto es Iron Quiet (MVP, physical-energy-first).
   await expect(page.getByText(/What would feeling stronger/)).toBeVisible();
   await page.getByText("New training top").click();
-  await expect(page.getByText("The days ahead")).toBeVisible();
+  // La pantalla Journey ya NO muestra "Days Ahead": se centra en capítulos,
+  // milestones, % de completion y Dream Reward activo.
+  await expect(page.getByText("Chapters")).toBeVisible();
+  await expect(page.getByText("The days ahead")).toHaveCount(0);
   await expect(page.getByText(/milestones completed/).first()).toBeVisible();
 
-  // briefing del día actual: contenido rico + selector de variante ◌/◆/⟁
-  await page.getByText("Day 1", { exact: true }).click();
-  await expect(page.getByText(/No gym\. Just two weights/)).toBeVisible(); // Trigger del día (sólo en el modal)
-  await expect(page.getByRole("button", { name: /Real/ })).toBeVisible();
-  await page.getByRole("button", { name: /Soft/ }).click(); // cambiar de variante
-  await page.getByRole("button", { name: "✕" }).click();
-
-  // abrir un milestone (Letter) y completarlo — arregla el "Start" muerto
-  await page.getByText("You don't have a discipline problem.").click();
+  // La "Next step" card lleva de un toque al milestone pendiente exacto —
+  // lo abre y se completa (arregla el "Start" muerto de milestones).
+  await expect(page.getByText(/Next step/)).toBeVisible();
+  await page.getByText(/Next step/).click();
   await expect(page.getByRole("button", { name: "Mark as read" })).toBeVisible();
   await page.getByRole("button", { name: "Mark as read" }).click();
 

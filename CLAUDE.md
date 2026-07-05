@@ -119,8 +119,8 @@ src/
                TodaysDoor (puerta→briefing), QuickCheckin (check-in rápido),
                TodayDareRevealCard, PlannedDueList, ActiveJourneyList.
   screens/     Pantallas (Onboarding, Dream, Reentry, Home, Card, Checkin,
-               Detail, Timer, Complete, Journey, Journeys, Progress, You).
-               Consumen el hook.
+               Detail, Timer, Complete, JourneyComplete, Journey, Journeys,
+               Progress, You). Consumen el hook.
   App.tsx      "Router" por estado: decide qué pantalla mostrar.
 ```
 
@@ -223,8 +223,8 @@ tired) o probar una **categoría nueva** (premiar la novedad, no solo la racha).
 Mapa único `SYMBOLS` (design tokens tipográficos). **Nunca** usar un glifo suelto
 en la UI: siempre por su clave. Cada Journey tiene un símbolo primario, cada
 Chapter uno secundario, cada sección del detalle y cada Trait usan claves del
-mapa. Nunca mostrar dorado/oro sin explicarlo con etiqueta (Days Ahead usa
-símbolo + label, nunca color a secas).
+mapa. Nunca mostrar dorado/oro sin explicarlo con etiqueta (el Badge final de un
+Journey usa símbolo + label, nunca color a secas).
 
 ### Journeys — sprints de 7 días
 
@@ -294,12 +294,12 @@ escaleras, dance cardio, movilidad de pie.
 `treat`, `proof` y una ficha corta `scienceTitle`/`scienceBody` ("Science Behind
 Today's Dare"). La ciencia usa lenguaje cuidadoso ("may support", "is associated
 with", "research suggests"); sin claims médicos. El helper puro `dayVariants(p)`
-(orden ◌→◆→⟁, "real" cae a `dare`) alimenta la UI.
-
-**Briefing de día** (`DayModal`): en la pantalla Journey, tocar un día hecho o el
-actual abre su plan — selector ◌/◆/⟁ (efímero, por defecto Real), Trigger,
-Companion, Treat, Proof y la ficha de ciencia. Los días futuros siguen sellados
-(no accionables). El timeline usa "Day N" (no Today/Tomorrow).
+(orden ◌→◆→⟁, "real" cae a `dare`) queda disponible para el selector
+Soft/Real/Bold del detalle del día (pendiente de UI). La pantalla Journey **ya no
+muestra ninguna línea de tiempo de días** ("Days Ahead") ni el modal de día
+(`DayModal`, eliminado): el `plan` alimenta el contenido de cada día pero la
+pantalla Journey se centra solo en capítulos, milestones, % de completion y Dream
+Reward activo.
 
 **Arranque explícito y multi-journey.** Ningún Journey arranca solo: el
 onboarding lleva a Today sin activar nada. Un Journey se empieza pulsando
@@ -332,9 +332,34 @@ Water). Con más de uno, sube y marca (`· today`) el recomendado por el check-i
 **Capítulos por COMPLETADO, no por calendario** (`chapterState` /
 `unlockedChapterCount` / `currentChapter` en `journeys.ts`): el capítulo I nace
 desbloqueado; el N+1 se desbloquea en cuanto TODOS los milestones del N están
-hechos, aunque sea el mismo día. La línea de tiempo de la pantalla Journey usa
-etiquetas de SECUENCIA (**Day 1..Day 7**), no de calendario; la fila semanal de
-Progress (Today/Tomorrow/…) sí es de calendario.
+hechos, aunque sea el mismo día. La pantalla Journey NO usa línea de tiempo de
+días; la fila semanal de Progress (Today/Tomorrow/…) sí es de calendario.
+
+**Completion del Journey por MILESTONES + celebración** (`journeyComplete()` en
+`journeys.ts`): un Journey se da por terminado cuando TODOS los milestones de
+TODOS sus capítulos están hechos —aunque hayan pasado menos de 7 días—, no por
+un contador de días. `useDare.applyMilestones` centraliza la detección: al
+marcar el último milestone de un Journey ACTIVO no terminado, lo añade a
+`journeysCompleted`, desbloquea su Badge/identidad final (`journey.identity.id`
++ extras: First Flame→`proof-of-fire`, Iron Quiet→`proof-of-iron`/`quiet-power`/
+`builder`), enfoca ese Journey y navega a la pantalla `journeyComplete`
+(celebración: Dream Reward como héroe + identidad + siguiente paso). Es
+**idempotente** (solo se celebra una vez por Journey, vía `journeysCompleted`) e
+**independiente** (terminar uno no afecta a otros activos). `finishDare` ya NO
+completa Journeys por contador de días. La pantalla `Complete` (fin de Dare) es
+independiente: Treat como héroe, sin badges ni cita de proof; los dos flujos no
+colisionan.
+
+**Progreso y próxima acción por MILESTONES (fuente única).** `milestoneProgress(j,
+done)` → `{done,total,pct}` es la MISMA base que dispara `journeyComplete`, así
+que la banda de completion de la pantalla Journey y la barra de Dream Reward de
+Progress miden lo mismo (milestones, no días). `nextMilestone(j, done)` devuelve
+el primer milestone pendiente del capítulo en curso (o null si está completo) y
+`nextAction` es su título (o la promesa del Journey como cierre). La pantalla
+Journey muestra una **"Next step" card** que abre ese milestone exacto de un
+toque, y un **banner de "Journey complete"** persistente (vía
+`journeysCompleted`) al revisitar un Journey ya terminado. Today reutiliza
+`nextAction` en `ActiveJourneyList`.
 
 Por qué así:
 

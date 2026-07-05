@@ -130,7 +130,9 @@ export function Detail({ app }: { app: DareApp }) {
             ))}
           </Section>
 
-          {/* 5 · Why this works — ciencia + porqué, fusionados y cortos */}
+          {/* 5 · Why this works — ciencia + porqué, fusionados y cortos. Es la
+                última explicación antes de comprometerse: va justo encima de
+                "Start dare" (cumple el spec: primero la acción, luego el porqué). */}
           <Section symKey="why" title="Why this works" color={C.gold}>
             <p style={{ fontSize: 14, lineHeight: 1.55, color: C.text }}>{why}</p>
             {science && (
@@ -140,6 +142,7 @@ export function Detail({ app }: { app: DareApp }) {
             )}
           </Section>
 
+          {/* 6 · Start dare — inmediatamente después de "Why this works". */}
           <button className="btn btn-green" style={{ marginTop: 6 }} onClick={() => app.startDare()}>
             Start dare
           </button>

@@ -18,7 +18,7 @@ import type {
 import { DARES } from "../data/dares";
 import { TAROT } from "../data/tarot";
 import { TRAITS } from "../data/traits";
-import { JOURNEYS, MVP_JOURNEYS, journeyById, currentChapter, journeyMilestoneIds, todaysDayPlan, SPRINT_DAYS } from "../data/journeys";
+import { JOURNEYS, MVP_JOURNEYS, journeyById, currentChapter, journeyMilestoneIds, todaysDayPlan, journeyComplete } from "../data/journeys";
 import { generateDare, recentDareIds, buildWhy } from "./generator";
 import { recommendJourney } from "./recommend";
 import { rollTreat, sample } from "./random";
@@ -39,6 +39,7 @@ export type Screen =
   | "detail"
   | "timer"
   | "complete"
+  | "journeyComplete"
   | "journey"
   | "journeys"
   | "progress"
@@ -155,6 +156,15 @@ function featureBadge(earned: string[]): string | null {
     return i === -1 ? BADGE_PRIORITY.length : i;
   };
   return [...earned].sort((a, b) => rank(a) - rank(b))[0];
+}
+
+/** Badges extra que otorga TERMINAR un Journey, además de su identidad final
+ *  (`journey.identity.id`). Solo First Flame e Iron Quiet tienen badges de
+ *  "Proof of…" propios; el resto se cierran solo con su identidad. */
+function journeyCompletionExtras(journeyId: JourneyId): string[] {
+  if (journeyId === "ember") return ["proof-of-fire"];
+  if (journeyId === "iron") return ["proof-of-iron", "quiet-power", "builder"];
+  return [];
 }
 
 export function useDare() {
@@ -640,13 +650,13 @@ export function useDare() {
     // veces usada la versión de baja energía (para el badge Reset Artist)
     const newSmallUses = store.smallVersionUses + (usedSmall ? 1 : 0);
 
-    // El progreso/completion del Journey SOLO cuenta si el Journey en foco está
-    // activo (arrancado). Sin Journey activo, el Dare aún cuenta para proof,
+    // El progreso del Journey (índice de día) SOLO avanza si el Journey en foco
+    // está activo. La COMPLETION del Journey ya NO depende de este contador: se
+    // dispara al completar todos los milestones (ver completeMilestone), no al
+    // llegar a 7 días. Sin Journey activo, el Dare aún cuenta para proof,
     // momentum y badges globales, pero no avanza ningún sprint.
     const journeyActive = store.activeJourneyIds.includes(store.journeyId);
     const newDaysDone = journeyActive ? daysDone + 1 : daysDone;
-    const finishesJourney =
-      journeyActive && newDaysDone >= SPRINT_DAYS && !store.journeysCompleted.includes(store.journeyId);
 
     // badges ganados por este Dare (función pura, umbrales acumulados)
     const have = (id: string) => store.traits.includes(id);
@@ -660,25 +670,11 @@ export function useDare() {
       have,
     });
 
-    // Cierre de Journey: UN capstone deliberado — la identity del Journey
-    // (First Mover, Quiet Builder…). Los demás badges de un Journey salen de
-    // los umbrales de achievements.ts ganados por el camino (momentum-keeper,
-    // rhythm-finder, courageous…), nunca uno por cada Dare. Así hay más de un
-    // badge por Journey sin spam (spec).
-    const newIdentities: string[] = [];
-    if (finishesJourney) {
-      const identId = journey.identity.id;
-      if (!store.identities.includes(identId)) newIdentities.push(identId);
-      // la identity también se colecciona como badge (findTrait la renderiza).
-      if (!have(identId) && !earned.includes(identId)) earned.push(identId);
-    }
-
     // Un único badge "destacado" para la pantalla de completion (el más
     // importante); el resto se desbloquean en silencio y aparecen en Progress.
-    // Al cerrar Journey, el capstone (identity) se muestra en su propio bloque
-    // premium: lo excluimos del banner para no mostrar el mismo badge dos veces.
-    const capstone = finishesJourney ? journey.identity.id : null;
-    const featured = featureBadge(earned.filter((id) => id !== capstone));
+    // El cierre de Journey (capstone/identity) ya NO se dispara aquí: es
+    // milestone-based y vive en `completeMilestone` (pantalla journeyComplete).
+    const featured = featureBadge(earned);
 
     setStore((s) => {
       // sella la completion en la entrada activa
@@ -696,12 +692,10 @@ export function useDare() {
         completed: [...s.completed, { dareId: d.id, date: today }],
         proofLibrary: [...s.proofLibrary, { date: today, dareId: d.id, text: d.proof }],
         journeyProgress: journeyActive ? { ...s.journeyProgress, [s.journeyId]: newDaysDone } : s.journeyProgress,
-        journeysCompleted: finishesJourney ? [...s.journeysCompleted, s.journeyId] : s.journeysCompleted,
         momentum: { count: newMomentum, lastDate: today },
         lastCats: [d.cat, s.lastCats[0]].filter(Boolean).slice(0, 2) as Cat[],
         traits: [...s.traits, ...earned],
         smallVersionUses: newSmallUses,
-        identities: [...s.identities, ...newIdentities],
         treats: [...s.treats, { date: today, tier: roll.tier, text: roll.text }],
         pendingFeedback: { dareId: d.id, cat: d.cat, at: Date.now() },
       };
@@ -711,7 +705,6 @@ export function useDare() {
     setTreatFlipped(false);
     setLastProof(d.proof);
     setNewTraits(featured ? [featured] : []);
-    setJustCompletedJourney(finishesJourney ? store.journeyId : null);
     setFbNote(false);
     setScreen("complete");
   }
@@ -789,24 +782,59 @@ export function useDare() {
   }
 
   // ---- milestones ----
+  /**
+   * Aplica un cambio en los milestones y, si con ello algún Journey ACTIVO
+   * queda con TODOS sus milestones completados por primera vez, lo marca como
+   * terminado, desbloquea su Dream Reward + Badge/identidad final y dispara la
+   * celebración (pantalla `journeyComplete`). La completion persiste vía
+   * `journeysCompleted` (idempotente: solo se celebra una vez por Journey).
+   * Los demás Journeys activos no se ven afectados.
+   */
+  function applyMilestones(patch: Record<string, boolean>, extra?: Partial<DareStore>) {
+    const nextMilestones = { ...store.milestones, ...patch };
+    // ¿Algún Journey activo acaba de completarse (y no estaba ya completado)?
+    const completedId = store.activeJourneyIds.find(
+      (id) => !store.journeysCompleted.includes(id) && journeyComplete(journeyById(id), nextMilestones),
+    );
+
+    if (!completedId) {
+      setStore((s) => ({ ...s, ...extra, milestones: { ...s.milestones, ...patch } }));
+      return;
+    }
+
+    const cj = journeyById(completedId);
+    const identId = cj.identity.id;
+    const newBadges = [identId, ...journeyCompletionExtras(completedId)].filter(
+      (b) => !store.traits.includes(b),
+    );
+    const newIdentities = store.identities.includes(identId) ? [] : [identId];
+
+    setStore((s) => ({
+      ...s,
+      ...extra,
+      milestones: { ...s.milestones, ...patch },
+      journeysCompleted: [...s.journeysCompleted, completedId],
+      traits: [...s.traits, ...newBadges.filter((b) => !s.traits.includes(b))],
+      identities: [...s.identities, ...newIdentities.filter((i) => !s.identities.includes(i))],
+      // Enfoca el Journey recién terminado para que la celebración y las
+      // pantallas siguientes muestren su Dream Reward e identidad.
+      journeyId: completedId,
+    }));
+
+    setJustCompletedJourney(completedId);
+    setScreen("journeyComplete");
+  }
+
   function completeMilestone(id: string) {
-    setStore((s) => ({ ...s, milestones: { ...s.milestones, [id]: true } }));
+    applyMilestones({ [id]: true });
   }
 
   function saveCompanionShelf(shelf: CompanionShelf, milestoneId?: string) {
-    setStore((s) => ({
-      ...s,
-      companionShelf: shelf,
-      milestones: milestoneId ? { ...s.milestones, [milestoneId]: true } : s.milestones,
-    }));
+    applyMilestones(milestoneId ? { [milestoneId]: true } : {}, { companionShelf: shelf });
   }
 
   function saveBossPlaylist(pl: BossPlaylist, milestoneId?: string) {
-    setStore((s) => ({
-      ...s,
-      bossPlaylist: pl,
-      milestones: milestoneId ? { ...s.milestones, [milestoneId]: true } : s.milestones,
-    }));
+    applyMilestones(milestoneId ? { [milestoneId]: true } : {}, { bossPlaylist: pl });
   }
 
   // ---- planning + dates ----
