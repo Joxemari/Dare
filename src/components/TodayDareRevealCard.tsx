@@ -39,7 +39,7 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
     const d = cd.dare;
     const col = colorOf(d);
     return (
-      <div className="card rise" style={{ padding: 24, borderColor: d.wild ? C.gold + "55" : C.line }}>
+      <div className="card rise" style={{ padding: 24, borderColor: d.wild ? C.gold + "55" : C.line, boxShadow: `0 0 40px -22px ${col}` }}>
         <p className="lbl" style={{ marginBottom: 12, color: col }}>
           {d.wild ? "WILDCARD" : LABEL}
         </p>

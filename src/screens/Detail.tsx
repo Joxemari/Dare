@@ -18,27 +18,30 @@ function dareSummary(d: Dare): string {
   return `A ${d.min}-minute ${CATS[d.cat].label.toLowerCase()} dare — small enough to start now, with no need to finish it perfectly.`;
 }
 
-/* Sección del detalle. Headers NEUTROS (sin arcoíris de acentos): la jerarquía
-   se expresa con `tone`, no con color. `primary` (What this is / Steps) lidera;
-   `muted` (Companion / Why / Effect) queda como apoyo — label más pequeña,
-   glifo y padding más contenidos. */
+/* Sección del detalle. Cada header lleva su ACENTO de color (glifo + label) para
+   que las secciones se distingan y tengan vida; la JERARQUÍA se mantiene con
+   `tone`: `primary` (What this is / Steps) lidera con label completa, `muted`
+   (Companion / Why / Effect) es apoyo con label más pequeña y padding contenido.
+   Así hay color Y orden (color con disciplina, no arcoíris que rebota). */
 function Section({
   symKey,
   title,
+  accent = C.dim,
   tone = "primary",
   children,
 }: {
   symKey: keyof typeof SECTION_SYM;
   title: string;
+  accent?: string;
   tone?: "primary" | "muted";
   children: ReactNode;
 }) {
   const glyph = SYMBOLS[SECTION_SYM[symKey]];
   const muted = tone === "muted";
   return (
-    <div className="card" style={{ padding: muted ? 16 : 18, marginBottom: muted ? 10 : 12, background: C.card2 }}>
-      <p className={muted ? "lbl-sm" : "lbl"} style={{ color: C.dim, marginBottom: muted ? 6 : 8, display: "flex", gap: 8, alignItems: "center" }}>
-        <span style={{ color: C.faint }}>{glyph}</span> {title}
+    <div className="card" style={{ padding: muted ? 16 : 18, marginBottom: muted ? 10 : 12, background: C.card2, borderColor: accent + "2b" }}>
+      <p className={muted ? "lbl-sm" : "lbl"} style={{ color: accent, marginBottom: muted ? 6 : 8, display: "flex", gap: 8, alignItems: "center" }}>
+        <span style={{ color: accent }}>{glyph}</span> {title}
       </p>
       {children}
     </div>
@@ -85,6 +88,7 @@ export function Detail({ app }: { app: DareApp }) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                boxShadow: `0 0 44px -12px ${col}`,
               }}
             >
               <Ico name={CAT_ICO[d.cat]} size={30} color={col} sw={1.3} />
@@ -103,12 +107,12 @@ export function Detail({ app }: { app: DareApp }) {
               4 Why this works · 5 Expected Effect · 6 CTAs. */}
 
           {/* 1 · What this is — un resumen corto de qué es el Dare (PRIMARIO) */}
-          <Section symKey="trigger" title="What this is">
+          <Section symKey="trigger" title="What this is" accent={C.green}>
             <p style={{ fontSize: 14.5, lineHeight: 1.55, color: C.text }}>{dareSummary(d)}</p>
           </Section>
 
-          {/* 2 · Steps — el Trigger es el primer paso práctico */}
-          <Section symKey="steps" title="Steps">
+          {/* 2 · Steps — el Trigger es el primer paso práctico (acento del Dare) */}
+          <Section symKey="steps" title="Steps" accent={col}>
             {steps.map((s, i) => (
               <div
                 key={i}
@@ -129,7 +133,7 @@ export function Detail({ app }: { app: DareApp }) {
           {/* 3 · Companion — recompensa CONCRETA y DURANTE la acción (temptation
               bundling): resolveCompanion elige uno concreto y coherente con la
               actividad (filtra por la categoría del Dare), rotado por fecha. */}
-          <Section symKey="companion" title={`Companion · ${comp.word}`} tone="muted">
+          <Section symKey="companion" title={`Companion · ${comp.word}`} accent={C.purple} tone="muted">
             <p className="serif t-quote" style={{ color: C.text, marginBottom: 6 }}>{comp.label}</p>
             <p style={{ fontSize: 13, lineHeight: 1.55, color: C.dim }}>{comp.note}</p>
           </Section>
@@ -137,7 +141,7 @@ export function Detail({ app }: { app: DareApp }) {
           {/* 4 · Why this works — el porqué + la ciencia COMPLETA (química,
                 comportamiento, efecto a largo plazo): es la explicación de peso
                 antes de comprometerse. Lenguaje prudente (ver science.ts). */}
-          <Section symKey="why" title="Why this works" tone="muted">
+          <Section symKey="why" title="Why this works" accent={C.gold} tone="muted">
             <p style={{ fontSize: 14, lineHeight: 1.55, color: C.text }}>{why}</p>
             {science && (
               <>
@@ -150,7 +154,7 @@ export function Detail({ app }: { app: DareApp }) {
           </Section>
 
           {/* 5 · Expected Effect (apoyo) */}
-          <Section symKey="effect" title="Expected Effect" tone="muted">
+          <Section symKey="effect" title="Expected Effect" accent={C.green} tone="muted">
             <Effects effects={d.effects} />
           </Section>
 

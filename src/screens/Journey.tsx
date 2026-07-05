@@ -124,7 +124,7 @@ export function Journey({ app }: { app: DareApp }) {
 
           {/* Journey completado — cierre persistente al revisitar la pantalla */}
           {!isPlaceholder && isJourneyActive && isComplete && (
-            <div className="card rise" style={{ padding: 20, marginBottom: 22, borderColor: C.gold + "55", textAlign: "center" }}>
+            <div className="card rise" style={{ padding: 20, marginBottom: 22, borderColor: C.gold + "55", boxShadow: `0 0 40px -18px ${C.gold}`, textAlign: "center" }}>
               <p style={{ fontSize: 24, color: C.gold, marginBottom: 6 }}>{SYMBOLS.dream}</p>
               <p className="serif t-heading" style={{ marginBottom: 4 }}>
                 Journey complete.
@@ -155,6 +155,7 @@ export function Journey({ app }: { app: DareApp }) {
                 gap: 12,
                 alignItems: "center",
                 color: C.text,
+                boxShadow: `0 0 26px -14px ${journey.color}`,
               }}
             >
               <Ico name={MS_T[next.t].ico} size={18} color={journey.color} sw={1.5} />
@@ -233,6 +234,7 @@ export function Journey({ app }: { app: DareApp }) {
                         fontSize: 24,
                         color: nodeCol,
                         opacity: state === "locked" ? 0.45 : 1,
+                        boxShadow: state === "now" ? `0 0 26px -8px ${journey.color}` : "none",
                       }}
                     >
                       {SYMBOLS[c.sym]}
