@@ -1,6 +1,7 @@
 import { C } from "../data/colors";
 import { SYMBOLS } from "../data/symbols";
 import { wrap } from "../components/layout";
+import { DareWord } from "../components/Wordmark";
 import type { DareApp } from "../lib/useDare";
 
 /* Onboarding — 3 pantallas visuales, SIN scroll cada una. Entrar en un ritual,
@@ -19,13 +20,7 @@ function BrandMark() {
       <span className="pulse" aria-hidden="true" style={{ color: C.green, fontSize: 18, lineHeight: 1 }}>
         {SYMBOLS.spark}
       </span>
-      <span
-        role="img"
-        aria-label="DARE"
-        style={{ fontFamily: "var(--font-sans)", fontWeight: 400, fontSize: 14, letterSpacing: "0.34em", textIndent: "0.34em", color: C.text }}
-      >
-        DARE
-      </span>
+      <DareWord style={{ fontSize: 14, letterSpacing: "0.34em", textIndent: "0.34em" }} />
     </div>
   );
 }

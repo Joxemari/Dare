@@ -1,5 +1,6 @@
 import { C } from "../data/colors";
 import { SYMBOLS } from "../data/symbols";
+import { DareWord } from "./Wordmark";
 
 /* ============================================================
    TodayHeader — masthead de Today. CONTEXTO + calidez, no acción.
@@ -27,13 +28,7 @@ export function TodayHeader({
         <span className="pulse" aria-hidden="true" style={{ color: C.green, fontSize: 17, lineHeight: 1 }}>
           {SYMBOLS.spark}
         </span>
-        <span
-          role="img"
-          aria-label="DARE"
-          style={{ fontFamily: "var(--font-sans)", fontWeight: 400, fontSize: 14, letterSpacing: "0.34em", textIndent: "0.34em", color: C.text }}
-        >
-          DARE
-        </span>
+        <DareWord style={{ fontSize: 14, letterSpacing: "0.34em", textIndent: "0.34em" }} />
       </div>
 
       {/* Hero con la imagen del día + degradado + fecha y headline encima */}
@@ -55,7 +50,8 @@ export function TodayHeader({
               inset: 0,
               backgroundImage: `url(${bgUrl})`,
               backgroundSize: "cover",
-              backgroundPosition: "center",
+              // Un poco a la derecha (feedback): el objeto del dibujo respira mejor.
+              backgroundPosition: "62% center",
             }}
           />
         )}

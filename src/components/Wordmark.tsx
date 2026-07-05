@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { C } from "../data/colors";
 import { SYMBOLS } from "../data/symbols";
 
@@ -9,6 +10,26 @@ import { SYMBOLS } from "../data/symbols";
    Today. El glifo es decorativo (aria-hidden); el logotipo lleva
    role/aria-label para lectores.
    ============================================================ */
+
+/** Logotipo "DARE" con la A convertida en TRIÁNGULO (△): "D△RE". El triángulo
+ *  hereda tamaño y tracking del contenedor; `aria-label="DARE"` para lectores.
+ *  Fuente única de la marca escrita — se reutiliza en Wordmark, Splash,
+ *  Onboarding y el masthead de Today. */
+export function DareWord({ style }: { style?: CSSProperties }) {
+  return (
+    <span
+      role="img"
+      aria-label="DARE"
+      style={{ fontFamily: "var(--font-sans)", fontWeight: 400, display: "inline-block", color: C.text, ...style }}
+    >
+      D
+      <span aria-hidden="true" style={{ fontSize: "0.9em", display: "inline-block", transform: "translateY(-0.03em)" }}>
+        {SYMBOLS.strength}
+      </span>
+      RE
+    </span>
+  );
+}
 export function Wordmark({
   size = "md",
   tagline = true,
@@ -27,22 +48,9 @@ export function Wordmark({
       <div aria-hidden="true" style={{ color: glyphColor, fontSize: glyph, marginBottom: size === "lg" ? 14 : 8 }}>
         {SYMBOLS.spark}
       </div>
-      <div
-        role="img"
-        aria-label="DARE"
-        style={{
-          fontFamily: "var(--font-sans)",
-          fontWeight: 400,
-          fontSize: word,
-          letterSpacing: gap,
-          // El tracking añade espacio a la derecha de la última letra: lo
-          // compensamos para que el bloque quede ópticamente centrado.
-          textIndent: gap,
-          color: C.text,
-        }}
-      >
-        DARE
-      </div>
+      {/* El tracking añade espacio a la derecha de la última letra: `textIndent`
+          lo compensa para que el bloque quede ópticamente centrado. */}
+      <DareWord style={{ fontSize: word, letterSpacing: gap, textIndent: gap }} />
       {tagline && (
         <p
           style={{
