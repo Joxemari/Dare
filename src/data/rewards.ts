@@ -46,6 +46,9 @@ export const TREATS: Record<Tier, readonly Treat[]> = {
     // Mentales.
     { text: "Five minutes of staring out the window, professionally.", fits: ["focus"] },
     { text: "Close every tab. One song with your eyes shut.", fits: ["focus"] },
+    { text: "A big glass of cold water and a proper sit-down.", fits: ["dumbbells", "tabata", "carry", "fitboxing"] },
+    { text: "Open the window wide and breathe for a minute.", fits: ["recovery", "small"] },
+    { text: "Tell one person the thing you just did. Say it out loud." },
   ],
   rare: [
     { text: "Ice cream today — in whatever weather this is." },
@@ -61,6 +64,8 @@ export const TREATS: Record<Tier, readonly Treat[]> = {
     { text: "A long hot shower with no clock.", avoid: ["pool"] },
     { text: "A bath hot enough to require negotiation.", avoid: ["pool"], fits: ["dumbbells", "carry"] },
     { text: "Twenty minutes in a café with a book and no phone.", avoid: ["forest", "walk"] },
+    { text: "The nice notebook and ten minutes to scribble nothing useful.", fits: ["focus"] },
+    { text: "A long soak with the good salts.", avoid: ["pool"], fits: ["dumbbells", "carry", "recovery"] },
   ],
   golden: [
     { text: "Golden Treat — dinner tonight is whatever you want.", special: "golden" },
@@ -69,6 +74,7 @@ export const TREATS: Record<Tier, readonly Treat[]> = {
     { text: "Choose your own Treat. This card is the permission.", special: "choose" },
     { text: "Golden — breakfast for dinner. Full ceremony.", special: "golden" },
     { text: "Golden — the small thing that's been sitting in your cart. It's time.", special: "golden" },
+    { text: "Golden — book the 'someday' thing today.", special: "golden" },
   ],
 };
 

@@ -222,4 +222,8 @@ export const DARES: Dare[] = [
     trigger: "Skip the trolley. Carry it.", companion: "The walk back.", proof: "Turned an errand into strength.",
     effects: { Strength: 2, Energy: 1 }, scienceId: "grip-longevity",
     steps: ["Do a real errand on foot", "Carry the bags instead of wheeling them", "Switch hands halfway", "Walk the whole way home"] },
+  { id: "unhurried-loop", title: "The Unhurried Loop", cat: "walk", min: 15, level: "Easy", energy: [2, 7], locs: ["outside", "forest"],
+    trigger: "No route. Just out.", companion: "One slow album.", proof: "Moved before negotiating.",
+    effects: { Energy: 2, Calm: 1, Mood: 1 }, scienceId: "walking-outdoors",
+    steps: ["Album on before you sit back down", "Out the door, pick the softer direction", "Walk one unhurried loop", "Home when the album says so"] },
 ];

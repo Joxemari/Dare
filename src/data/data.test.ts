@@ -7,7 +7,8 @@ import { TRAITS, findTrait } from "./traits";
 import { SYMBOLS, JOURNEY_SYM } from "./symbols";
 import { CATS } from "./colors";
 import { CAT_ICO } from "./icons";
-import { validateDare } from "../lib/contentSchema";
+import { TREATS } from "./rewards";
+import { validateDare, validateWildcard, validateTreat } from "../lib/contentSchema";
 
 const ALL = [...DARES, ...WILDCARDS];
 const SCIENCE_IDS = SCIENCE.map((s) => s.id);
@@ -51,6 +52,21 @@ describe("integridad de los Dares", () => {
       // ids existentes = todos menos él mismo, para no auto-colisionar.
       const existingIds = ALL_IDS.filter((id) => id !== d.id);
       expect(validateDare(d, { existingIds, scienceIds: SCIENCE_IDS }), d.id).toEqual([]);
+    }
+  });
+
+  it("todos los wildcards vivos son válidos (validateWildcard, wild:true)", () => {
+    for (const w of WILDCARDS) {
+      const existingIds = ALL_IDS.filter((id) => id !== w.id);
+      expect(validateWildcard(w, { existingIds, scienceIds: SCIENCE_IDS }), w.id).toEqual([]);
+    }
+  });
+
+  it("todos los Treats vivos pasan validateTreat (misma red que la generación)", () => {
+    for (const tier of Object.keys(TREATS) as Array<keyof typeof TREATS>) {
+      for (const t of TREATS[tier]) {
+        expect(validateTreat({ ...t, tier }), t.text).toEqual([]);
+      }
     }
   });
 });
