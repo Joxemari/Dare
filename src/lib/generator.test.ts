@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { generateDare, allowedLocs, currentToDareLocs, destToDareLoc, recentDareIds } from "./generator";
+import { generateDare, generateJourneyDayDare, allowedLocs, currentToDareLocs, destToDareLoc, recentDareIds } from "./generator";
 import { DARES } from "../data/dares";
 import { journeyById } from "../data/journeys";
 import { mulberry32 } from "./prng";
@@ -160,6 +160,49 @@ describe("generateDare", () => {
     const ci: Checkin = { energy: 3, time: 10, loc: "home", dest: null, state: "tired", focus: 2, avoiding: "mind" };
     const { why } = generateDare(ci, [], {}, ember);
     expect(why.length).toBeGreaterThan(0);
+  });
+});
+
+describe("generateJourneyDayDare", () => {
+  const iron = journeyById("iron");
+
+  it("devuelve un Dare de la categoría del día cuando existe (dentro del Journey)", () => {
+    // "walk" tiene Dares → el resultado es SIEMPRE de esa categoría, nunca del
+    // pool global aleatorio.
+    expect(DARES.some((d) => d.cat === "walk")).toBe(true);
+    for (let i = 0; i < 40; i++) {
+      const dare = generateJourneyDayDare("walk", iron, base);
+      expect(dare.cat).toBe("walk");
+    }
+  });
+
+  it("excluye (duro) un Dare rechazado si la categoría tiene alternativas", () => {
+    const walk = DARES.filter((d) => d.cat === "walk");
+    expect(walk.length).toBeGreaterThan(1);
+    const rejected = walk[0].id;
+    for (let i = 0; i < 60; i++) {
+      const dare = generateJourneyDayDare("walk", iron, base, [], [rejected]);
+      expect(dare.id).not.toBe(rejected);
+      expect(dare.cat).toBe("walk");
+    }
+  });
+
+  it("cae a las categorías del Journey si la del día no tiene Dares", () => {
+    // fabrica una categoría sin Dares reales: filtramos a algo que no exista.
+    const cats = new Set(DARES.map((d) => d.cat));
+    const emptyCat = (["padel", "pool", "forest"] as const).find((c) => !cats.has(c));
+    // Si todas existen, este test no aplica; sólo corre si hay una vacía real.
+    if (!emptyCat) return;
+    for (let i = 0; i < 20; i++) {
+      const dare = generateJourneyDayDare(emptyCat, iron, base);
+      expect(iron.bias.includes(dare.cat) || dare.cat === "small").toBe(true);
+    }
+  });
+
+  it("siempre devuelve un Dare (nunca undefined)", () => {
+    const dare = generateJourneyDayDare("recovery", iron, { ...base, energy: 2, state: "tired" });
+    expect(dare).toBeTruthy();
+    expect(typeof dare.id).toBe("string");
   });
 });
 
