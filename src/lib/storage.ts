@@ -1,7 +1,8 @@
 import type { DareStore, JourneyId } from "../types";
 
-const KEY = "dare:v6";
+const KEY = "dare:v7";
 /** Claves antiguas, si un build previo escribió alguna. */
+const KEY_V6 = "dare:v6";
 const KEY_V5 = "dare:v5";
 const KEY_V4 = "dare:v4";
 const KEY_V3 = "dare:v3";
@@ -10,7 +11,7 @@ const KEY_V1 = "dare:v1";
 
 export function defaultStore(): DareStore {
   return {
-    version: 6,
+    version: 7,
     onboarded: false,
     journeyId: "iron",
     activeJourneyIds: [],
@@ -46,14 +47,20 @@ export function defaultStore(): DareStore {
       evening: { hour: 18, minute: 0, lastShown: "" },
     },
     install: { dismissedAt: "", installedAt: "" },
+    cardIntroDate: "",
   };
 }
 
 /**
- * Migra una forma desconocida/antigua hasta v6. Defensiva: mergea sobre
+ * Migra una forma desconocida/antigua hasta v7. Defensiva: mergea sobre
  * los defaults, de modo que cualquier campo que el build viejo nunca
  * escribió reciba un valor razonable. Idempotente: aplicada a un store ya
- * v6 lo deja igual.
+ * v7 lo deja igual.
+ *
+ * v6 → v7: añade `cardIntroDate` (gate "una vez al día" del ritual de la Daily
+ *   Card al abrir la app). Campo NUEVO → un store v6 no lo tuvo y recibe "" al
+ *   mergear; "" ≠ hoy ⇒ el ritual aparece en la próxima apertura. Sin más
+ *   cambios de forma: un v6 es por lo demás compatible con v7.
  *
  * v2 → v3: renombra el vocabulario del prototipo al del producto —
  *   xp/streak/badges/rewardDraws/tarot → se descartan o remapean a
@@ -94,7 +101,7 @@ function migrate(raw: unknown): DareStore {
     ...base,
     onboarded: typeof o.onboarded === "boolean" ? o.onboarded : base.onboarded,
     journeyId: typeof o.journeyId === "string" ? (o.journeyId as DareStore["journeyId"]) : base.journeyId,
-    version: 6,
+    version: 7,
   };
 
   if (o.journeyProgress && typeof o.journeyProgress === "object") {
@@ -208,6 +215,12 @@ function migrate(raw: unknown): DareStore {
     merged.install = { ...base.install, ...(o.install as object) };
   }
 
+  // v7: fecha del ritual de la Daily Card al abrir. Campo NUEVO → un store
+  // anterior (v6 o menos) no lo tuvo, así que recibe "" al mergear sobre base;
+  // "" ≠ hoy ⇒ el ritual aparece en la próxima apertura (comportamiento
+  // deseado, no una pérdida). Un v7 conserva su valor (idempotencia).
+  if (typeof o.cardIntroDate === "string") merged.cardIntroDate = o.cardIntroDate;
+
   return merged;
 }
 
@@ -216,8 +229,10 @@ export function load(): DareStore {
     const cur = localStorage.getItem(KEY);
     if (cur) {
       const parsed = JSON.parse(cur);
-      return parsed && parsed.version === 6 ? (parsed as DareStore) : migrate(parsed);
+      return parsed && parsed.version === 7 ? (parsed as DareStore) : migrate(parsed);
     }
+    const v6 = localStorage.getItem(KEY_V6);
+    if (v6) return migrate(JSON.parse(v6));
     const v5 = localStorage.getItem(KEY_V5);
     if (v5) return migrate(JSON.parse(v5));
     const v4 = localStorage.getItem(KEY_V4);
@@ -245,6 +260,7 @@ export function save(store: DareStore): void {
 export function clearStore(): void {
   try {
     localStorage.removeItem(KEY);
+    localStorage.removeItem(KEY_V6);
     localStorage.removeItem(KEY_V5);
     localStorage.removeItem(KEY_V4);
     localStorage.removeItem(KEY_V3);

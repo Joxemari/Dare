@@ -132,3 +132,37 @@ test("Journey: Begin explícito, milestones accionables + tabs Progress/You", as
 
   expect(errors, errors.join("\n")).toEqual([]);
 });
+
+test("Daily Card: ritual de apertura una vez al día, saltable, gate persistente", async ({ page }) => {
+  const errors = guardPageErrors(page);
+  // Siembra un store YA onboarded, solo si no existe: así el reload conserva lo
+  // que la app persista (no lo re-siembra), a diferencia de un clear() en cada
+  // navegación. Sin `version` → load() lo pasa por migrate (merge sobre defaults).
+  await page.addInitScript(() => {
+    if (!localStorage.getItem("dare:v7"))
+      localStorage.setItem("dare:v7", JSON.stringify({ onboarded: true }));
+  });
+  await page.goto("/Dare/");
+
+  // al abrir la app aparece el ritual de las 3 cartas (una vez al día)
+  await expect(page.getByText("Draw your card.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Skip for now" })).toBeVisible();
+
+  // saltar → Today
+  await page.getByRole("button", { name: "Skip for now" }).click();
+  await expect(page.getByText("YOUR DARE OF THE DAY")).toBeVisible();
+
+  // gate "una vez al día": tras saltar NO reaparece al recargar la app
+  await page.reload();
+  await expect(page.getByText("YOUR DARE OF THE DAY")).toBeVisible();
+  await expect(page.getByText("Draw your card.")).toHaveCount(0);
+
+  // la carta se saca desde You: elegir una la revela a pantalla completa
+  await page.getByRole("button", { name: /You/ }).click();
+  await expect(page.getByText("DRAW YOUR CARD FOR TODAY")).toBeVisible();
+  await page.locator('button[aria-label="Face-down daily card"]').first().click();
+  await expect(page.getByText("Tap to continue")).toBeVisible();
+  await page.getByText("Tap to continue").click();
+
+  expect(errors, errors.join("\n")).toEqual([]);
+});
