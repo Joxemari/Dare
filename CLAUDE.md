@@ -16,7 +16,7 @@ además de la operativa de desarrollo. No es solo una lista de comandos.
 - **Tailwind CSS v4** vía `@tailwindcss/vite`; los tokens viven en `src/index.css`.
 - **Vitest** para los tests.
 - Fuentes autoalojadas con `@fontsource` (Cormorant Garamond + Space Grotesk); sin CDN de Google.
-- Persistencia en **`localStorage`**, esquema versionado (v6) con migración.
+- Persistencia en **`localStorage`**, esquema versionado (v7) con migración.
 - **PWA instalable** sin dependencias extra (manifest estático + service worker
   a mano); offline y "añadir a inicio". Ver sección *PWA* más abajo.
 - Sin router: las pantallas son estado, no rutas.
@@ -107,7 +107,7 @@ src/
                                   isIOS/isInStandaloneMode/installOffer (ver más
                                   abajo)
                Frontera con efectos (I/O), aisladas a propósito:
-                 storage.ts    load/save/migrate sobre localStorage (v6)
+                 storage.ts    load/save/migrate sobre localStorage (v7)
                  useDare.ts    hook de React: estado de la app + orquestación
                  feedback.ts   vibración (navigator.vibrate) + sonido sintetizado
                                (Web Audio, sin assets). Impuro; no se testea.
@@ -154,12 +154,23 @@ baja → Still Water, con ganas → Iron Quiet, atascado → Wild Ground, con en
 alta → Bright Pulse, overwhelmed → Still Water, returning → el activo más suave),
 lo sube y lo marca (`· today`).
 
-El **card pull del día** (tarot, `DailyCardDraw`) vive ahora en la pestaña
-**You** (antes estaba arriba en Today): es un placer OPCIONAL que buscas, no un
-peaje del ritual diario. Elegir una de las 3 cartas abre la pantalla `Card`
-(revelado a pantalla completa) y al volver queda una miniatura. El check-in
-COMPLETO (loc/dest, para encaminar Dares de piscina/gym/bosque) ya no cuelga de
-Today; se alcanza desde el "one more" de la completion.
+El **card pull del día** (tarot, `DailyCardDraw`) tiene dos superficies, y
+NINGUNA es Today (que queda mínimo):
+
+- **Ritual de apertura, UNA VEZ AL DÍA y SALTABLE.** Al abrir la app, si aún no
+  hay carta hoy y no se ha resuelto el ritual, la pantalla `Card` aparece con las
+  3 cartas boca abajo (*"Draw your card."*) ANTES de Today. Elegir una la revela
+  a pantalla completa y entra a Today; **"Skip for now"** (`skipCardIntro`) lo
+  salta sin sacar carta. El gate es puro (`shouldOpenCardIntro` en `useDare`:
+  `onboarded && dailyCard.cardId == null && cardIntroDate !== hoy`) y se decide en
+  el inicializador del `screen`; tanto sacar (`pickCard`) como saltar sellan
+  `store.cardIntroDate = hoy`, así **no reaparece** en reaperturas del mismo día.
+  El usuario *away* no lo ve (Reentry manda). Es un placer, no un peaje.
+- **En la pestaña You**, `DailyCardDraw` es el sitio para sacarla si se saltó, y
+  para reabrir la ya sacada (miniatura). Antes vivía arriba en Today.
+
+El check-in COMPLETO (loc/dest, para encaminar Dares de piscina/gym/bosque) ya no
+cuelga de Today; se alcanza desde el "one more" de la completion.
 
 ### Contenido generativo (pipeline de PRs, no runtime)
 
@@ -532,8 +543,9 @@ que `index.html` enlaza manifest + apple-touch-icon.
   `smallVersionUses`, identidades, milestones, companion shelf, boss playlist,
   planned dares (destinos) + Planned Dares (`darePlans`) + Dares rechazados
   (`rejectedDares`), dates, historial de treats, feedback, las preferencias de
-  notificación (dos franjas) y el estado del nudge de instalación (`install`:
-  `dismissedAt`/`installedAt`)). Los check-ins guardan también el **vibe** de
+  notificación (dos franjas), el estado del nudge de instalación (`install`:
+  `dismissedAt`/`installedAt`) y `cardIntroDate` (día en que se resolvió el ritual
+  de la Daily Card al abrir)). Los check-ins guardan también el **vibe** de
   companion elegido (campo opcional en `Checkin`). Lo *derivable* (p. ej. el
   scoring de un dare, el companion concreto resuelto, el nº de proofs,
   la identidad actual, el capítulo desbloqueado, **el briefing del día**) se
@@ -543,8 +555,8 @@ que `index.html` enlaza manifest + apple-touch-icon.
   vía `lookup.ts`) al leer. Así, cambiar el contenido de un dato no rompe los
   datos antiguos guardados. Copiar el objeto entero dentro del store obliga a
   migrar en cuanto cambie su forma.
-- **Versionado de la forma + migración:** el store lleva `version` (hoy `6`) bajo
-  la clave `dare:v6`. `storage.ts` migra cualquier forma antigua/desconocida a v6
+- **Versionado de la forma + migración:** el store lleva `version` (hoy `7`) bajo
+  la clave `dare:v7`. `storage.ts` migra cualquier forma antigua/desconocida a v7
   mergeando sobre `defaultStore()` (ver `migrate()`), de modo que un campo que un
   build viejo nunca escribió recibe un valor por defecto. v2→v3 renombra el
   vocabulario del prototipo al de producto (streak→momentum, rewardDraws→treats,
@@ -565,9 +577,12 @@ que `index.html` enlaza manifest + apple-touch-icon.
   Dares) se **promueve** a la franja de la **mañana** (conservando la hora y su
   `lastShown`) mientras la **tarde** recibe el default (18:00); y los check-ins
   sin `vibe` se leen tal cual (sin `vibe` = surprise), sin transformar nada. Un
-  store guardado por cualquiera de esas v5 (o un v4) migra a v6 sin pérdida. La
-  migración es
-  **idempotente**: aplicarla a un store ya v6 lo deja igual. Si cambia la forma,
+  store guardado por cualquiera de esas v5 (o un v4) migra a v6 sin pérdida.
+  **v6→v7:** añade `cardIntroDate` (gate del ritual de la Daily Card al abrir);
+  un store v6 no lo tenía → recibe `""` al mergear, y `"" ≠ hoy` hace que el
+  ritual aparezca en la próxima apertura (comportamiento deseado, no una
+  pérdida). La migración es
+  **idempotente**: aplicarla a un store ya v7 lo deja igual. Si cambia la forma,
   **hay que subir la versión y ampliar la migración en la misma PR.**
 - **Defensivo ante datos corruptos:** si el JSON no parsea, se arranca limpio con
   `defaultStore()` en vez de romper.

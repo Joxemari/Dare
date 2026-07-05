@@ -7,17 +7,19 @@ const DEFAULT_NOTIFS = {
   evening: { hour: 18, minute: 0, lastShown: "" },
 };
 
-describe("migrate (v2/v3/v4/v5 → v6)", () => {
-  it("arranca en v6 con defaults ante entradas vacías/corruptas", () => {
-    expect(migrate(null).version).toBe(6);
-    expect(migrate("nope" as unknown).version).toBe(6);
-    expect(migrate({}).version).toBe(6);
+describe("migrate (v2…v6 → v7)", () => {
+  it("arranca en v7 con defaults ante entradas vacías/corruptas", () => {
+    expect(migrate(null).version).toBe(7);
+    expect(migrate("nope" as unknown).version).toBe(7);
+    expect(migrate({}).version).toBe(7);
     // por defecto no hay ningún Journey activo
     expect(migrate({}).activeJourneyIds).toEqual([]);
     expect(migrate({}).smallVersionUses).toBe(0);
     // campos nuevos → arrancan vacíos
     expect(migrate({}).darePlans).toEqual([]);
     expect(migrate({}).rejectedDares).toEqual([]);
+    // v7: gate del ritual de la Daily Card → "" (nunca resuelto ⇒ aparecerá)
+    expect(migrate({}).cardIntroDate).toBe("");
   });
 
   it("añade el default de notifications e install a un store sin ellos", () => {
@@ -39,7 +41,7 @@ describe("migrate (v2/v3/v4/v5 → v6)", () => {
       catCounts: { walk: 3 },
     };
     const m = migrate(v2);
-    expect(m.version).toBe(6);
+    expect(m.version).toBe(7);
     expect(m.onboarded).toBe(true);
     expect(m.journeyId).toBe("iron");
     // streak → momentum
@@ -66,7 +68,7 @@ describe("migrate (v2/v3/v4/v5 → v6)", () => {
       journeysCompleted: [],
     };
     const m = migrate(v3);
-    expect(m.version).toBe(6);
+    expect(m.version).toBe(7);
     // The Ember tenía progreso → sigue activo tras migrar
     expect(m.activeJourneyIds).toContain("ember");
     expect(m.activeJourneyIds).not.toContain("iron");
@@ -82,7 +84,21 @@ describe("migrate (v2/v3/v4/v5 → v6)", () => {
     expect(migrate(v3).activeJourneyIds).toContain("ember");
   });
 
-  it("es idempotente sobre un store ya v6", () => {
+  it("v6 → v7: un store v6 sin cardIntroDate recibe '' (el ritual aparecerá)", () => {
+    const v6 = { ...defaultStore(), version: 6 as unknown as 7, onboarded: true };
+    delete (v6 as Record<string, unknown>).cardIntroDate;
+    const m = migrate(v6);
+    expect(m.version).toBe(7);
+    expect(m.cardIntroDate).toBe("");
+  });
+
+  it("v7 → v7: conserva un cardIntroDate ya guardado (idempotencia)", () => {
+    const s = { ...defaultStore(), cardIntroDate: "2026-07-05" };
+    expect(migrate(s).cardIntroDate).toBe("2026-07-05");
+    expect(migrate(migrate(s)).cardIntroDate).toBe("2026-07-05");
+  });
+
+  it("es idempotente sobre un store ya v7", () => {
     const s = { ...defaultStore(), onboarded: true, activeJourneyIds: ["ember" as const], proofLibrary: [{ date: "x", dareId: "y", text: "z" }] };
     const once = migrate(s);
     const twice = migrate(once);
@@ -94,7 +110,7 @@ describe("migrate (v2/v3/v4/v5 → v6)", () => {
   it("v3 → v6: conserva lo transferible y recibe notifications por defecto", () => {
     const v3 = {
       ...defaultStore(),
-      version: 3 as unknown as 6, // simula un store guardado por un build v3
+      version: 3 as unknown as 7, // simula un store guardado por un build v3
       onboarded: true,
       momentum: { count: 4, lastDate: "2026-07-03" },
     };
@@ -102,7 +118,7 @@ describe("migrate (v2/v3/v4/v5 → v6)", () => {
     delete (v3 as Record<string, unknown>).notifications;
     delete (v3 as Record<string, unknown>).install;
     const m = migrate(v3);
-    expect(m.version).toBe(6);
+    expect(m.version).toBe(7);
     expect(m.onboarded).toBe(true);
     expect(m.momentum).toEqual({ count: 4, lastDate: "2026-07-03" });
     expect(m.notifications).toEqual(DEFAULT_NOTIFS);
@@ -112,24 +128,24 @@ describe("migrate (v2/v3/v4/v5 → v6)", () => {
   it("v4 → v6: conserva check-ins guardados (el `vibe` opcional queda undefined)", () => {
     const v4 = {
       ...defaultStore(),
-      version: 4 as unknown as 6, // simula un store guardado por un build v4
+      version: 4 as unknown as 7, // simula un store guardado por un build v4
       onboarded: true,
       lastCheckin: { energy: 6, time: 20, loc: "home", dest: null, state: "normal" },
       checkins: [{ energy: 6, time: 20, loc: "home", dest: null, state: "normal", date: "2026-07-04" }],
     };
     const m = migrate(v4);
-    expect(m.version).toBe(6);
+    expect(m.version).toBe(7);
     expect(m.lastCheckin).toEqual({ energy: 6, time: 20, loc: "home", dest: null, state: "normal" });
     expect(m.lastCheckin?.vibe).toBeUndefined();
     expect(m.checkins).toHaveLength(1);
   });
 
   it("v4 → v6: un store v4 sin Planned Dares recibe los campos por defecto", () => {
-    const v4 = { ...defaultStore(), version: 4 as unknown as 6, onboarded: true };
+    const v4 = { ...defaultStore(), version: 4 as unknown as 7, onboarded: true };
     delete (v4 as Record<string, unknown>).darePlans;
     delete (v4 as Record<string, unknown>).rejectedDares;
     const m = migrate(v4);
-    expect(m.version).toBe(6);
+    expect(m.version).toBe(7);
     expect(m.darePlans).toEqual([]);
     expect(m.rejectedDares).toEqual([]);
   });
@@ -149,12 +165,12 @@ describe("migrate (v2/v3/v4/v5 → v6)", () => {
     // un store v4 traía `notifications: { enabled, hour, minute, lastShown }`
     const v4 = {
       ...defaultStore(),
-      version: 4 as unknown as 6,
+      version: 4 as unknown as 7,
       notifications: { enabled: true, hour: 7, minute: 30, lastShown: "2026-07-04" } as never,
     };
     delete (v4 as Record<string, unknown>).install;
     const m = migrate(v4);
-    expect(m.version).toBe(6);
+    expect(m.version).toBe(7);
     expect(m.notifications).toEqual({
       enabled: true,
       morning: { hour: 7, minute: 30, lastShown: "2026-07-04" },

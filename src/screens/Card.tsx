@@ -5,28 +5,29 @@ import { ShareCardButton } from "../components/ShareCardButton";
 import { cardRevealFeedback } from "../lib/feedback";
 import type { DareApp } from "../lib/useDare";
 
-/** Ritual de la carta del día. Vive fuera de Today (se abre desde el icono del
-    header) para mantener Today mínimo. Dos estados:
+/** Ritual de la carta del día. Dos estados:
 
-    1. Sin carta elegida → se muestran tres cartas boca abajo para ELEGIR una
-       (`pickCard` → revela). Antes esto vivía en Home; se movió aquí.
+    1. Sin carta elegida → RITUAL DE APERTURA: se muestran tres cartas boca abajo
+       para ELEGIR una (`pickCard` → revela). Aparece UNA VEZ AL DÍA al abrir la
+       app (gate en useDare: `shouldOpenCardIntro`) y es SALTABLE ("Skip for now"
+       → `skipCardIntro`). La carta resultante vive luego en la pestaña You.
     2. Carta elegida → revelado a pantalla completa. La imagen ES la carta
        entera (marco, número, nombre, arte y texto), así que no se añade texto.
        Un tap continúa a Today. */
 export function Card({ app }: { app: DareApp }) {
   const { card, cardOptions } = app;
   const go = () => app.setScreen("home");
+  // Saltar el ritual: marca el día como resuelto para que no reaparezca hoy.
+  const skip = () => app.skipCardIntro();
 
-  // ---- 1. Elegir carta (boca abajo) ----
+  // ---- 1. Elegir carta (boca abajo) — ritual de apertura, saltable ----
   if (!card) {
-    if (!cardOptions.length) return <div className="dare-root" style={{ minHeight: "100dvh" }} onClick={go} />;
+    if (!cardOptions.length) return <div className="dare-root" style={{ minHeight: "100dvh" }} onClick={skip} />;
     return (
       <div className="dare-root">
         <div style={{ minHeight: "100dvh", maxWidth: 430, margin: "0 auto", padding: "28px 24px", display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
-            <button className="link" style={{ textDecoration: "none", fontSize: 16 }} onClick={go} aria-label="Back to Today">
-              ←
-            </button>
+            <span style={{ width: 16 }} />
             <span className="lbl" style={{ letterSpacing: "0.3em", color: C.gold }}>
               TODAY'S CARD
             </span>
@@ -60,6 +61,10 @@ export function Card({ app }: { app: DareApp }) {
                 </button>
               ))}
             </div>
+
+            <button className="link" style={{ color: C.faint, marginTop: 30 }} onClick={skip}>
+              Skip for now
+            </button>
           </div>
         </div>
       </div>

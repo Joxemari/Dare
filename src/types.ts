@@ -438,7 +438,7 @@ export interface InstallPrefs {
     instalación (`notifications` morning/evening + `install`) y los Companions
     (campo opcional `vibe` en `Checkin`). */
 export interface DareStore {
-  version: 6;
+  version: 7;
   onboarded: boolean;
   /** Journey "en foco" para la pantalla Journey y la lane de Today. */
   journeyId: JourneyId;
@@ -495,4 +495,8 @@ export interface DareStore {
   notifications: NotificationPrefs;
   /** Estado del nudge de instalación PWA (v5). */
   install: InstallPrefs;
+  /** Fecha (YYYY-MM-DD) en que se resolvió el ritual de la Daily Card al abrir
+   *  la app (sacada O saltada). Gate del "una vez al día": si no coincide con
+   *  hoy y aún no hay carta, el ritual de las 3 cartas aparece al abrir (v7). */
+  cardIntroDate: string;
 }

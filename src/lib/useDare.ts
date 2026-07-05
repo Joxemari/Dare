@@ -93,6 +93,13 @@ function rollover(s: DareStore): DareStore {
   return { ...s, todaysDares, dailyCard };
 }
 
+/** ¿Toca el ritual de la Daily Card al abrir la app? "Una vez al día":
+ *  onboarded, aún sin carta hoy y sin haberlo resuelto (sacado/saltado) hoy.
+ *  El usuario "away" no cuenta: App muestra Reentry por encima del screen. */
+function shouldOpenCardIntro(s: DareStore): boolean {
+  return s.onboarded && (s.dailyCard?.cardId ?? null) === null && s.cardIntroDate !== todayStr();
+}
+
 function catFeedbackMap(s: DareStore): Partial<Record<Cat, number>> {
   const m: Partial<Record<Cat, number>> = {};
   for (const f of s.energyFeedback) m[f.cat] = (m[f.cat] || 0) + f.delta;
@@ -143,7 +150,9 @@ function journeyCompletionExtras(journeyId: JourneyId): string[] {
 
 export function useDare() {
   const [store, setStore] = useState<DareStore>(() => rollover(load()));
-  const [screen, setScreen] = useState<Screen>(() => (store.onboarded ? "home" : "onboarding"));
+  const [screen, setScreen] = useState<Screen>(() =>
+    !store.onboarded ? "onboarding" : shouldOpenCardIntro(store) ? "card" : "home",
+  );
   const [away, setAway] = useState<boolean>(
     () =>
       store.onboarded &&
@@ -477,10 +486,21 @@ export function useDare() {
   }
 
   function pickCard(cardId: string) {
-    setStore((s) => (s.dailyCard ? { ...s, dailyCard: { ...s.dailyCard, cardId } } : s));
+    // Elegir carta marca el ritual del día como resuelto (cardIntroDate) para
+    // que no reaparezca al reabrir la app hoy.
+    setStore((s) =>
+      s.dailyCard ? { ...s, dailyCard: { ...s.dailyCard, cardId }, cardIntroDate: todayStr() } : s,
+    );
     // Al elegir carta se revela a pantalla completa (screen "card"); desde el
-    // recap de Home se puede reabrir con setScreen("card").
+    // recap de You se puede reabrir con setScreen("card").
     setScreen("card");
+  }
+
+  /** Salta el ritual de la Daily Card al abrir: marca el día como resuelto (no
+   *  reaparece hoy) y entra a Today. La carta puede sacarse luego desde You. */
+  function skipCardIntro() {
+    setStore((s) => ({ ...s, cardIntroDate: todayStr() }));
+    setScreen("home");
   }
 
   /**
@@ -1014,6 +1034,7 @@ export function useDare() {
     cancelJourney,
     startJourneyDay,
     pickCard,
+    skipCardIntro,
     runCheckin,
     justDareMe,
     quickDareMe,
