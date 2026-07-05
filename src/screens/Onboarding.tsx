@@ -7,8 +7,9 @@ import type { DareApp } from "../lib/useDare";
 /* Onboarding — 2 pantallas visuales, SIN scroll cada una. Entrar en un ritual,
    no leer un tutorial. Símbolos del mapa central, glow suave, dark. Ambas
    pantallas comparten la MISMA estructura para que sean consistentes: marca
-   sutil arriba · contenido en el centro · un solo botón abajo (sin footer
-   suelto — antes solo la última llevaba una nota, y descuadraba):
+   sutil arriba · contenido en el centro · botón + la misma nota de footer
+   ("One Dare. One proof.") abajo en AMBAS (antes solo la última la llevaba,
+   y descuadraba):
      1) Intro a DARE (marca + símbolo con glow + la promesa).
      2) La idea + el método (no necesitas motivación; Dare · Companion · Treat
         + Dream Reward; check-in → Dare → Journey de 7 días). */
@@ -66,6 +67,9 @@ function Screen1({ app }: { app: DareApp }) {
         <button className="btn btn-green" onClick={() => app.setObIdx(1)}>
           Continue
         </button>
+        <p className="lbl" style={{ marginTop: 14, color: C.faint }}>
+          One Dare. One proof.
+        </p>
       </div>
     </div>
   );
@@ -133,6 +137,9 @@ function Screen2({ app }: { app: DareApp }) {
         <button className="btn btn-green" onClick={() => app.completeOnboarding()}>
           Enter DARE
         </button>
+        <p className="lbl" style={{ marginTop: 14, color: C.faint }}>
+          One Dare. One proof.
+        </p>
       </div>
     </div>
   );
