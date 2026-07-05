@@ -1,14 +1,15 @@
 import type { DareStore, JourneyId } from "../types";
 
-const KEY = "dare:v4";
+const KEY = "dare:v5";
 /** Claves antiguas, si un build previo escribió alguna. */
+const KEY_V4 = "dare:v4";
 const KEY_V3 = "dare:v3";
 const KEY_V2 = "dare:v2";
 const KEY_V1 = "dare:v1";
 
 export function defaultStore(): DareStore {
   return {
-    version: 4,
+    version: 5,
     onboarded: false,
     journeyId: "ember",
     activeJourneyIds: [],
@@ -34,6 +35,8 @@ export function defaultStore(): DareStore {
     companionShelf: null,
     bossPlaylist: null,
     plannedDares: [],
+    darePlans: [],
+    rejectedDares: [],
     dates: [],
     pendingFeedback: null,
     notifications: { enabled: false, hour: 9, minute: 0, lastShown: "" },
@@ -57,6 +60,11 @@ export function defaultStore(): DareStore {
  *   completado se considera activo, de modo que un usuario existente conserva
  *   su Journey en curso. También se añade `notifications`, que un store v3 no
  *   escribió nunca → recibe el default al mergear sobre `defaultStore()`.
+ *
+ * v4 → v5: Planned Dares (Dares concretos apartados para más tarde) + registro
+ *   de Dares rechazados (para no repetirlos pronto). Ambos son campos NUEVOS:
+ *   un store v4 nunca los escribió → reciben `[]` al mergear sobre
+ *   `defaultStore()`. Nada que remapear; el resto del store se conserva igual.
  */
 function migrate(raw: unknown): DareStore {
   const base = defaultStore();
@@ -68,7 +76,7 @@ function migrate(raw: unknown): DareStore {
     ...base,
     onboarded: typeof o.onboarded === "boolean" ? o.onboarded : base.onboarded,
     journeyId: typeof o.journeyId === "string" ? (o.journeyId as DareStore["journeyId"]) : base.journeyId,
-    version: 4,
+    version: 5,
   };
 
   if (o.journeyProgress && typeof o.journeyProgress === "object") {
@@ -120,6 +128,9 @@ function migrate(raw: unknown): DareStore {
   if (o.companionShelf && typeof o.companionShelf === "object") merged.companionShelf = o.companionShelf as DareStore["companionShelf"];
   if (o.bossPlaylist && typeof o.bossPlaylist === "object") merged.bossPlaylist = o.bossPlaylist as DareStore["bossPlaylist"];
   if (Array.isArray(o.plannedDares)) merged.plannedDares = o.plannedDares as DareStore["plannedDares"];
+  // v5 — Planned Dares + Dares rechazados (nuevos; un store previo no los tuvo).
+  if (Array.isArray(o.darePlans)) merged.darePlans = o.darePlans as DareStore["darePlans"];
+  if (Array.isArray(o.rejectedDares)) merged.rejectedDares = o.rejectedDares as DareStore["rejectedDares"];
   if (Array.isArray(o.dates)) merged.dates = o.dates as DareStore["dates"];
   if (o.pendingFeedback && typeof o.pendingFeedback === "object") merged.pendingFeedback = o.pendingFeedback as DareStore["pendingFeedback"];
   if (typeof o.smallVersionUses === "number") merged.smallVersionUses = o.smallVersionUses;
@@ -155,8 +166,10 @@ export function load(): DareStore {
     const cur = localStorage.getItem(KEY);
     if (cur) {
       const parsed = JSON.parse(cur);
-      return parsed && parsed.version === 4 ? (parsed as DareStore) : migrate(parsed);
+      return parsed && parsed.version === 5 ? (parsed as DareStore) : migrate(parsed);
     }
+    const v4 = localStorage.getItem(KEY_V4);
+    if (v4) return migrate(JSON.parse(v4));
     const v3 = localStorage.getItem(KEY_V3);
     if (v3) return migrate(JSON.parse(v3));
     const v2 = localStorage.getItem(KEY_V2);
@@ -180,6 +193,7 @@ export function save(store: DareStore): void {
 export function clearStore(): void {
   try {
     localStorage.removeItem(KEY);
+    localStorage.removeItem(KEY_V4);
     localStorage.removeItem(KEY_V3);
     localStorage.removeItem(KEY_V2);
     localStorage.removeItem(KEY_V1);

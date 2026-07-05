@@ -28,14 +28,20 @@ async function enterApp(page: Page) {
   await expect(page.getByText("Today's Door")).toBeVisible();
 }
 
-test("Today: ritual de carta + revelado inline del Dare, loop sin errores", async ({ page }) => {
+test("Today: Door→Briefing + Your Dare tras check-in rápido, loop sin errores", async ({ page }) => {
   const errors = guardPageErrors(page);
   await enterApp(page);
 
-  // atmósfera + Dare cerrado + sin Journeys todavía
-  await expect(page.getByText("One opening is enough.")).toBeVisible();
-  await expect(page.getByText("One dare is waiting.")).toBeVisible();
+  // Today's Door + Dare cerrado (pide check-in) + sin Journeys todavía
+  await expect(page.getByText("Tap to open today's briefing")).toBeVisible();
+  await expect(page.getByText("One dare, matched to today.")).toBeVisible();
   await expect(page.getByText("No Journey started yet.")).toBeVisible();
+
+  // abrir la puerta revela Today's Briefing detrás (consejo inspirado)
+  await page.getByRole("button", { name: "Open today's briefing" }).click();
+  await expect(page.getByText("Today's briefing")).toBeVisible();
+  await expect(page.getByText("Today:", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Close" }).click();
 
   // ritual de la carta del día vive fuera de Today, tras el icono del header
   await page.getByRole("button", { name: "Today's card" }).click();
@@ -45,8 +51,15 @@ test("Today: ritual de carta + revelado inline del Dare, loop sin errores", asyn
   await page.getByText("Tap to continue").click();
   await expect(page.getByText("Today's Door")).toBeVisible();
 
-  // revelar el Dare INLINE, de un solo toque (sin cambiar de pantalla)
-  await page.getByRole("button", { name: "Reveal today's dare" }).click();
+  // "Your Dare" EXIGE un check-in rápido (energía · foco · qué evitas)
+  await page.getByRole("button", { name: "Check in for my dare" }).click();
+  await expect(page.getByText("Quick check-in")).toBeVisible();
+  await page.getByRole("button", { name: "4", exact: true }).nth(0).click(); // energy
+  await page.getByRole("button", { name: "4", exact: true }).nth(1).click(); // focus
+  await page.getByRole("button", { name: "Admin", exact: true }).click();
+  await page.getByRole("button", { name: "Get my Dare" }).click();
+
+  // Dare revelado inline
   await expect(page.getByRole("button", { name: "Start now" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Another dare" })).toBeVisible();
 
@@ -68,23 +81,25 @@ test("Today: ritual de carta + revelado inline del Dare, loop sin errores", asyn
   expect(errors, errors.join("\n")).toEqual([]);
 });
 
-test("Today: check-in personalizado → Get my dare abre el Detail", async ({ page }) => {
+test("Dare page: What this is / Why this works, sin Treat Locked + Plan for later", async ({ page }) => {
   const errors = guardPageErrors(page);
   await enterApp(page);
 
-  // el check-in de 30 s sigue accesible desde Today (link discreto)
-  await page.getByRole("button", { name: /Personalize/ }).click();
-  await expect(page.getByText("How are you today?")).toBeVisible();
-  await page.getByRole("button", { name: "6", exact: true }).click();
-  await page.getByRole("button", { name: "20 min" }).click();
-  await page.getByRole("button", { name: "Home", exact: true }).click();
-  await page.getByRole("button", { name: "Normal" }).click();
-  await page.getByRole("button", { name: "Get my dare" }).click();
+  // check-in rápido → Dare revelado → View details abre el Detail
+  await page.getByRole("button", { name: "Check in for my dare" }).click();
+  await page.getByRole("button", { name: "3", exact: true }).nth(0).click(); // energy
+  await page.getByRole("button", { name: "3", exact: true }).nth(1).click(); // focus
+  await page.getByRole("button", { name: "Mind", exact: true }).click();
+  await page.getByRole("button", { name: "Get my Dare" }).click();
+  await page.getByRole("button", { name: "View details" }).click();
 
-  // "Get my dare" abre el Detail directamente — sin tap-to-reveal
+  // la primera sección es un resumen, no "Trigger"; y "Why this works" fusiona ciencia
+  await expect(page.getByText("What this is")).toBeVisible();
   await expect(page.getByText("Expected Effect")).toBeVisible();
-  await expect(page.getByText("Treat Locked")).toBeVisible();
-  await expect(page.getByText("Why this Dare today")).toBeVisible();
+  await expect(page.getByText("Why this works")).toBeVisible();
+  // ya NO hay "Treat Locked" ni sección "Trigger" en la pantalla del Dare
+  await expect(page.getByText("Treat Locked")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Plan for later/ })).toBeVisible();
 
   expect(errors, errors.join("\n")).toEqual([]);
 });

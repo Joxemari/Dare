@@ -1,18 +1,18 @@
 import { C } from "../data/colors";
 import { Ico } from "../components/Ico";
-import { Briefing } from "../components/Briefing";
 import { Nav } from "../components/Nav";
-import { AtmosphereHero } from "../components/AtmosphereHero";
+import { TodaysDoor } from "../components/TodaysDoor";
 import { TodayDareRevealCard } from "../components/TodayDareRevealCard";
 import { ActiveJourneyList } from "../components/ActiveJourneyList";
+import { PlannedDueList } from "../components/PlannedDueList";
 import { wrap, pad } from "../components/layout";
 import type { DareApp } from "../lib/useDare";
 
 /* ============================================================
    TODAY — un ritual diario mínimo, no un dashboard.
-   Header · atmósfera · lectura del día · un Dare oculto que se
-   revela de un toque · Journeys activos · navegación.
-   Sin proofs, sin métricas, sin calendario, sin greeting.
+   Header · Today's Door (abre el Briefing) · un Dare tras un
+   check-in rápido · Planned Dares vencidos · Journeys activos.
+   Sin proofs, sin badges, sin cartas de ciencia, sin métricas.
    ============================================================ */
 
 /** Botón de icono minimalista para el header. */
@@ -41,13 +41,12 @@ function IconButton({ name, label, onClick }: { name: string; label: string; onC
 
 export function Home({ app }: { app: DareApp }) {
   const { briefing, journey } = app;
-  const revealed = !!app.currentDare && app.currentDare.revealed;
 
   return (
     <div className="dare-root">
       <div style={wrap}>
         <div style={{ ...pad, paddingBottom: 0 }}>
-          {/* Header: icono · TODAY · perfil */}
+          {/* Header: icono carta · TODAY · perfil */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
             <IconButton name="card" label="Today's card" onClick={() => app.setScreen("card")} />
             <span
@@ -59,27 +58,18 @@ export function Home({ app }: { app: DareApp }) {
             <IconButton name="person" label="Profile and settings" onClick={() => app.setScreen("you")} />
           </div>
 
-          {/* Atmósfera diaria (modular: símbolo/textos por props) */}
-          <AtmosphereHero />
+          {/* Today's Door → revela Today's Briefing detrás (flip) */}
+          <TodaysDoor briefing={briefing} accent={journey.color} onUseForDare={() => app.startQuickCheckin()} />
 
-          {/* Lectura del día (widget estilo Co-Star) — parte de la atmósfera */}
+          {/* Planned Dares vencidos — se ofrecen sin saturar Today */}
+          <PlannedDueList app={app} />
+
+          {/* Un Dare — tras un check-in rápido (energía · foco · qué evitas) */}
           <div style={{ marginTop: 20 }}>
-            <Briefing briefing={briefing} accent={journey.color} />
+            <TodayDareRevealCard app={app} />
           </div>
 
-          {/* Un Dare oculto — revelado inline de un solo toque */}
-          <TodayDareRevealCard app={app} />
-
-          {/* Ajuste opcional y discreto: check-in de 30 s ("Get my Dare") */}
-          {!revealed && (
-            <div style={{ textAlign: "center", marginTop: 12 }}>
-              <button className="link" style={{ color: C.faint, fontSize: 12 }} onClick={() => app.setScreen("checkin")}>
-                Personalize · 30-sec check-in
-              </button>
-            </div>
-          )}
-
-          {/* Journeys activos — próxima acción + Start (detalle en la pestaña Journey) */}
+          {/* Journeys activos — próxima acción + Start (detalle en Journey) */}
           <ActiveJourneyList app={app} />
 
           <div style={{ height: 8 }} />

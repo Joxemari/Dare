@@ -1,14 +1,17 @@
 import { describe, it, expect } from "vitest";
 import { _migrate as migrate, defaultStore } from "./storage";
 
-describe("migrate (v2/v3 → v4)", () => {
-  it("arranca en v4 con defaults ante entradas vacías/corruptas", () => {
-    expect(migrate(null).version).toBe(4);
-    expect(migrate("nope" as unknown).version).toBe(4);
-    expect(migrate({}).version).toBe(4);
+describe("migrate (v2/v3/v4 → v5)", () => {
+  it("arranca en v5 con defaults ante entradas vacías/corruptas", () => {
+    expect(migrate(null).version).toBe(5);
+    expect(migrate("nope" as unknown).version).toBe(5);
+    expect(migrate({}).version).toBe(5);
     // por defecto no hay ningún Journey activo
     expect(migrate({}).activeJourneyIds).toEqual([]);
     expect(migrate({}).smallVersionUses).toBe(0);
+    // campos v5 nuevos → arrancan vacíos
+    expect(migrate({}).darePlans).toEqual([]);
+    expect(migrate({}).rejectedDares).toEqual([]);
   });
 
   it("añade el default de notifications a un store sin él", () => {
@@ -29,7 +32,7 @@ describe("migrate (v2/v3 → v4)", () => {
       catCounts: { walk: 3 },
     };
     const m = migrate(v2);
-    expect(m.version).toBe(4);
+    expect(m.version).toBe(5);
     expect(m.onboarded).toBe(true);
     expect(m.journeyId).toBe("iron");
     // streak → momentum
@@ -56,7 +59,7 @@ describe("migrate (v2/v3 → v4)", () => {
       journeysCompleted: [],
     };
     const m = migrate(v3);
-    expect(m.version).toBe(4);
+    expect(m.version).toBe(5);
     // The Ember tenía progreso → sigue activo tras migrar
     expect(m.activeJourneyIds).toContain("ember");
     expect(m.activeJourneyIds).not.toContain("iron");
@@ -84,17 +87,38 @@ describe("migrate (v2/v3 → v4)", () => {
   it("v3 → v4: conserva lo transferible y recibe notifications por defecto", () => {
     const v3 = {
       ...defaultStore(),
-      version: 3 as unknown as 4, // simula un store guardado por un build v3
+      version: 3 as unknown as 5, // simula un store guardado por un build v3
       onboarded: true,
       momentum: { count: 4, lastDate: "2026-07-03" },
     };
     // un store v3 no llevaba `notifications`
     delete (v3 as Record<string, unknown>).notifications;
     const m = migrate(v3);
-    expect(m.version).toBe(4);
+    expect(m.version).toBe(5);
     expect(m.onboarded).toBe(true);
     expect(m.momentum).toEqual({ count: 4, lastDate: "2026-07-03" });
     expect(m.notifications).toEqual({ enabled: false, hour: 9, minute: 0, lastShown: "" });
+  });
+
+  it("v4 → v5: un store v4 sin Planned Dares recibe los campos por defecto", () => {
+    const v4 = { ...defaultStore(), version: 4 as unknown as 5, onboarded: true };
+    delete (v4 as Record<string, unknown>).darePlans;
+    delete (v4 as Record<string, unknown>).rejectedDares;
+    const m = migrate(v4);
+    expect(m.version).toBe(5);
+    expect(m.darePlans).toEqual([]);
+    expect(m.rejectedDares).toEqual([]);
+  });
+
+  it("v5 → v5: conserva Planned Dares y rechazos ya guardados", () => {
+    const s = {
+      ...defaultStore(),
+      darePlans: [{ id: "p1", dareId: "one-song", when: "later-today" as const, dueDate: "2026-07-05", label: "One Song", createdAt: "2026-07-05" }],
+      rejectedDares: [{ dareId: "pine-reset", date: "2026-07-05" }],
+    };
+    const m = migrate(s);
+    expect(m.darePlans).toHaveLength(1);
+    expect(m.rejectedDares).toEqual([{ dareId: "pine-reset", date: "2026-07-05" }]);
   });
 
   it("preserva unas notifications ya guardadas (completando campos que falten)", () => {

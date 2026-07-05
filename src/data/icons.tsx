@@ -102,6 +102,24 @@ export const ICONS: Record<string, ReactNode> = {
       <path d="M12 8 Q12.4 11.6 15 12 Q12.4 12.4 12 16 Q11.6 12.4 9 12 Q11.6 11.6 12 8 Z" />
     </>
   ),
+  phone: (
+    <>
+      <rect x="7.5" y="3" width="9" height="18" rx="2.2" />
+      <path d="M10.6 18 H13.4" />
+    </>
+  ),
+  chat: (
+    <>
+      <path d="M5 6.5 h14 a1.5 1.5 0 0 1 1.5 1.5 v6 a1.5 1.5 0 0 1 -1.5 1.5 H10 l-4 3 v-3 H5 a1.5 1.5 0 0 1 -1.5 -1.5 v-6 A1.5 1.5 0 0 1 5 6.5 Z" />
+    </>
+  ),
+  broom: (
+    <>
+      <path d="M15.5 4 L9 10.5" />
+      <path d="M6 13 l5 5" />
+      <path d="M5 19 c2-1 3-3 6-3 l2 2 c0 3-2 4-3 6 Z" />
+    </>
+  ),
 };
 
 export const CAT_ICO: Record<Cat, string> = {
@@ -116,4 +134,16 @@ export const CAT_ICO: Record<Cat, string> = {
   recovery: "moon",
   focus: "eye",
   small: "spark",
+  // anti-procrastinación / activación
+  admin: "letter",
+  communication: "chat",
+  bodyreset: "sine",
+  environment: "broom",
+  creative: "bulb",
+  social: "person",
+  decision: "goal",
+  emotion: "moon",
+  phone: "phone",
+  taskcontact: "goal",
+  close: "check",
 };
