@@ -38,8 +38,8 @@ export function DareWord({ style }: { style?: CSSProperties }) {
           fill="none"
           stroke="currentColor"
           strokeWidth="8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          strokeLinecap="butt"
+          strokeLinejoin="miter"
         />
       </svg>
       RE
