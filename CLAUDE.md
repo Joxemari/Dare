@@ -99,7 +99,7 @@ src/
                                   la Daily Card vía Web Share API (ver más abajo)
                  briefing.ts      "Today's Briefing": elige un consejo inspirado
                                   en alguien conocido (biblioteca `briefings`)
-                                  para el widget Y el recordatorio (buildBriefing/
+                                  SOLO para el recordatorio (buildBriefing/
                                   buildReminder) + dueSlot() (qué franja del
                                   recordatorio toca: mañana/tarde). Puro, seeded por
                                   fecha (ver más abajo)
@@ -114,10 +114,10 @@ src/
                  notify.ts     recordatorio local: permiso + showNotification vía
                                service worker. Impuro; no se testea.
   components/  Presentacionales: Ico, TarotArt, Dots, Nav, Meta, Effects,
-               MilestoneModal, ShareCardButton, Briefing, PlanForLater, layout;
-               y los de Today: DailyCardDraw (card pull inline), AtmosphereHero,
-               TodaysDoor (puerta→briefing), QuickCheckin (check-in rápido),
-               TodayDareRevealCard, PlannedDueList, ActiveJourneyList.
+               MilestoneModal, ShareCardButton, PlanForLater, layout;
+               DailyCardDraw (card pull del día, vive en You); y los de Today:
+               QuickCheckin (check-in rápido), TodayDareRevealCard,
+               PlannedDueList, ActiveJourneyList.
   screens/     Pantallas (Onboarding, Dream, Reentry, Home, Card, Checkin,
                Detail, Timer, Complete, JourneyComplete, Journey, Journeys,
                Progress, You). Consumen el hook.
@@ -127,22 +127,23 @@ src/
 ### Today — ritual diario mínimo (no dashboard)
 
 La pestaña Today (`screens/Home.tsx`) es deliberadamente MÍNIMA y **sin iconos
-en las esquinas** (el perfil vive en la pestaña **You** del nav inferior): arriba
-el **card pull inline** (`DailyCardDraw`: "DRAW YOUR CARD FOR TODAY" + 3 cartas
-boca abajo → elegir revela en `Card`; una vez elegida, miniatura para reabrirla)
-— antes colgaba de un icono en la esquina; luego **Today's Door** (`TodaysDoor`:
-la puerta se **abre con un flip** y revela detrás **Today's Briefing** — un
-consejo concreto inspirado en alguien conocido, con CTA "Use this for my Dare /
-Close"), **Your Dare** (`TodayDareRevealCard`), la lista de **Planned Dares
-vencidos** (`PlannedDueList`) y `ActiveJourneyList`. NO muestra proofs, badges,
-cartas de ciencia ni métricas — eso vive en Progress.
+en las esquinas** (el perfil vive en la pestaña **You** del nav inferior).
+Principio: **UNA acción evidente al abrir**, cero adornos compitiendo arriba (el
+manifiesto es *"one decision removed, one action begun"*). De arriba a abajo:
+**Your Dare** como HÉROE (`TodayDareRevealCard`), la lista de **Planned Dares
+vencidos** (`PlannedDueList`) y `ActiveJourneyList`. NO muestra carta del día,
+briefing, proofs, badges, ciencia ni métricas — la carta vive en **You**, el
+briefing solo en el recordatorio, y proofs/badges/ciencia en **Progress**.
 
-**Your Dare EXIGE un check-in rápido** (fix del "genera sin preguntar"):
-tocar "Your Dare" abre `QuickCheckin` inline — **Energy 1-5 · Focus 1-5 · qué
-estás evitando** (Admin/Body/People/Mind/Nothing), sin ninguna opción marcada
-por defecto — y solo entonces se genera el Dare y se revela inline. Flujo:
-Today's Door → (opcional) Briefing · Your Dare → check-in → Dare generado →
-Start. En el hook: `startQuickCheckin`/`runQuickCheckin` (mapea el rápido a un
+**Your Dare a un toque, check-in opcional.** El estado cerrado ofrece **"Just
+dare me"** (`quickDareMe`: genera al instante con el último check-in —o un
+default seguro— y revela INLINE, sin peaje diario) y, como opción secundaria,
+**"Check in first"** (`startQuickCheckin`): abre `QuickCheckin` inline —**Energy
+1-5 · Focus 1-5 · qué estás evitando** (Admin/Body/People/Mind/Nothing), sin
+opción marcada por defecto— y solo entonces genera y revela el Dare. Flujo
+rápido: Your Dare → *Just dare me* → Dare revelado → Start. Flujo afinado: Your
+Dare → *Check in first* → check-in → Dare → Start. En el hook:
+`quickDareMe`/`startQuickCheckin`/`runQuickCheckin` (el rápido mapea a un
 `Checkin` de contexto casa, escalando 1-5→1-10 y derivando el estado);
 `anotherDare` **rechaza** el actual (no repetir pronto) y reabre el check-in.
 
@@ -152,11 +153,12 @@ baja → Still Water, con ganas → Iron Quiet, atascado → Wild Ground, con en
 alta → Bright Pulse, overwhelmed → Still Water, returning → el activo más suave),
 lo sube y lo marca (`· today`).
 
-El **card pull del día** (tarot) es ahora **inline en la parte alta de Today**
-(`DailyCardDraw`); elegir una de las 3 cartas abre la pantalla `Card` (revelado a
-pantalla completa) y al volver queda una miniatura. El check-in COMPLETO
-(loc/dest, para encaminar Dares de piscina/gym/bosque) ya no cuelga de Today; se
-alcanza desde el "one more" de la completion.
+El **card pull del día** (tarot, `DailyCardDraw`) vive ahora en la pestaña
+**You** (antes estaba arriba en Today): es un placer OPCIONAL que buscas, no un
+peaje del ritual diario. Elegir una de las 3 cartas abre la pantalla `Card`
+(revelado a pantalla completa) y al volver queda una miniatura. El check-in
+COMPLETO (loc/dest, para encaminar Dares de piscina/gym/bosque) ya no cuelga de
+Today; se alcanza desde el "one more" de la completion.
 
 ### Contenido generativo (pipeline de PRs, no runtime)
 
@@ -424,19 +426,23 @@ identidad. El diseño completo y el modelo de datos a preparar están en
 `docs/social-layer.md` (principio de producto: *presencia, no ranking* — no
 romper el tono anti-gamificación).
 
-### Today's Briefing + recordatorio (consejo inspirado, no motivación vaga)
+### Today's Briefing (consejo inspirado) — SOLO en el recordatorio
 
 **Today's Briefing** es UN consejo concreto: inspirado en una **persona conocida**
 y un **hábito/método/anécdota real**, accionable HOY y corto (formato *persona →
 insight → "Today: acción"*). NADA de motivación genérica, "draw a card", lenguaje
-de Journey confuso ni nombres de estado internos. Sirve DE FORMA COMPARTIDA a dos
-superficies: el **widget in-app** (detrás de Today's Door) y el **recordatorio
-local** (notificación). Reparto según la regla del repo (puro vs. frontera):
+de Journey confuso ni nombres de estado internos. **Ya NO tiene widget in-app**:
+antes se revelaba detrás de "Today's Door" en Today, pero para mantener Today
+mínimo (una sola acción) ese widget —junto con `TodaysDoor`, `AtmosphereHero` y el
+componente `Briefing`— se **eliminó**. El briefing sobrevive en su única
+superficie útil: el **recordatorio local** (notificación). Reparto según la regla
+del repo (puro vs. frontera):
 
 - **`src/data/briefings.ts`** — datos de dominio SIN lógica: la biblioteca
   `BRIEFINGS` (persona + insight + acción + símbolo).
 - **`src/lib/briefing.ts`** — PURO y testeado (`briefing.test.ts`).
-  `buildBriefing()` elige una entrada de la biblioteca `BRIEFINGS`;
+  `buildBriefing()` elige una entrada de la biblioteca `BRIEFINGS` (lo usa
+  internamente `buildReminder`);
   `buildReminder(input, slot)` deriva el título/cuerpo de la notificación (el
   título varía por franja: la tarde dice *"Still time today"* sin culpar);
   `dueSlot()` decide (recibiendo `now`) **qué franja toca** avisar
@@ -451,21 +457,19 @@ local** (notificación). Reparto según la regla del repo (puro vs. frontera):
   `feedback.ts`): permiso (`Notification`), y `showReminderNotification()` vía
   `serviceWorker.ready.showNotification` (fallback a `new Notification`). El clic
   lo maneja `public/sw.js` (`notificationclick` → enfoca/abre la app).
-- **`src/lib/useDare.ts`** — orquesta: expone el `briefing` derivado, las acciones
+- **`src/lib/useDare.ts`** — orquesta: las acciones
   (`enableNotifications`/`disableNotifications`/`setNotificationSlot(slot,h,m)`) y
   un efecto que comprueba `dueSlot` al montar, al enfocar la pestaña y **cada
-  minuto mientras la app está viva**; al disparar, sella **solo** el `lastShown`
-  de la franja avisada (dedupe diario por franja).
-- **`src/components/Briefing.tsx`** (presentacional; se muestra detrás de
-  Today's Door al abrirla) y la sección **"Daily reminder"** de
-  `src/screens/You.tsx` (toggle + **dos horas**, mañana/tarde + estado del
-  permiso).
+  minuto mientras la app está viva**; al disparar, construye el recordatorio con
+  `buildReminder` y sella **solo** el `lastShown` de la franja avisada (dedupe
+  diario por franja). Ya NO expone un `briefing` derivado (no hay widget).
+- **`src/screens/You.tsx`** — la sección **"Daily reminder"** (toggle + **dos
+  horas**, mañana/tarde + estado del permiso).
 
 **Límite honesto (sin backend):** es un recordatorio **LOCAL**, fiable mientras la
 pestaña vive. El **push con la app cerrada** exige servidor push + VAPID → queda
-**diferido** a cuando DARE tenga backend. Igual, los **widgets nativos** de
-pantalla de inicio no existen para una PWA; por eso el "widget" es la tarjeta
-in-app. Las preferencias viven en `store.notifications` (ver *Datos persistidos*).
+**diferido** a cuando DARE tenga backend. Las preferencias viven en
+`store.notifications` (ver *Datos persistidos*).
 
 ### Nudge de instalación (PWA) — proteger el localStorage
 
