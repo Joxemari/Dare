@@ -33,8 +33,19 @@ export function vibrate(pattern: number | number[] = 18): void {
   }
 }
 
-/** Shimmer sintetizado: dos senoides suaves (C5 + G5) con decay exponencial.
-    Discreto, sin percusividad — un “brillo” que acompaña al giro de la carta. */
+/** Shimmer sintetizado: un “brillo” místico que acompaña al giro de la carta.
+    En vez de un acorde mayor luminoso (C5+G5), buscamos algo misterioso y
+    ritual, en línea con el tarot de la app:
+
+    - Registro grave con un DRONE sostenido (La, dos triángulos ligeramente
+      desafinados → batido/“shimmer” vivo, sin percusividad).
+    - Un arpegio lento en modo MENOR/suspendido (La menor add9: A·C·E·B) con
+      osciladores desafinados por par, entra suave y con cola larga.
+    - Un filtro paso-bajo que se ABRE despacio (400→2400 Hz): el sonido “emerge”
+      de la penumbra, la sensación de revelación.
+    - Una chispa muy tenue en agudos al final (armónico), como un destello.
+
+    Todo sintetizado en el momento (sin assets → offline). */
 export function playChime(): void {
   const ac = audioCtx();
   if (!ac) return;
@@ -42,20 +53,51 @@ export function playChime(): void {
     // El audio requiere gesto del usuario; si está suspendido, reanudar.
     if (ac.state === "suspended") ac.resume().catch(() => {});
     const now = ac.currentTime;
-    const notes = [523.25, 783.99]; // C5, G5 — quinta, luminoso
-    notes.forEach((freq, i) => {
-      const osc = ac.createOscillator();
+
+    // Bus común con un filtro que se abre despacio: el sonido emerge de la penumbra.
+    const bus = ac.createGain();
+    bus.gain.value = 0.9;
+    const filter = ac.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.Q.value = 0.7;
+    filter.frequency.setValueAtTime(400, now);
+    filter.frequency.exponentialRampToValueAtTime(2400, now + 1.4);
+    bus.connect(filter).connect(ac.destination);
+
+    // Voz reutilizable: par de osciladores desafinados (batido) → cola larga.
+    const voice = (
+      freq: number,
+      t0: number,
+      peak: number,
+      dur: number,
+      type: OscillatorType = "triangle",
+      detune = 6,
+    ) => {
       const gain = ac.createGain();
-      osc.type = "sine";
-      osc.frequency.value = freq;
-      const t0 = now + i * 0.09; // ligero arpegio
       gain.gain.setValueAtTime(0, t0);
-      gain.gain.linearRampToValueAtTime(0.12, t0 + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.9);
-      osc.connect(gain).connect(ac.destination);
-      osc.start(t0);
-      osc.stop(t0 + 0.95);
-    });
+      gain.gain.linearRampToValueAtTime(peak, t0 + dur * 0.18); // ataque suave
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      gain.connect(bus);
+      [-detune, detune].forEach((cents) => {
+        const osc = ac.createOscillator();
+        osc.type = type;
+        osc.frequency.value = freq;
+        osc.detune.value = cents;
+        osc.connect(gain);
+        osc.start(t0);
+        osc.stop(t0 + dur + 0.1);
+      });
+    };
+
+    // Drone grave sostenido (La2) — el “fondo” ritual.
+    voice(110, now, 0.09, 2.6, "sine", 4);
+
+    // Arpegio lento en La menor add9: A3 · C4 · E4 · B4. Modo menor = misterio.
+    const arp = [220.0, 261.63, 329.63, 493.88];
+    arp.forEach((freq, i) => voice(freq, now + 0.12 + i * 0.16, 0.1, 1.8 - i * 0.15));
+
+    // Destello final muy tenue en agudos (E6), como un brillo que se apaga.
+    voice(1318.51, now + 0.7, 0.03, 1.2, "sine", 3);
   } catch {
     /* no-op */
   }
@@ -64,6 +106,6 @@ export function playChime(): void {
 /** Feedback al revelar la carta: vibración corta + shimmer. Se llama desde el
     tap (Home) para que el audio no lo bloquee la política de autoplay. */
 export function cardRevealFeedback(): void {
-  vibrate(18);
+  vibrate([12, 40, 10]); // doble pulso suave, más ritual que un golpe seco
   playChime();
 }
