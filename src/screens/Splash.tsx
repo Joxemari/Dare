@@ -1,12 +1,13 @@
 import { C } from "../data/colors";
-import { Wordmark } from "../components/Wordmark";
+import { SYMBOLS } from "../data/symbols";
 
 /* ============================================================
-   Splash — pantalla oscura de apertura tras el onboarding. El
-   logo aparece en el centro, crece suavemente y un "shine" cruza
-   el wordmark (inspiración: How We Feel). Es transitoria: App la
-   muestra ~1.7s al arrancar y luego revela la app. Respeta
-   prefers-reduced-motion (App no la monta si está activo).
+   Splash — pantalla oscura de apertura. Reveal por CAPAS: primero
+   entra SOLO el glifo (favicon), y un instante después suben "DARE"
+   + eslogan. Es transitoria: App la muestra ~1.3s en cada cold-start
+   (arranque en frío de la app/web) y luego revela la app. NO aparece
+   al cambiar de pestaña ni en la navegación normal (App solo la monta
+   al arrancar). Respeta prefers-reduced-motion (App no la monta).
    Presentacional puro; el timer vive en App.
    ============================================================ */
 export function Splash() {
@@ -33,9 +34,30 @@ export function Splash() {
           background: `radial-gradient(circle, ${C.green}22 0%, transparent 68%)`,
         }}
       />
-      <div className="splash-in" style={{ position: "relative" }}>
-        <div className="splash-shine">
-          <Wordmark size="lg" />
+      <div style={{ position: "relative", textAlign: "center", lineHeight: 1 }}>
+        {/* 1 · el favicon entra primero */}
+        <div className="splash-glyph" aria-hidden="true" style={{ color: C.green, fontSize: 46, marginBottom: 16 }}>
+          {SYMBOLS.spark}
+        </div>
+        {/* 2 · DARE + eslogan entran después */}
+        <div className="splash-word">
+          <div
+            role="img"
+            aria-label="DARE"
+            style={{
+              fontFamily: "var(--font-sans)",
+              fontWeight: 400,
+              fontSize: 30,
+              letterSpacing: "0.42em",
+              textIndent: "0.42em",
+              color: C.text,
+            }}
+          >
+            DARE
+          </div>
+          <p style={{ fontSize: 12.5, color: C.green, marginTop: 14, letterSpacing: "0.02em" }}>
+            Daily Actions. Real Energy.
+          </p>
         </div>
       </div>
     </div>

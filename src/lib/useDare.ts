@@ -367,7 +367,12 @@ export function useDare() {
    *  empieza explícitamente desde la pestaña Journey ("Begin Journey"). */
   function completeOnboarding() {
     patch({ onboarded: true });
-    setScreen("home");
+    // Tras el onboarding, si aún no hay carta hoy y no se resolvió el ritual,
+    // entra al pull de la carta (mismo gate que en cold-start); si no, a Today.
+    // Antes iba SIEMPRE a "home", por eso el ritual "a veces no salía" al
+    // terminar el onboarding.
+    const openCard = (store.dailyCard?.cardId ?? null) === null && store.cardIntroDate !== todayStr();
+    setScreen(openCard ? "card" : "home");
   }
 
   function replayOnboarding() {

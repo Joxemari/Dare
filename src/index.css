@@ -264,6 +264,38 @@ body {
     mask-position: -60% 0;
   }
 }
+/* Splash escalonado: el glifo (favicon) entra PRIMERO; luego "DARE" + eslogan
+   suben con un fade con retardo. Da un reveal por capas, elegante. */
+.splash-glyph {
+  animation: dareSplashIn 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.splash-word {
+  animation: dareSplashWord 0.7s ease 0.5s both;
+}
+@keyframes dareSplashWord {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Voltear la carta al pulsarla (boca abajo → se da la vuelta y se va). */
+.card-flip-out {
+  animation: dareFlipOut 0.36s ease both;
+}
+@keyframes dareFlipOut {
+  from {
+    transform: rotateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: rotateY(90deg);
+    opacity: 0;
+  }
+}
 .tcard {
   background: linear-gradient(160deg, #1e1e1b, #171715);
   border: 1px solid #ffc85744;
@@ -312,7 +344,10 @@ button:focus-visible {
   .flip,
   .badge-reveal,
   .splash-in,
-  .splash-shine {
+  .splash-shine,
+  .splash-glyph,
+  .splash-word,
+  .card-flip-out {
     animation: none;
   }
   .btn,
