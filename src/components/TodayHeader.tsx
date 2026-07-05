@@ -27,20 +27,23 @@ export function TodayHeader({
         <Wordmark size="sm" />
       </div>
 
-      {/* hero con glow de horizonte: cálido e inspirador, sin ser una acción */}
+      {/* hero con glow de horizonte, TENUE y ESTÁTICO: Today no es uno de los 3
+          momentos cálidos, así que el calor aquí es un toque contenido (sin
+          pulso). El único sparkle de Today vive aquí (la card del Dare ya no
+          repite otro). */}
       <div style={{ position: "relative", display: "flex", justifyContent: "center", marginBottom: 18 }}>
         <div
           aria-hidden="true"
           style={{
             position: "absolute",
-            width: 200,
-            height: 200,
+            width: 180,
+            height: 180,
             borderRadius: "50%",
-            background: `radial-gradient(circle, ${accent}26 0%, transparent 68%)`,
-            top: -64,
+            background: `radial-gradient(circle, ${accent}18 0%, transparent 68%)`,
+            top: -60,
           }}
         />
-        <span aria-hidden="true" className="pulse" style={{ color: accent, fontSize: 34, position: "relative" }}>
+        <span aria-hidden="true" style={{ color: accent, fontSize: 32, position: "relative" }}>
           {SYMBOLS.spark}
         </span>
       </div>

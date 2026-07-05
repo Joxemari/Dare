@@ -240,6 +240,21 @@ promocionar (Dares/Wildcards → `dares.ts`/`wildcards.ts`, Treats → `rewards.
 por `tier`) y borrar el fichero de `_proposed/`. Detalle en
 `docs/content-pipeline.md`.
 
+### Clave visual — base editorial sobria + calor en 3 momentos
+
+DARE busca calidad percibida en clave **híbrida**: una **base editorial sobria**
+(mucho aire, tipografía como jerarquía, casi sin adornos) y **calor concentrado
+SOLO en 3 momentos**: **Splash + Onboarding**, **Daily Card** (ritual) y
+**Completion** (`Complete` de Dare + `JourneyComplete`). Regla dura: el **glow**
+(`box-shadow` de color) y las animaciones cálidas se **reservan** a esos momentos;
+las superficies rutinarias (Detail, Journey, Journeys, Progress, You, Dream)
+llevan solo **borde/hairline**, sin glow. **Excepción documentada:** Today lleva
+un **toque cálido tenue y ESTÁTICO** (glow suave en el masthead, sin pulso y sin
+un segundo sparkle), aunque no sea uno de los 3 momentos. El **color por Journey**
+se mantiene (identidad propia). Cuerpo en **weight 400** (antes 300) para más peso
+editorial sobre `#111`. Al añadir un `box-shadow`/glow o una animación de "magia"
+nueva, pregúntate si estás en uno de los 3 momentos; si no, va sobrio.
+
 ### Vocabulario del producto (UI en inglés)
 
 DARE no es un tracker de fitness: es un *Chief Energy Officer*. El vocabulario de

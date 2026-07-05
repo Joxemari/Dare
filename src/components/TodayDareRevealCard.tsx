@@ -39,7 +39,7 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
     const d = cd.dare;
     const col = colorOf(d);
     return (
-      <div className="card rise" style={{ padding: 24, borderColor: d.wild ? C.gold + "55" : C.line, boxShadow: `0 0 40px -22px ${col}` }}>
+      <div className="card rise" style={{ padding: 24, borderColor: d.wild ? C.gold + "55" : C.line }}>
         <p className="lbl" style={{ marginBottom: 12, color: col }}>
           {d.wild ? "WILDCARD" : LABEL}
         </p>
@@ -69,9 +69,6 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
   if (cd && !revealed) {
     return (
       <div className="card rise" style={{ padding: 30, textAlign: "center" }}>
-        <div className="pulse" style={{ fontSize: 22, color: C.gold, marginBottom: 14, opacity: 0.85 }}>
-          {SYMBOLS.spark}
-        </div>
         <p className="lbl" style={{ marginBottom: 8, color: C.dim }}>
           {LABEL}
         </p>
@@ -88,9 +85,6 @@ export function TodayDareRevealCard({ app }: { app: DareApp }) {
   // ---- Cerrado: un toque genera el Dare; el check-in queda opcional ----
   return (
     <div className="card rise" style={{ padding: 30, textAlign: "center" }}>
-      <div className="pulse" style={{ fontSize: 22, color: C.green, marginBottom: 14, opacity: 0.9 }}>
-        {SYMBOLS.spark}
-      </div>
       <p className="lbl" style={{ marginBottom: 8, color: C.dim }}>
         YOUR DARE OF THE DAY
       </p>

@@ -43,7 +43,9 @@ body {
   background: #111111;
   color: #f6f6f3;
   font-family: "Space Grotesk", system-ui, sans-serif;
-  font-weight: 300;
+  /* Cuerpo en 400 (antes 300): el light se lavaba sobre #111 y restaba peso
+     editorial. Los títulos serif y labels ya iban en 400. */
+  font-weight: 400;
   min-height: 100vh;
   min-height: 100dvh;
 }
