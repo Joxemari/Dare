@@ -1,14 +1,15 @@
 import type { DareStore, JourneyId } from "../types";
 
-const KEY = "dare:v4";
+const KEY = "dare:v5";
 /** Claves antiguas, si un build previo escribió alguna. */
+const KEY_V4 = "dare:v4";
 const KEY_V3 = "dare:v3";
 const KEY_V2 = "dare:v2";
 const KEY_V1 = "dare:v1";
 
 export function defaultStore(): DareStore {
   return {
-    version: 4,
+    version: 5,
     onboarded: false,
     journeyId: "ember",
     activeJourneyIds: [],
@@ -41,10 +42,10 @@ export function defaultStore(): DareStore {
 }
 
 /**
- * Migra una forma desconocida/antigua hasta v4. Defensiva: mergea sobre
+ * Migra una forma desconocida/antigua hasta v5. Defensiva: mergea sobre
  * los defaults, de modo que cualquier campo que el build viejo nunca
  * escribió reciba un valor razonable. Idempotente: aplicada a un store ya
- * v4 lo deja igual.
+ * v5 lo deja igual.
  *
  * v2 → v3: renombra el vocabulario del prototipo al del producto —
  *   xp/streak/badges/rewardDraws/tarot → se descartan o remapean a
@@ -57,6 +58,12 @@ export function defaultStore(): DareStore {
  *   completado se considera activo, de modo que un usuario existente conserva
  *   su Journey en curso. También se añade `notifications`, que un store v3 no
  *   escribió nunca → recibe el default al mergear sobre `defaultStore()`.
+ *
+ * v4 → v5: sistema de Companions (temptation bundling). El único cambio de
+ *   forma es un campo OPCIONAL `vibe` en cada Checkin ("¿qué lo haría menos
+ *   aburrido hoy?"). Los check-ins guardados por un build v4 simplemente no
+ *   lo llevan → se leen como `undefined` (= surprise), sin necesidad de
+ *   derivar ni transformar nada. Solo se sube la versión.
  */
 function migrate(raw: unknown): DareStore {
   const base = defaultStore();
@@ -68,7 +75,7 @@ function migrate(raw: unknown): DareStore {
     ...base,
     onboarded: typeof o.onboarded === "boolean" ? o.onboarded : base.onboarded,
     journeyId: typeof o.journeyId === "string" ? (o.journeyId as DareStore["journeyId"]) : base.journeyId,
-    version: 4,
+    version: 5,
   };
 
   if (o.journeyProgress && typeof o.journeyProgress === "object") {
@@ -155,8 +162,10 @@ export function load(): DareStore {
     const cur = localStorage.getItem(KEY);
     if (cur) {
       const parsed = JSON.parse(cur);
-      return parsed && parsed.version === 4 ? (parsed as DareStore) : migrate(parsed);
+      return parsed && parsed.version === 5 ? (parsed as DareStore) : migrate(parsed);
     }
+    const v4 = localStorage.getItem(KEY_V4);
+    if (v4) return migrate(JSON.parse(v4));
     const v3 = localStorage.getItem(KEY_V3);
     if (v3) return migrate(JSON.parse(v3));
     const v2 = localStorage.getItem(KEY_V2);
@@ -180,6 +189,7 @@ export function save(store: DareStore): void {
 export function clearStore(): void {
   try {
     localStorage.removeItem(KEY);
+    localStorage.removeItem(KEY_V4);
     localStorage.removeItem(KEY_V3);
     localStorage.removeItem(KEY_V2);
     localStorage.removeItem(KEY_V1);

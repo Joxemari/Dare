@@ -1,5 +1,6 @@
 import { DARES } from "../data/dares";
 import { WILDCARDS } from "../data/wildcards";
+import { vibeBonus, vibeConfig } from "./companions";
 import type { Cat, Checkin, CurrentLoc, Dare, Dest, Journey, Loc } from "../types";
 
 /* --------------------- DARE GENERATOR ---------------------
@@ -77,8 +78,10 @@ export function generateDare(
   const locs = allowedLocs(ci);
   const at = (d: Dare) => d.locs.some((l) => locs.includes(l));
 
-  // wildcard chance — la anticipación vive aquí
-  if (ci.time >= 10 && ci.energy >= 3 && Math.random() < 0.18) {
+  // wildcard chance — la anticipación vive aquí. Los vibes que buscan
+  // novedad ("Go somewhere different" / "Surprise me") suben la probabilidad.
+  const wildChance = vibeConfig(ci.vibe)?.novelty ? 0.34 : 0.18;
+  if (ci.time >= 10 && ci.energy >= 3 && Math.random() < wildChance) {
     const wpool = WILDCARDS.filter((w) => w.min <= ci.time + 2 && at(w));
     if (wpool.length) {
       // no repitas el último wildcard si hay alternativas
@@ -126,6 +129,9 @@ export function generateDare(
     const recentIdx = recentIds.indexOf(d.id);
     if (recentIdx >= 0) s -= Math.max(6, 26 - recentIdx * 5);
     s += (catFeedback[d.cat] || 0) * 6;
+    // el vibe del check-in ("¿qué lo haría menos aburrido hoy?") empuja hacia
+    // la familia de companion elegida (temptation bundling)
+    s += vibeBonus(ci.vibe, d);
     s += Math.random() * 6;
     return { d, s };
   });

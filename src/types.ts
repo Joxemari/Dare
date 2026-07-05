@@ -57,6 +57,49 @@ export type Effect =
 /** Intensidad de un efecto: 1 (+), 2 (++), 3 (+++). */
 export type EffectMap = Partial<Record<Effect, 1 | 2 | 3>>;
 
+/* ------------------------- COMPANIONS -------------------------
+   Companion = recompensa DURANTE la acción (temptation bundling,
+   Nudge): emparejar algo que "deberías hacer" (esfuerzo) con algo
+   que "quieres hacer" (placer). NO es un personaje ni decoración:
+   es el anzuelo que hace que la actividad sea menos aburrida. La
+   regla del producto: el companion ocurre DURANTE el Dare, nunca
+   antes. Catálogo en `data/companions.ts`, lógica en
+   `lib/companions.ts`. */
+
+/** Familias de companion (cada una ataca una fricción distinta). */
+export type CompanionCategory =
+  | "entertainment" // Netflix, YouTube, podcast, audiobook, playlist
+  | "social" // llamar a alguien, clase con gente, caminar acompañada
+  | "sensory" // café, vela, sauna, ducha caliente, ropa bonita, sol
+  | "novelty" // ruta nueva, clase nueva, deporte nuevo, sitio nuevo
+  | "identity"; // "hot walk mode", "strong woman mode", "boxing girl mode"
+
+/** Lo que el usuario elige en el check-in: "¿qué lo haría menos
+    aburrido hoy?". Sesga la generación hacia una familia de companion. */
+export type CompanionVibe =
+  | "watch" // ver algo
+  | "listen" // escuchar algo
+  | "talk" // hablar con alguien
+  | "elsewhere" // ir a un sitio distinto
+  | "aesthetic" // hacerlo bonito
+  | "social" // hacerlo social
+  | "brutal" // corto y brutal
+  | "surprise"; // sorpréndeme
+
+/** Un Companion concreto y accionable (vive en `data/companions.ts`). */
+export interface Companion {
+  id: string;
+  category: CompanionCategory;
+  /** Palabra única para el chip (p. ej. "Netflix"). */
+  word: string;
+  /** Frase corta y accionable, en presente, DURANTE la acción. */
+  label: string;
+  /** Por qué funciona (temptation bundling), una frase. */
+  note: string;
+  /** Categorías de Dare a las que encaja mejor (vacío = cualquiera). */
+  cats?: Cat[];
+}
+
 export interface Dare {
   id: string;
   title: string;
@@ -90,6 +133,9 @@ export interface Checkin {
   /** A dónde acepta que DARE le mande (o null = "Not now"). */
   dest: Dest | null;
   state: MentalState;
+  /** "¿Qué lo haría menos aburrido hoy?" — sesga el companion del Dare.
+      Opcional: los check-ins antiguos (pre-v5) no lo tienen → surprise. */
+  vibe?: CompanionVibe | null;
 }
 
 export interface TarotCard {
@@ -287,9 +333,9 @@ export interface NotificationPrefs {
   lastShown: string;
 }
 
-/** localStorage — versión 4. Ver storage.ts (migración desde v2/v3). */
+/** localStorage — versión 5. Ver storage.ts (migración desde v2/v3/v4). */
 export interface DareStore {
-  version: 4;
+  version: 5;
   onboarded: boolean;
   /** Journey "en foco" para la pantalla Journey y la lane de Today. */
   journeyId: JourneyId;

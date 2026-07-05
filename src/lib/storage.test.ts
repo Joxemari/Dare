@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { _migrate as migrate, defaultStore } from "./storage";
 
-describe("migrate (v2/v3 → v4)", () => {
-  it("arranca en v4 con defaults ante entradas vacías/corruptas", () => {
-    expect(migrate(null).version).toBe(4);
-    expect(migrate("nope" as unknown).version).toBe(4);
-    expect(migrate({}).version).toBe(4);
+describe("migrate (v2/v3/v4 → v5)", () => {
+  it("arranca en v5 con defaults ante entradas vacías/corruptas", () => {
+    expect(migrate(null).version).toBe(5);
+    expect(migrate("nope" as unknown).version).toBe(5);
+    expect(migrate({}).version).toBe(5);
     // por defecto no hay ningún Journey activo
     expect(migrate({}).activeJourneyIds).toEqual([]);
     expect(migrate({}).smallVersionUses).toBe(0);
@@ -29,7 +29,7 @@ describe("migrate (v2/v3 → v4)", () => {
       catCounts: { walk: 3 },
     };
     const m = migrate(v2);
-    expect(m.version).toBe(4);
+    expect(m.version).toBe(5);
     expect(m.onboarded).toBe(true);
     expect(m.journeyId).toBe("iron");
     // streak → momentum
@@ -56,7 +56,7 @@ describe("migrate (v2/v3 → v4)", () => {
       journeysCompleted: [],
     };
     const m = migrate(v3);
-    expect(m.version).toBe(4);
+    expect(m.version).toBe(5);
     // The Ember tenía progreso → sigue activo tras migrar
     expect(m.activeJourneyIds).toContain("ember");
     expect(m.activeJourneyIds).not.toContain("iron");
@@ -72,7 +72,7 @@ describe("migrate (v2/v3 → v4)", () => {
     expect(migrate(v3).activeJourneyIds).toContain("ember");
   });
 
-  it("es idempotente sobre un store ya v4", () => {
+  it("es idempotente sobre un store ya v5", () => {
     const s = { ...defaultStore(), onboarded: true, activeJourneyIds: ["ember" as const], proofLibrary: [{ date: "x", dareId: "y", text: "z" }] };
     const once = migrate(s);
     const twice = migrate(once);
@@ -81,20 +81,35 @@ describe("migrate (v2/v3 → v4)", () => {
     expect(twice.activeJourneyIds).toEqual(["ember"]);
   });
 
-  it("v3 → v4: conserva lo transferible y recibe notifications por defecto", () => {
+  it("v3 → v5: conserva lo transferible y recibe notifications por defecto", () => {
     const v3 = {
       ...defaultStore(),
-      version: 3 as unknown as 4, // simula un store guardado por un build v3
+      version: 3 as unknown as 5, // simula un store guardado por un build v3
       onboarded: true,
       momentum: { count: 4, lastDate: "2026-07-03" },
     };
     // un store v3 no llevaba `notifications`
     delete (v3 as Record<string, unknown>).notifications;
     const m = migrate(v3);
-    expect(m.version).toBe(4);
+    expect(m.version).toBe(5);
     expect(m.onboarded).toBe(true);
     expect(m.momentum).toEqual({ count: 4, lastDate: "2026-07-03" });
     expect(m.notifications).toEqual({ enabled: false, hour: 9, minute: 0, lastShown: "" });
+  });
+
+  it("v4 → v5: conserva check-ins guardados (el `vibe` opcional queda undefined)", () => {
+    const v4 = {
+      ...defaultStore(),
+      version: 4 as unknown as 5, // simula un store guardado por un build v4
+      onboarded: true,
+      lastCheckin: { energy: 6, time: 20, loc: "home", dest: null, state: "normal" },
+      checkins: [{ energy: 6, time: 20, loc: "home", dest: null, state: "normal", date: "2026-07-04" }],
+    };
+    const m = migrate(v4);
+    expect(m.version).toBe(5);
+    expect(m.lastCheckin).toEqual({ energy: 6, time: 20, loc: "home", dest: null, state: "normal" });
+    expect(m.lastCheckin?.vibe).toBeUndefined();
+    expect(m.checkins).toHaveLength(1);
   });
 
   it("preserva unas notifications ya guardadas (completando campos que falten)", () => {

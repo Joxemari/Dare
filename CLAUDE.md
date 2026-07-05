@@ -16,7 +16,7 @@ además de la operativa de desarrollo. No es solo una lista de comandos.
 - **Tailwind CSS v4** vía `@tailwindcss/vite`; los tokens viven en `src/index.css`.
 - **Vitest** para los tests.
 - Fuentes autoalojadas con `@fontsource` (Cormorant Garamond + Space Grotesk); sin CDN de Google.
-- Persistencia en **`localStorage`**, esquema versionado (v4) con migración.
+- Persistencia en **`localStorage`**, esquema versionado (v5) con migración.
 - **PWA instalable** sin dependencias extra (manifest estático + service worker
   a mano); offline y "añadir a inicio". Ver sección *PWA* más abajo.
 - Sin router: las pantallas son estado, no rutas.
@@ -61,13 +61,19 @@ src/
                symbols (mapa central de glifos), science (biblioteca),
                traits (BADGES: hitos difíciles; persisten bajo la clave
                `traits` del store), rewards (treats/dates/dream,
-               antes draws), icons, colors.
+               antes draws), companions (catálogo de companions +
+               config de vibes; temptation bundling), icons, colors.
   lib/         Lógica. La mayoría son funciones PURAS y deterministas:
                  generator.ts     selección del dare (scoring, no if/else),
                                   con contexto+destino del check-in
                  achievements.ts  earnedTraits() — qué traits gana un dare
+                 companions.ts    sistema de Companions (temptation bundling):
+                                  clasifica/resuelve el companion de un dare,
+                                  lo ROTA por fecha, y vibeBonus() sesga el
+                                  generador según el vibe del check-in
                  prng.ts          PRNG con semilla (mulberry32), reproducible
-                 random.ts        sample() y rollTreat() (usan Math.random)
+                 random.ts        sample() y rollTreat(boost) (usan Math.random;
+                                  boost sesga el treat por baja motivación/novedad)
                  date.ts          helpers de fecha local (todayStr, daysBetween)
                  lookup.ts        búsquedas sobre los datos (findDare, findCard)
                  contentSchema.ts validateDare(): reglas duras del contenido
@@ -83,7 +89,7 @@ src/
                                   buildReminder) + reminderDue(). Puro, seeded por
                                   fecha (ver más abajo)
                Frontera con efectos (I/O), aisladas a propósito:
-                 storage.ts    load/save/migrate sobre localStorage (v4)
+                 storage.ts    load/save/migrate sobre localStorage (v5)
                  useDare.ts    hook de React: estado de la app + orquestación
                  feedback.ts   vibración (navigator.vibrate) + sonido sintetizado
                                (Web Audio, sin assets). Impuro; no se testea.
@@ -140,6 +146,35 @@ importante; el resto quedan en Progress). No mostrar XP,
 niveles, "streak failed", calorías ni "burn". El sistema de recompensas está
 separado a propósito: *Trigger* (antes) · *Companion* (durante) · *Treat*
 (después) · *Date* (semanal) · *Dream Reward* (al terminar el Journey).
+
+### Companions — recompensa DURANTE (temptation bundling)
+
+El **Companion** NO es un personaje ni decoración: es una **recompensa
+simultánea** que hace la actividad menos aburrida MIENTRAS ocurre. Es *temptation
+bundling* (Nudge): emparejar algo que "deberías" hacer (esfuerzo) con algo que
+"quieres" (placer). Regla dura: **el companion pasa DURANTE el Dare, nunca antes**
+(«ves el episodio SOLO mientras haces las sentadillas» — ese es el anzuelo). Cinco
+familias (`CompanionCategory`): *entertainment* (Netflix/YouTube/podcast/
+audiobook/playlist), *social* (llamar a alguien, clase con gente), *sensory*
+(café, vela, sauna, ducha caliente, sol), *novelty* (ruta/clase/deporte/sitio
+nuevo), *identity* ("Hot Walk Mode", "Strong Woman Mode", "Boxing Girl Mode").
+
+Reparto (regla del repo): el **catálogo** y la config de vibes viven en
+`data/companions.ts`; la **lógica** (clasificar, resolver, ROTAR por fecha, sesgar
+el generador) en `lib/companions.ts` (puro, testeado); la **UI** (chip + label +
+nota + regla "during only") solo presenta. `resolveCompanion` elige un companion
+concreto y accionable rotándolo por fecha para no aburrir.
+
+**Vibe del check-in** (`CompanionVibe`): la pantalla de check-in pregunta *"What
+would make this less boring today?"* (watch/listen/talk/elsewhere/aesthetic/
+social/brutal/surprise). Es **opcional** (no bloquea "Get my dare"); `vibeBonus`
+sesga el generador hacia esa familia de companion y los vibes de novedad suben la
+tasa de wildcards. El vibe se persiste en el `Checkin` (campo opcional `vibe`).
+
+**Variabilidad de la recompensa** (spec): el pool de Treats y Date ideas es amplio
+a propósito, y `rollTreat(boost)` **sesga** la tirada hacia mejores treats cuando
+el Dare lo merece — completar con **poca motivación** (energía baja / blocked /
+tired) o probar una **categoría nueva** (premiar la novedad, no solo la racha).
 
 ### Símbolos (`src/data/symbols.ts`)
 
@@ -309,7 +344,9 @@ que `index.html` enlaza manifest + apple-touch-icon.
   del día, daily card, proof library, momentum, badges (clave `traits`),
   `smallVersionUses`, identidades, milestones, companion shelf, boss playlist,
   planned dares, dates, historial de treats, feedback y las preferencias de
-  notificación). Lo *derivable* (p. ej. el scoring de un dare, el nº de proofs,
+  notificación). Los check-ins guardan también el **vibe** de companion elegido
+  (campo opcional en `Checkin`). Lo *derivable* (p. ej. el scoring de un dare, el
+  companion concreto resuelto, el nº de proofs,
   la identidad actual, el capítulo desbloqueado, **el briefing del día**) se
   recalcula, no se guarda.
 - **Guarda referencias, no copias.** Persiste **identificadores** (p. ej. el `id`
@@ -317,8 +354,8 @@ que `index.html` enlaza manifest + apple-touch-icon.
   vía `lookup.ts`) al leer. Así, cambiar el contenido de un dato no rompe los
   datos antiguos guardados. Copiar el objeto entero dentro del store obliga a
   migrar en cuanto cambie su forma.
-- **Versionado de la forma + migración:** el store lleva `version` (hoy `4`) bajo
-  la clave `dare:v4`. `storage.ts` migra cualquier forma antigua/desconocida a v4
+- **Versionado de la forma + migración:** el store lleva `version` (hoy `5`) bajo
+  la clave `dare:v5`. `storage.ts` migra cualquier forma antigua/desconocida a v5
   mergeando sobre `defaultStore()` (ver `migrate()`), de modo que un campo que un
   build viejo nunca escribió recibe un valor por defecto. v2→v3 renombra el
   vocabulario del prototipo al de producto (streak→momentum, rewardDraws→treats,
@@ -326,8 +363,11 @@ que `index.html` enlaza manifest + apple-touch-icon.
   modelo multi-journey y el recordatorio diario: como un store v3 nunca tuvo
   `activeJourneyIds`, se **deriva** (cualquier Journey con progreso > 0 o
   completado se marca activo), así un usuario existente no pierde su Journey en
-  curso; y `notifications` recibe su valor por defecto al mergear. La migración es
-  **idempotente**: aplicarla a un store ya v4 lo deja igual. Si cambia la forma,
+  curso; y `notifications` recibe su valor por defecto al mergear. v4→v5 añade el
+  sistema de Companions: el único cambio de forma es un campo **opcional** `vibe`
+  en cada `Checkin`, así que los check-ins v4 se leen tal cual (sin `vibe` =
+  surprise) — solo se sube la versión, no hay nada que derivar. La migración es
+  **idempotente**: aplicarla a un store ya v5 lo deja igual. Si cambia la forma,
   **hay que subir la versión y ampliar la migración en la misma PR.**
 - **Defensivo ante datos corruptos:** si el JSON no parsea, se arranca limpio con
   `defaultStore()` en vez de romper.

@@ -5,36 +5,11 @@ import { SYMBOLS, SECTION_SYM } from "../data/symbols";
 import { SPRINT_DAYS } from "../data/journeys";
 import { findScience } from "../data/science";
 import { Ico } from "../components/Ico";
-import { Meta, companionWord } from "../components/Meta";
+import { Meta } from "../components/Meta";
 import { Effects } from "../components/Effects";
 import { wrap, pad } from "../components/layout";
-import type { Dare } from "../types";
+import { resolveCompanion } from "../lib/companions";
 import type { DareApp } from "../lib/useDare";
-
-/** Nota explicativa del Companion (por qué acompañar la acción ayuda). */
-function companionNote(d: Dare): string {
-  switch (companionWord(d)) {
-    case "Silence":
-      return "Silence gives your brain fewer inputs to process. Use the quiet as part of the reset.";
-    case "Podcast":
-    case "Audiobook":
-      return "Something to listen to lowers how hard the effort feels, so starting and continuing is easier.";
-    case "Netflix":
-      return "Pair the effort with a show you already want to watch — the reward is built in, so you show up.";
-    case "Playlist":
-    case "Album":
-    case "Music":
-      return "Music you like lowers perceived effort and sets the pace, so your brain negotiates less.";
-    case "Coffee":
-      return "A small reward waiting at the end turns the action into something you get to do, not have to.";
-    case "Friend":
-      return "Doing it with someone adds connection and accountability — play, not homework.";
-    case "Daylight":
-      return "Daylight itself is the companion: it lifts alertness and helps set your body clock.";
-    default:
-      return "A companion makes the action enjoyable, so you're far more likely to begin.";
-  }
-}
 
 function Section({ symKey, title, color, children }: { symKey: keyof typeof SECTION_SYM; title: string; color?: string; children: ReactNode }) {
   const glyph = SYMBOLS[SECTION_SYM[symKey]];
@@ -53,6 +28,12 @@ export function Detail({ app }: { app: DareApp }) {
   const d = app.currentDare.dare;
   const why = app.currentDare.why;
   const col = colorOf(d);
+  // Companion concreto y rotado por día (temptation bundling): sesgado por el
+  // vibe del último check-in, estable dentro del día vía la fecha del Dare.
+  const comp = resolveCompanion(d, {
+    vibe: app.store.lastCheckin?.vibe,
+    seed: app.currentDare.entry.date,
+  });
   const science = findScience(d.scienceId);
   const remaining = Math.max(0, SPRINT_DAYS - app.daysDone);
 
@@ -101,10 +82,13 @@ export function Detail({ app }: { app: DareApp }) {
             <p className="serif" style={{ fontSize: 18, color: C.text }}>"{d.trigger}"</p>
           </Section>
 
-          {/* 2 · Companion (con explicación de por qué ayuda) */}
-          <Section symKey="companion" title="Companion" color={C.purple}>
-            <p style={{ fontSize: 14, color: C.text, marginBottom: 6 }}>{d.companion}</p>
-            <p style={{ fontSize: 13, lineHeight: 1.55, color: C.dim }}>{companionNote(d)}</p>
+          {/* 2 · Companion — recompensa DURANTE la acción (temptation bundling) */}
+          <Section symKey="companion" title={`Companion · ${comp.word}`} color={C.purple}>
+            <p className="serif" style={{ fontSize: 16, color: C.text, marginBottom: 6 }}>{comp.label}</p>
+            <p style={{ fontSize: 13, lineHeight: 1.55, color: C.dim, marginBottom: 8 }}>{comp.note}</p>
+            <p className="lbl" style={{ fontSize: 9, color: C.gold }}>
+              {SYMBOLS.spark} During the dare only — that's the hook.
+            </p>
           </Section>
 
           {/* 3 · Expected Effect */}

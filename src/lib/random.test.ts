@@ -37,4 +37,23 @@ describe("rollTreat", () => {
       }
     }
   });
+
+  it("boost sesga hacia mejores treats (más golden/rare que sin boost)", () => {
+    const N = 4000;
+    let baseGood = 0;
+    let boostGood = 0;
+    for (let i = 0; i < N; i++) {
+      if (rollTreat(0).tier !== "common") baseGood++;
+      if (rollTreat(1).tier !== "common") boostGood++;
+    }
+    // base: ~30% no-common; boost=1: ~44% → el sesgo debe notarse con N grande
+    expect(boostGood).toBeGreaterThan(baseGood);
+  });
+
+  it("clampa el boost fuera de [0,1] sin romper la forma", () => {
+    for (let i = 0; i < 200; i++) {
+      const draw = rollTreat(5); // fuera de rango → se clampa a 1
+      expect(["common", "rare", "golden"]).toContain(draw.tier);
+    }
+  });
 });
