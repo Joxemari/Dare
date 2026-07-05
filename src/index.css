@@ -267,10 +267,11 @@ body {
 /* Splash escalonado: el glifo (favicon) entra PRIMERO; luego "DARE" + eslogan
    suben con un fade con retardo. Da un reveal por capas, elegante. */
 .splash-glyph {
-  animation: dareSplashIn 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: dareSplashIn 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
+/* "DARE" + eslogan entran TARDE: el favicon respira solo ~1.5s antes. */
 .splash-word {
-  animation: dareSplashWord 0.7s ease 0.5s both;
+  animation: dareSplashWord 0.8s ease 1.5s both;
 }
 @keyframes dareSplashWord {
   from {
