@@ -1,24 +1,18 @@
 import { C } from "../data/colors";
 import { SYMBOLS } from "../data/symbols";
-import { VIBES } from "../data/companions";
 import { wrap, pad } from "../components/layout";
-import type { CurrentLoc, Dest, MentalState } from "../types";
+import type { CurrentLoc, MentalState } from "../types";
 import type { DareApp } from "../lib/useDare";
 
+// "Send me somewhere" (loc "anywhere") es la última opción: DARE elige un
+// destino (piscina/gym/bosque/…). Reemplaza a la antigua segunda pregunta.
 const locs: [CurrentLoc, string][] = [
   ["home", "Home"],
   ["city", "City / street"],
   ["park", "Park / outside"],
   ["office", "Office"],
   ["travelling", "Travelling"],
-];
-const dests: [Dest | "none", string][] = [
-  ["none", "Not now"],
-  ["forest", "Forest"],
-  ["pool", "Pool"],
-  ["gym", "Gym / Fitboxing"],
-  ["padel", "Padel"],
-  ["cafe", "Café walk"],
+  ["anywhere", "Send me somewhere ✦"],
 ];
 const states: [MentalState, string][] = [
   ["blocked", "Blocked"],
@@ -27,16 +21,9 @@ const states: [MentalState, string][] = [
   ["active", "Active"],
   ["stressed", "Stressed"],
 ];
-const planOpts: [Dest, string][] = [
-  ["forest", "Plan forest"],
-  ["pool", "Plan pool"],
-  ["padel", "Plan padel"],
-  ["gym", "Plan Fitboxing"],
-  ["cafe", "Plan café walk"],
-];
 
 export function Checkin({ app }: { app: DareApp }) {
-  const { draft, setDraft, store } = app;
+  const { draft, setDraft } = app;
   const ready = draft.energy && draft.time && draft.loc && draft.state;
 
   return (
@@ -101,31 +88,12 @@ export function Checkin({ app }: { app: DareApp }) {
               <button
                 key={id}
                 className={"pill" + (draft.loc === id ? " on" : "")}
+                style={{ fontSize: 12 }}
                 onClick={() => setDraft({ ...draft, loc: id })}
               >
                 {t}
               </button>
             ))}
-          </div>
-
-          <p className="lbl" style={{ marginBottom: 10 }}>
-            Can DARE send you somewhere?
-          </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 22 }}>
-            {dests.map(([id, t]) => {
-              // draft.dest === null significa SIN tocar → ningún botón marcado.
-              const on = draft.dest === id;
-              return (
-                <button
-                  key={id}
-                  className={"pill" + (on ? " on" : "")}
-                  style={{ fontSize: 12 }}
-                  onClick={() => setDraft({ ...draft, dest: id })}
-                >
-                  {t}
-                </button>
-              );
-            })}
           </div>
 
           <p className="lbl" style={{ marginBottom: 10 }}>
@@ -143,32 +111,6 @@ export function Checkin({ app }: { app: DareApp }) {
             ))}
           </div>
 
-          {/* Companion / temptation bundling: qué haría la acción menos aburrida.
-              Opcional (no bloquea "Get my dare"); sesga el companion del Dare. */}
-          <p className="lbl" style={{ marginBottom: 4 }}>
-            What would make this less boring today?
-          </p>
-          <p style={{ color: C.dim, fontSize: 12, marginBottom: 10 }}>
-            Optional — I'll build the dare around it.
-          </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8, marginBottom: 26 }}>
-            {VIBES.map((v) => {
-              const on = draft.vibe === v.vibe;
-              return (
-                <button
-                  key={v.vibe}
-                  className={"pill" + (on ? " on" : "")}
-                  style={{ fontSize: 12 }}
-                  aria-pressed={on}
-                  // segundo toque deselecciona → vuelve a "surprise"
-                  onClick={() => setDraft({ ...draft, vibe: on ? null : v.vibe })}
-                >
-                  {v.label}
-                </button>
-              );
-            })}
-          </div>
-
           <button
             className="btn btn-ghost"
             disabled={!ready}
@@ -179,42 +121,15 @@ export function Checkin({ app }: { app: DareApp }) {
                 energy: draft.energy!,
                 time: draft.time!,
                 loc: draft.loc!,
-                // null (sin tocar) o "none" (Not now) → sin destino
-                dest: draft.dest && draft.dest !== "none" ? draft.dest : null,
+                // El destino ya no es una pregunta aparte: si loc === "anywhere"
+                // ("Send me somewhere"), el generador manda a un sitio.
+                dest: null,
                 state: draft.state!,
-                vibe: draft.vibe,
               })
             }
           >
             Get my dare
           </button>
-
-          {/* planning — no time now? plan it instead */}
-          <div className="card" style={{ padding: 16, margin: "22px 0 0", background: C.card2 }}>
-            <p className="lbl" style={{ marginBottom: 10 }}>
-              {SYMBOLS.focus} Plan a Dare this week
-            </p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {planOpts.map(([dest, label]) => {
-                const on = store.plannedDares.some((p) => p.dest === dest);
-                return (
-                  <button
-                    key={dest}
-                    className={"pill" + (on ? " on" : "")}
-                    style={{ padding: "8px 14px", fontSize: 12, width: "auto" }}
-                    aria-pressed={on}
-                    onClick={() => app.togglePlanDare(dest, label.replace("Plan ", ""))}
-                  >
-                    {on ? "✓ " : ""}
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-            <p style={{ fontSize: 11, color: C.faint, marginTop: 10 }}>
-              Tap to plan, tap again to remove. Planned Dares appear in Progress.
-            </p>
-          </div>
         </div>
       </div>
     </div>

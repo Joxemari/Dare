@@ -34,6 +34,15 @@ describe("currentToDareLocs / destToDareLoc", () => {
     expect(destToDareLoc("cafe")).toBe("outside");
     expect(destToDareLoc("gym")).toBe("gym");
   });
+
+  it("'anywhere' (Send me somewhere) admite localizaciones de destino", () => {
+    const locs = currentToDareLocs("anywhere");
+    expect(locs).toContain("pool");
+    expect(locs).toContain("gym");
+    expect(locs).toContain("forest");
+    // no te deja en casa
+    expect(locs).not.toContain("home");
+  });
 });
 
 describe("allowedLocs", () => {
@@ -160,6 +169,39 @@ describe("generateDare", () => {
     const ci: Checkin = { energy: 3, time: 10, loc: "home", dest: null, state: "tired", focus: 2, avoiding: "mind" };
     const { why } = generateDare(ci, [], {}, ember);
     expect(why.length).toBeGreaterThan(0);
+  });
+});
+
+describe("coherencia de duración y destino (check-in)", () => {
+  it("nunca elige un Dare más largo que el tiempo disponible", () => {
+    for (const time of [10, 20, 30]) {
+      for (let i = 0; i < 30; i++) {
+        const { dare } = generateDare({ ...base, time, energy: 7 }, [], {}, ember);
+        expect(dare.min).toBeLessThanOrEqual(time + 2);
+      }
+    }
+  });
+
+  it("con más tiempo disponible tiende a Dares más largos (coincide con time)", () => {
+    const avg = (time: number) => {
+      let sum = 0;
+      const N = 100;
+      for (let i = 0; i < N; i++) sum += generateDare({ ...base, time, energy: 7 }, [], {}, ember).dare.min;
+      return sum / N;
+    };
+    // 30 min disponibles debe rendir Dares claramente más largos que 10 min.
+    expect(avg(30)).toBeGreaterThan(avg(10));
+  });
+
+  it("'Send me somewhere' (loc anywhere) manda a un destino, no te deja en casa", () => {
+    const destLocs = ["forest", "pool", "gym", "padel", "outside"];
+    for (let i = 0; i < 40; i++) {
+      const { dare } = generateDare({ ...base, loc: "anywhere", dest: null, energy: 7 }, [], {}, ember);
+      // el Dare se puede hacer en un destino (o es el comodín small)
+      expect(dare.locs.some((l) => destLocs.includes(l)) || dare.cat === "small").toBe(true);
+      // nunca un Dare exclusivamente de casa
+      expect(dare.locs).not.toEqual(["home"]);
+    }
   });
 });
 
