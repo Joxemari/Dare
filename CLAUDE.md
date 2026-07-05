@@ -116,7 +116,8 @@ src/
   components/  Presentacionales: Ico, TarotArt, Dots, Nav, Meta, Effects,
                MilestoneModal, ShareCardButton, PlanForLater, layout;
                DailyCardDraw (card pull del día, vive en You); y los de Today:
-               TodayDareRevealCard, PlannedDueList, ActiveJourneyList.
+               TodayHeader (masthead: fecha+saludo+capítulo), TodayDareRevealCard,
+               PlannedDueList, ActiveJourneyList.
   screens/     Pantallas (Onboarding, Dream, Reentry, Home, Card, Checkin,
                Detail, Timer, Complete, JourneyComplete, Journey, Journeys,
                Progress, You). Consumen el hook.
@@ -125,14 +126,25 @@ src/
 
 ### Today — ritual diario mínimo (no dashboard)
 
-La pestaña Today (`screens/Home.tsx`) es deliberadamente MÍNIMA y **sin iconos
-en las esquinas** (el perfil vive en la pestaña **You** del nav inferior).
+La pestaña Today (`screens/Home.tsx`) es deliberadamente MÍNIMA y **sin iconos-
+acción en las esquinas** (el perfil vive en la pestaña **You** del nav inferior).
 Principio: **UNA acción evidente al abrir**, cero adornos compitiendo arriba (el
 manifiesto es *"one decision removed, one action begun"*). De arriba a abajo:
-**Your Dare** como HÉROE (`TodayDareRevealCard`), la lista de **Planned Dares
-vencidos** (`PlannedDueList`) y `ActiveJourneyList`. NO muestra carta del día,
-briefing, proofs, badges, ciencia ni métricas — la carta vive en **You**, el
-briefing solo en el recordatorio, y proofs/badges/ciencia en **Progress**.
+
+1. **Masthead** (`TodayHeader`): un encabezado de CONTEXTO, no una acción —
+   **fecha** ("SUNDAY 5 JULY", `formatDayLabel`), **saludo** por franja horaria
+   ("Good morning/afternoon/evening", `greetingFor(hour)`, ambos puros en
+   `lib/date.ts`) + *"One dare today."*, y —SOLO si estás **embarcado** en un
+   Journey (`isJourneyActive`)— la línea del **capítulo en curso** ("THE EMBER ·
+   CHAPTER II — …", en el color del Journey). El único glifo es decorativo
+   (`aria-hidden`), no un icono-acción. Da calidez/orientación sin competir con
+   el Dare (por eso vuelve, a diferencia de la carta/briefing que sí eran CTAs).
+2. **Your Dare** como HÉROE (`TodayDareRevealCard`).
+3. La lista de **Planned Dares vencidos** (`PlannedDueList`) y `ActiveJourneyList`.
+
+NO muestra carta del día, briefing, proofs, badges, ciencia ni métricas — la
+carta vive en **You**, el briefing solo en el recordatorio, y proofs/badges/
+ciencia en **Progress**.
 
 **Your Dare a un toque, check-in opcional.** El estado cerrado ofrece **"Just
 dare me"** (`quickDareMe`: genera al instante con el último check-in —o un
