@@ -21,10 +21,10 @@ export interface TraitContext {
  * nada, solo decide a partir del contexto. Testable sin DOM.
  *
  * Filosofía (spec): los badges marcan HITOS con significado, no cada
- * acción. La mayoría de completions devuelven []. Los badges de fin de
- * Journey (proof-of-fire / quiet-power / proof-of-iron y la vía "Iron
- * Quiet" de builder) se otorgan al cerrar el sprint en useDare; aquí solo
- * viven los que dependen de umbrales acumulados.
+ * acción. La mayoría de completions devuelven []. Aquí viven los badges por
+ * UMBRAL acumulado (cuestan de llegar). El capstone de fin de Journey (su
+ * identity: First Mover, Quiet Builder…) se otorga aparte, en useDare, al
+ * cerrar el sprint — un único capstone por Journey.
  */
 export function earnedTraits(x: TraitContext): string[] {
   const out: string[] = [];

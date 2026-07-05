@@ -85,9 +85,6 @@ const BADGE_PRIORITY = [
   "returner",
   "outwalker",
   "forged",
-  "proof-of-iron",
-  "proof-of-fire",
-  "quiet-power",
   "builder",
   "courageous",
   "momentum-keeper",
@@ -537,24 +534,25 @@ export function useDare() {
       have,
     });
 
-    // badges e identidad de fin de Journey
+    // Cierre de Journey: UN capstone deliberado — la identity del Journey
+    // (First Mover, Quiet Builder…). Los demás badges de un Journey salen de
+    // los umbrales de achievements.ts ganados por el camino (momentum-keeper,
+    // rhythm-finder, courageous…), nunca uno por cada Dare. Así hay más de un
+    // badge por Journey sin spam (spec).
     const newIdentities: string[] = [];
     if (finishesJourney) {
-      const jTrait = store.journeyId === "ember" ? "proof-of-fire" : store.journeyId === "iron" ? "proof-of-iron" : null;
-      if (jTrait && !have(jTrait) && !earned.includes(jTrait)) earned.push(jTrait);
-      if (store.journeyId === "iron") {
-        // Iron Quiet completado → Quiet Power y Builder (vía Journey).
-        for (const b of ["quiet-power", "builder"]) if (!have(b) && !earned.includes(b)) earned.push(b);
-      }
       const identId = journey.identity.id;
       if (!store.identities.includes(identId)) newIdentities.push(identId);
-      // la identidad también existe como badge coleccionable
+      // la identity también se colecciona como badge (findTrait la renderiza).
       if (!have(identId) && !earned.includes(identId)) earned.push(identId);
     }
 
     // Un único badge "destacado" para la pantalla de completion (el más
     // importante); el resto se desbloquean en silencio y aparecen en Progress.
-    const featured = featureBadge(earned);
+    // Al cerrar Journey, el capstone (identity) se muestra en su propio bloque
+    // premium: lo excluimos del banner para no mostrar el mismo badge dos veces.
+    const capstone = finishesJourney ? journey.identity.id : null;
+    const featured = featureBadge(earned.filter((id) => id !== capstone));
 
     setStore((s) => {
       // sella la completion en la entrada activa
