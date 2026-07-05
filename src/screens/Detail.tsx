@@ -10,12 +10,26 @@ import { PlanForLater } from "../components/PlanForLater";
 import { wrap, pad } from "../components/layout";
 import { resolveCompanion } from "../lib/companions";
 import type { DareApp } from "../lib/useDare";
-import type { Dare } from "../types";
+import type { Dare, Loc } from "../types";
 
-/** Resumen "What this is": usa el summary del Dare o deriva un fallback. */
+/** Frase de lugar para el "What this is" (para entender de un vistazo si es en
+ *  casa, en el bosque, en la piscina…). */
+const PLACE_PHRASE: Record<Loc, string> = {
+  home: "at home",
+  outside: "outside",
+  forest: "in the forest",
+  pool: "in the pool",
+  gym: "at the gym",
+  padel: "on the court",
+};
+
+/** Resumen "What this is": usa el summary del Dare o deriva un fallback CORTO y
+ *  específico — dice qué tipo de movimiento y DÓNDE (pesas en casa, paseo por el
+ *  bosque, baño en la piscina…), para entenderlo de un vistazo. */
 function dareSummary(d: Dare): string {
   if (d.summary) return d.summary;
-  return `A ${d.min}-minute ${CATS[d.cat].label.toLowerCase()} dare — small enough to start now, with no need to finish it perfectly.`;
+  const place = PLACE_PHRASE[d.locs[0]] ?? "wherever you are";
+  return `${d.min} minutes of ${CATS[d.cat].label.toLowerCase()} ${place} — small enough to start now, no need to finish it perfectly.`;
 }
 
 /* Sección del detalle. Cada header lleva su ACENTO de color (glifo + label) para
@@ -100,7 +114,8 @@ export function Detail({ app }: { app: DareApp }) {
               {d.title}
             </h2>
             <p style={{ color: C.dim, fontSize: 13.5 }}>{d.min} minutes</p>
-            <Meta dare={d} />
+            {/* El companion del strip = el de la sección (mismo `comp` resuelto). */}
+            <Meta dare={d} companion={comp.word} />
           </div>
 
           {/* Orden (spec de review): 1 What this is · 2 Steps · 3 Companion ·
@@ -111,8 +126,9 @@ export function Detail({ app }: { app: DareApp }) {
             <p style={{ fontSize: 14.5, lineHeight: 1.55, color: C.text }}>{dareSummary(d)}</p>
           </Section>
 
-          {/* 2 · Steps — el Trigger es el primer paso práctico (acento del Dare) */}
-          <Section symKey="steps" title="Steps" accent={col}>
+          {/* 2 · Steps — título (glifo + "Steps") y números en el AMARILLO del
+              símbolo (C.gold), consistente entre sí. El Trigger es el 1er paso. */}
+          <Section symKey="steps" title="Steps" accent={C.gold}>
             {steps.map((s, i) => (
               <div
                 key={i}
@@ -124,7 +140,7 @@ export function Detail({ app }: { app: DareApp }) {
                   borderBottom: i < steps.length - 1 ? `1px solid ${C.line}` : "none",
                 }}
               >
-                <span style={{ color: col, fontSize: 11, minWidth: 16 }}>{i + 1}</span>
+                <span style={{ color: C.gold, fontSize: 11, minWidth: 16 }}>{i + 1}</span>
                 <span style={{ fontSize: 14, lineHeight: 1.4 }}>{s}</span>
               </div>
             ))}
@@ -133,16 +149,20 @@ export function Detail({ app }: { app: DareApp }) {
           {/* 3 · Companion — recompensa CONCRETA y DURANTE la acción (temptation
               bundling): resolveCompanion elige uno concreto y coherente con la
               actividad (filtra por la categoría del Dare), rotado por fecha. */}
-          <Section symKey="companion" title={`Companion · ${comp.word}`} accent={C.purple} tone="muted">
-            <p className="serif t-quote" style={{ color: C.text, marginBottom: 6 }}>{comp.label}</p>
-            <p style={{ fontSize: 13, lineHeight: 1.55, color: C.dim }}>{comp.note}</p>
+          {/* Título SOLO "Companion" (el companion concreto ya sale en el strip
+              de arriba). Sin texto en blanco: la idea accionable + el porqué van
+              en gris, concretos, para no requerir pensar. */}
+          <Section symKey="companion" title="Companion" accent={C.purple} tone="muted">
+            <p style={{ fontSize: 14, lineHeight: 1.5, color: C.dim, marginBottom: 6 }}>{comp.label}</p>
+            <p style={{ fontSize: 12.5, lineHeight: 1.55, color: C.faint }}>{comp.note}</p>
           </Section>
 
           {/* 4 · Why this works — el porqué + la ciencia COMPLETA (química,
                 comportamiento, efecto a largo plazo): es la explicación de peso
                 antes de comprometerse. Lenguaje prudente (ver science.ts). */}
           <Section symKey="why" title="Why this works" accent={C.gold} tone="muted">
-            <p style={{ fontSize: 14, lineHeight: 1.55, color: C.text }}>{why}</p>
+            {/* Todo en gris (sin blanco): el porqué + la ciencia. */}
+            <p style={{ fontSize: 14, lineHeight: 1.55, color: C.dim }}>{why}</p>
             {science && (
               <>
                 <p style={{ fontSize: 13.5, lineHeight: 1.6, color: C.dim, marginTop: 10 }}>{science.text}</p>

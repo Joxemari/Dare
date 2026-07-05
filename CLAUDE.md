@@ -272,9 +272,15 @@ corrigió por feedback de dirección. Reglas vigentes:
   nodo de capítulo activo (`Journey`), card del Journey seleccionado (`Journeys`),
   día de hoy y badges ganados (`Progress`).
 - **`Detail` con color por sección + jerarquía**: cada header lleva su acento
-  (What this is=verde, Steps=color del Dare, Companion=púrpura, Why=oro,
-  Effect=verde) para que se distingan, PERO se mantiene la jerarquía `primary`
-  (label `.lbl`) vs `muted` (label `.lbl-sm`) — color **y** orden.
+  (What this is=verde, **Steps=oro** —título, glifo y números en el mismo
+  amarillo—, Companion=púrpura, Why=oro, Effect=verde) para que se distingan,
+  PERO se mantiene la jerarquía `primary` (label `.lbl`) vs `muted` (label
+  `.lbl-sm`) — color **y** orden, sin arcoíris. **Companion**: título SOLO
+  "Companion" (el companion concreto sale en el strip `Meta`, que recibe el
+  MISMO `comp.word` resuelto → strip y sección coinciden); la idea accionable +
+  el porqué van en gris (sin texto en blanco). **Why this works** va todo en
+  gris. **What this is** deriva un resumen corto que dice el tipo y el LUGAR
+  (pesas en casa / paseo por el bosque / baño en la piscina…).
 - **Today** mantiene un toque cálido tenue y estático (glow tras el wordmark).
 - Se conserva lo editorial que NO era el problema: escala tipográfica tokenizada,
   masthead de Today compacto, capas de superficie (`card`/`card2`), cuerpo en
