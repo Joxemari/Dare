@@ -72,7 +72,9 @@ src/
                  generator.ts     selección del dare (scoring, no if/else),
                                   con contexto+destino del check-in completo
                                   + evitar rechazados. Aún soporta foco/avoiding
-                                  en el scoring, hoy sin UI que los alimente
+                                  en el scoring, hoy sin UI que los alimente.
+                                  generateJourneyDayDare(): Dare de un día de
+                                  Journey sin dareId, restringido al Journey
                  achievements.ts  earnedTraits() — qué traits gana un dare
                  companions.ts    sistema de Companions (temptation bundling):
                                   clasifica/resuelve el companion de un dare,
@@ -362,15 +364,20 @@ empezar" por la presencia de `journeyStartedAt`. Los controles viven en la
 pantalla Journey (Pause/Cancel activo; Resume/Cancel pausado, con confirmación
 inline para cancelar); el picker muestra el estado ("Paused · Day N of 7").
 
-**Today's plan (acción prescrita del día).** Con Journeys activos, Today lista
-para cada uno la **acción de HOY** del plan (`todaysDayPlan(j, daysDone)` →
+**Today's plan (acción del día).** Con Journeys activos, Today lista para cada
+uno la **acción de HOY** del plan (`todaysDayPlan(j, daysDone)` →
 `plan[daysDone]`, o null si el sprint está completo): "Day N · título" + un botón
-que lanza el Dare prescrito de ese día directamente al Detail
-(`startJourneyDay`, pone el Journey en foco para que completar avance SU sprint;
-si el día no fija `dareId`, cae al check-in). Así se ve de un vistazo qué toca
-hoy de cada Journey en marcha (p. ej. fuerza de Iron Quiet + respiración de Still
-Water). Con más de uno, sube y marca (`· today`) el recomendado por el check-in
-("choose your lane").
+que lanza el Dare de ese día directamente al Detail (`startJourneyDay`, pone el
+Journey en foco para que completar avance SU sprint). **El Dare del día se
+resuelve SIEMPRE dentro del Journey, nunca del pool global aleatorio:** si el día
+fija un `dareId`, ese; si no (días de recuperación/foco abiertos), se **genera
+restringido** a la categoría del día → categorías del Journey (`journey.bias`) →
+`small`, vía `generateJourneyDayDare` (puro, en `generator.ts`, testeado). Antes
+esos días caían al check-in y al pool global, y el Journey acababa ofreciendo un
+Dare aleatorio ajeno — ya no. Si el sprint está completo (sin día), el botón abre
+la pantalla del Journey. Así se ve de un vistazo qué toca hoy de cada Journey en
+marcha (p. ej. fuerza de Iron Quiet + respiración de Still Water). Con más de uno,
+sube y marca (`· today`) el recomendado por el check-in ("choose your lane").
 
 **Capítulos por COMPLETADO, no por calendario** (`chapterState` /
 `unlockedChapterCount` / `currentChapter` en `journeys.ts`): el capítulo I nace

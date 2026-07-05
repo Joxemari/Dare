@@ -167,3 +167,29 @@ test("Daily Card: ritual de apertura una vez al día, saltable, gate persistente
 
   expect(errors, errors.join("\n")).toEqual([]);
 });
+
+test("Journey day sin dareId: Start lanza un Dare del Journey, no el check-in", async ({ page }) => {
+  const errors = guardPageErrors(page);
+  // Siembra Still Water ACTIVO (su día 1 = recovery, SIN dareId) y salta el
+  // ritual de la carta (cardIntroDate = hoy) para abrir directo en Today.
+  await page.addInitScript(() => {
+    const d = new Date();
+    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    if (!localStorage.getItem("dare:v7"))
+      localStorage.setItem(
+        "dare:v7",
+        JSON.stringify({ onboarded: true, journeyId: "water", activeJourneyIds: ["water"], cardIntroDate: today }),
+      );
+  });
+  await page.goto("/Dare/");
+
+  // Today abre directo (sin ritual) y el Journey activo ofrece un "Start"
+  await expect(page.getByText("One dare today.")).toBeVisible();
+  await page.getByRole("button", { name: "Start", exact: true }).click();
+
+  // Debe caer en el Dare (Detail), NUNCA en el check-in "How are you today?"
+  await expect(page.getByText("What this is")).toBeVisible();
+  await expect(page.getByText("How are you today?")).toHaveCount(0);
+
+  expect(errors, errors.join("\n")).toEqual([]);
+});

@@ -18,7 +18,7 @@ import { DARES } from "../data/dares";
 import { TAROT } from "../data/tarot";
 import { TRAITS } from "../data/traits";
 import { JOURNEYS, MVP_JOURNEYS, journeyById, currentChapter, journeyMilestoneIds, todaysDayPlan, journeyComplete } from "../data/journeys";
-import { generateDare, recentDareIds, buildWhy } from "./generator";
+import { generateDare, generateJourneyDayDare, recentDareIds, buildWhy } from "./generator";
 import { recommendJourney } from "./recommend";
 import { rollTreat, sample } from "./random";
 import { findDare, findCard } from "./lookup";
@@ -450,39 +450,51 @@ export function useDare() {
     });
   }
 
-  /** Today's Body Dare de un Journey activo: lanza el Dare PRESCRITO del día
-   *  que toca (plan[daysDone]) directamente al Detail. Si el día no fija un
-   *  dareId concreto, cae al check-in de ese Journey. Pone el Journey en foco
-   *  para que completar avance SU sprint. */
+  /** Today's Body Dare de un Journey activo: lanza el Dare del día que toca
+   *  (plan[daysDone]) directamente al Detail, poniendo el Journey en foco para
+   *  que completar avance SU sprint. El Dare del día se resuelve SIEMPRE dentro
+   *  del Journey — nunca del pool global aleatorio: si el día fija un `dareId`,
+   *  ese; si no (p. ej. días de recuperación/foco abiertos), se GENERA
+   *  restringido a la categoría del día / categorías del Journey
+   *  (`generateJourneyDayDare`). Si el sprint ya está completo (sin día), abre
+   *  la pantalla del Journey. */
   function startJourneyDay(id: JourneyId) {
     const j = journeyById(id);
     const prog = store.journeyProgress[id] ?? 0;
     const day = todaysDayPlan(j, prog);
     patch({ journeyId: id });
-    const dare = day?.dareId ? findDare(day.dareId) : null;
-    if (day && dare) {
-      const t = todayStr();
-      setStore((s) => ({
-        ...s,
-        journeyId: id,
-        todaysDares: [
-          ...s.todaysDares.filter((e) => !(e.date === t && e.completedAt === null)),
-          {
-            dareId: dare.id,
-            date: t,
-            wild: false,
-            revealed: true,
-            why: `${j.name} · Day ${prog + 1}: ${day.title}. Today's action from your journey.`,
-            startedAt: null,
-            completedAt: null,
-          },
-        ],
-      }));
-      setScreen("detail");
-    } else {
-      // Sin dareId fijo (p. ej. días de recuperación abiertos) → check-in del Journey.
-      setScreen("checkin");
+    if (!day) {
+      // Sprint completo — no hay acción de hoy; muestra el Journey.
+      setScreen("journey");
+      return;
     }
+    const prescribed = day.dareId ? findDare(day.dareId) : null;
+    let dare = prescribed;
+    if (!dare) {
+      // Día sin dareId → genera DENTRO del Journey (nunca del pool global).
+      const recentIds = recentDareIds([...store.completed, ...store.todaysDares]);
+      const cutoff = todayStr(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000));
+      const rejectedIds = store.rejectedDares.filter((r) => r.date >= cutoff).map((r) => r.dareId);
+      dare = generateJourneyDayDare(day.cat, j, store.lastCheckin ?? SAFE_CI, recentIds, rejectedIds);
+    }
+    const t = todayStr();
+    setStore((s) => ({
+      ...s,
+      journeyId: id,
+      todaysDares: [
+        ...s.todaysDares.filter((e) => !(e.date === t && e.completedAt === null)),
+        {
+          dareId: dare!.id,
+          date: t,
+          wild: false,
+          revealed: true,
+          why: `${j.name} · Day ${prog + 1}: ${day.title}. Today's action from your journey.`,
+          startedAt: null,
+          completedAt: null,
+        },
+      ],
+    }));
+    setScreen("detail");
   }
 
   function pickCard(cardId: string) {

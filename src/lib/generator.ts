@@ -180,6 +180,40 @@ export function generateDare(
   return { dare, why: buildWhy(ci, dare) };
 }
 
+/**
+ * Dare para un día de Journey SIN `dareId` prescrito (p. ej. días de
+ * recuperación/foco abiertos). Se restringe DURO al Journey — nunca al pool
+ * global —: primero a la categoría del día (`cat`), luego a las categorías del
+ * Journey (`journey.bias`), y como último recurso a `small`. Así el Journey
+ * SIEMPRE da un Dare del Journey, no un aleatorio ajeno. Evita rechazados
+ * (exclusión dura) y, si puede, los vistos recientemente. Ligero scoring por
+ * energía + desempate aleatorio, como `generateDare`.
+ */
+export function generateJourneyDayDare(
+  cat: Cat,
+  journey: Journey,
+  ci: Checkin,
+  recentIds: string[] = [],
+  rejectedIds: string[] = [],
+): Dare {
+  const ok = (d: Dare) => !rejectedIds.includes(d.id);
+  let pool = DARES.filter((d) => d.cat === cat && ok(d));
+  if (!pool.length) pool = DARES.filter((d) => journey.bias.includes(d.cat) && ok(d));
+  if (!pool.length) pool = DARES.filter((d) => d.cat === "small");
+  // no repitas lo reciente si hay alternativas frescas dentro del Journey
+  const fresh = pool.filter((d) => !recentIds.includes(d.id));
+  const from = fresh.length ? fresh : pool;
+  const scored = from.map((d) => {
+    let s = 0;
+    if (ci.energy >= d.energy[0] && ci.energy <= d.energy[1]) s += 20;
+    else s -= 6 * Math.min(Math.abs(ci.energy - d.energy[0]), Math.abs(ci.energy - d.energy[1]));
+    s += Math.random() * 6;
+    return { d, s };
+  });
+  scored.sort((a, b) => b.s - a.s);
+  return scored[0].d;
+}
+
 export function buildWhy(ci: Checkin, d: Dare): string {
   const e = ci.energy;
   const opener =
