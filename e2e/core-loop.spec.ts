@@ -56,6 +56,10 @@ test("Today: ritual de carta + revelado inline del Dare, loop sin errores", asyn
   await expect(page.getByText("Dare completed.")).toBeVisible();
   await expect(page.getByText("Treat unlocked.")).toBeVisible();
 
+  // el Treat es el héroe: se revela de un toque; la feedback aparece tras revelar.
+  // La tarjeta tiene animación `pulse` (nunca "stable"): forzamos el click.
+  await page.getByText("Tap to reveal").click({ force: true });
+
   // no debe aparecer XP en ninguna parte visible de la completion
   const body = (await page.locator("body").innerText()).toLowerCase();
   expect(body).not.toMatch(/\bxp\b/);
@@ -97,18 +101,14 @@ test("Journey: Begin explícito, milestones accionables + tabs Progress/You", as
   await page.getByRole("button", { name: "Journey", exact: true }).click();
   await page.getByRole("button", { name: /Begin Journey/ }).click();
 
-  // sin Dream Reward → setup; al elegirlo, el Journey arranca y muestra el plan
+  // sin Dream Reward → setup; al elegirlo, el Journey arranca y muestra capítulos
   await expect(page.getByText(/What would make finishing/)).toBeVisible();
   await page.getByText("Painting class").click();
-  await expect(page.getByText("The days ahead")).toBeVisible();
+  // La pantalla Journey ya NO muestra "Days Ahead": se centra en capítulos,
+  // milestones, % de completion y Dream Reward activo.
+  await expect(page.getByText("Chapters")).toBeVisible();
+  await expect(page.getByText("The days ahead")).toHaveCount(0);
   await expect(page.getByText(/milestones completed/).first()).toBeVisible();
-
-  // briefing del día actual: contenido rico + selector de variante ◌/◆/⟁
-  await page.getByText("Day 1", { exact: true }).click();
-  await expect(page.getByText(/Just shoes/)).toBeVisible(); // Trigger del día (sólo en el modal)
-  await expect(page.getByRole("button", { name: /Real/ })).toBeVisible();
-  await page.getByRole("button", { name: /Soft/ }).click(); // cambiar de variante
-  await page.getByRole("button", { name: "✕" }).click();
 
   // abrir un milestone (Letter) y completarlo — arregla el "Start" muerto
   await page.getByText("You don't have a motivation problem").click();
