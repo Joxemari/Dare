@@ -15,34 +15,19 @@ import { SYMBOLS } from "../data/symbols";
  *  horizontal (dos diagonales en pico, tipo Λ), no una A normal ni el triángulo
  *  relleno △ (que quedaba desproporcionado dentro de la palabra). Se dibuja con
  *  un SVG a altura de mayúscula y con el grosor de trazo de D·R·E → proporcionado
- *  y hereda el color (currentColor). La estrella ✦ va como glifo APARTE (encima/
- *  al lado). `aria-label="DARE"` para lectores. Fuente única de la marca escrita;
- *  se reutiliza en Wordmark, Splash, Onboarding y el masthead de Today. */
+ *  el color. La estrella ✦ va como glifo APARTE (encima/al lado). Se probó una A
+ *  abierta (SVG Λ) pero rompía el layout del masthead (la palabra hacía wrap) →
+ *  se vuelve a texto plano "DARE", con `white-space: nowrap` para que la marca
+ *  NUNCA se parta en dos líneas. `aria-label="DARE"` para lectores. Fuente única
+ *  de la marca escrita; se reutiliza en Wordmark, Splash, Onboarding y Today. */
 export function DareWord({ style }: { style?: CSSProperties }) {
   return (
     <span
       role="img"
       aria-label="DARE"
-      style={{ fontFamily: "var(--font-sans)", fontWeight: 400, display: "inline-block", color: C.text, ...style }}
+      style={{ fontFamily: "var(--font-sans)", fontWeight: 400, display: "inline-block", whiteSpace: "nowrap", color: C.text, ...style }}
     >
-      D
-      {/* A sin barra: pico Λ. viewBox con la misma proporción que height/width
-          para no deformar el trazo; se apoya en la línea base como una letra. */}
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 69 80"
-        style={{ height: "0.72em", width: "0.62em", verticalAlign: "baseline" }}
-      >
-        <path
-          d="M6 75 L34.5 7 L63 75"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="8"
-          strokeLinecap="butt"
-          strokeLinejoin="miter"
-        />
-      </svg>
-      RE
+      DARE
     </span>
   );
 }
