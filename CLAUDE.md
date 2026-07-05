@@ -57,7 +57,9 @@ concentran en la frontera (hook + `storage`), no repartidos por las pantallas.
 ```
 src/
   data/        Datos de dominio (constantes, sin lógica): dares, wildcards,
-               journeys (planes de 7 días + milestones tipados), tarot,
+               modes (MovementMode + CAT_MODE: capa de "tipo de movimiento"
+               sobre las categorías), journeys (planes de 7 días + milestones
+               tipados; MVP_JOURNEY_IDS marca los 4 ofrecibles), tarot,
                symbols (mapa central de glifos), science (biblioteca),
                traits (BADGES: hitos difíciles; persisten bajo la clave
                `traits` del store), rewards (treats/dates/dream,
@@ -76,6 +78,9 @@ src/
                                   de contenido generativo.
                  generationInput.ts  buildGenerationInput(): resume el store en
                                   la señal de feedback que alimenta la generación
+                 recommend.ts     recommendJourney(): qué Journey del MVP
+                                  destacar HOY en Today según el check-in
+                                  (estado+energía). Puro, prioriza los activos
                  share.ts         capa social: texto/payload PUROS para compartir
                                   la Daily Card vía Web Share API (ver más abajo)
                  briefing.ts      "lectura del día" estilo Co-Star: contenido del
@@ -105,7 +110,12 @@ La pestaña Today (`screens/Home.tsx`) es deliberadamente MÍNIMA: header
 de línea + textos, modular por props para variar por estado/journey), un
 `TodayDareRevealCard` (un Dare oculto que se **revela inline de un toque**, sin
 navegar; estados cerrado/revelado/completado), y `ActiveJourneyList` (filas
-compactas: símbolo + próxima acción + Start, que abre la pestaña Journey). Bajo
+compactas: símbolo + próxima acción + Start, que abre la pestaña Journey). Con
+**varios Journeys activos**, Today prioriza el "Today's Body Dare": sube y
+marca (`· today`) el Journey recomendado por el check-in (`recommendJourney` en
+`lib/recommend.ts`: energía baja → Still Water, con ganas → Iron Quiet, atascado
+→ Wild Ground, con energía alta → Bright Pulse, overwhelmed → Still Water,
+returning → el activo más suave). Bajo
 el hero se mantiene el widget `Briefing` (la "lectura del día" estilo Co-Star,
 parte de la atmósfera diaria). NO muestra proofs, métricas ni calendario — eso
 vive en Progress. El **ritual de
@@ -157,13 +167,60 @@ milestone: `letter/goal/action/motivator/science/proof/reflection/badge`. Los
 milestones son accionables (modal `MilestoneModal`): cada tipo tiene su CTA real
 y persiste en `store.milestones`.
 
-**Set final: 7 Journeys** (`JourneyId`), cada uno con símbolo, color propio
-(`JOURNEY_COLOR`) y Badge final (`identity`, 1 por Journey; su id existe también
-como Trait para el render del anillo). Los ids internos `ember/iron/water` se
-conservan (no romper datos guardados): **First Flame ✦** (slot `ember`),
-**Iron Quiet △** (`iron`), **Still Water ☾** (`water`), **Clear Signal ◇**
-(`clear`), **Steady Current ⌁** (`current`), **Wild Ground ↟** (`wild`),
-**Quiet Fire ⟁** (`fire`). Todos tienen `plan` completo (ya no hay placeholders).
+**MVP: 4 Journeys ofrecibles** — DARE es **physical-energy-first**: el objetivo
+es ayudar a construir el hábito de moverse (fuerza, cardio, aire libre,
+recuperación) sin aburrimiento. El picker (`Journeys.tsx`) y la lista de Today
+solo ofrecen estos 4 (`MVP_JOURNEY_IDS = ["iron","pulse","wild","water"]`):
+
+- **Iron Quiet △** (`iron`) — fuerza: mancuernas, kettlebell, carries. Sin gym.
+- **Bright Pulse ◆** (`pulse`) — cardio divertido: fitboxing, shadowboxing,
+  standing tabata, dance cardio, sesiones cortas y sudadas. **Journey nuevo.**
+- **Wild Ground ↟** (`wild`) — fuera: caminar, luz, bosque, rutas, colinas,
+  escaleras, microaventuras.
+- **Still Water ☾** (`water`) — recuperación: piscina, movilidad suave,
+  respiración, apagado de la noche.
+
+Cada Journey tiene símbolo, color propio (`JOURNEY_COLOR`) y Badge final
+(`identity`, 1 por Journey; su id existe también como Trait para el render del
+anillo). El de Bright Pulse es **Bright Mover** (`bright-mover`).
+
+**Roadmap (en datos, NO empezables).** Los otros 4 del set histórico se
+conservan en `JOURNEYS` (`ROADMAP_JOURNEYS`) como conceptos de roadmap y para no
+romper el progreso guardado: **First Flame ✦** (`ember`, hoy concepto de
+onboarding/primera activación), **Clear Signal ◇** (`clear`, foco),
+**Steady Current ⌁** (`current`, consistencia), **Quiet Fire ⟁** (`fire`,
+coraje). En el picker aparecen al final como **"Coming soon"**: solo un preview
+(nombre, tag, promesa y la estructura de capítulos), sin CTA — no se pueden
+empezar. Los ids internos `ember/iron/water` se conservan (no romper datos
+guardados). Al reintroducir uno, basta con añadir su id a `MVP_JOURNEY_IDS`.
+
+**Contenido de los Journeys del MVP** — estándar de calidad (aplicado a los 4):
+las *letters* citan trabajos y autores concretos (BJ Fogg, Wendy Wood, Katy
+Milkman, James Clear, Bandura, Tabata, Gibala, Karageorghis, Kelly McGonigal,
+Stuart Brown, los Kaplan, Qing Li, Oppezzo, Keltner, Benson, el trial de
+cyclic sighing de Stanford 2023, Wallace J. Nichols, Cal Newport, Masicampo &
+Baumeister, Matthew Walker…); cada capítulo incluye *setup actions* que cambian
+conducta (pesos a la vista, mínimo de dos reps, temptation bundle, lift log,
+anclar el hueco diario, three-song ladder, invitar a alguien, agendar el agua,
+shutdown shelf…); la ciencia va con referencias pero lenguaje prudente ("is
+associated with", "may support"); y los *proofs* son específicos, nunca de
+relleno. La biblioteca (`science.ts`) tiene fichas reutilizables para esto
+(habit-automaticity, temptation-bundling, progressive-overload, grip-longevity,
+exercise-snacks, awe-walks, cyclic-sighing, shutdown-ritual, blue-mind…).
+
+**Modos de movimiento** (`src/data/modes.ts`): `MovementMode` (Strong · Sweaty ·
+Outside · Water · Recovery · Soft · Play · Social · Travel) es una capa por
+encima de las categorías (`CAT_MODE`). Regla **anti-aburrimiento**: el generador
+penaliza repetir el mismo MODO más de dos veces seguidas (además de la
+penalización por `Cat`). Cada Journey rota modos, companions y treats a lo largo
+de sus 7 días para no sentirse repetitivo.
+
+**Ejercicios permitidos/prohibidos.** Nunca: push-ups, planks, burpees, mountain
+climbers, trabajo de suelo con manos apoyadas, HIIT largo, lenguaje de calorías/
+peso/vergüenza (lo refuerza `contentSchema` + `data.test.ts`). Permitido:
+mancuernas, kettlebells, bandas, carries, sentadillas goblet, zancadas, press,
+remo, curls, shadowboxing, fitboxing, padel, natación, caminar, colinas,
+escaleras, dance cardio, movilidad de pie.
 
 **Variantes de dificultad por día** (`DayPlan`): `soft` (◌ baja energía),
 `dare`/`real` (◆ recomendada), `bold` (⟁ más dura), más `trigger`, `companion`,
@@ -183,9 +240,29 @@ ficha de ciencia del día a Today.
 onboarding lleva a Today sin activar nada. Un Journey se empieza pulsando
 "Begin Journey" en la pestaña Journey (`startJourney` → si falta Dream Reward,
 su setup primero). Pueden estar **varios activos a la vez**
-(`store.activeJourneyIds`): arrancar uno no detiene otro; Today ofrece una lane
-("Choose your lane") si hay más de uno. El progreso/completion de un Journey
-solo cuenta si está activo.
+(`store.activeJourneyIds`): arrancar uno no detiene otro. El progreso/completion
+de un Journey solo cuenta si está activo.
+
+**Ciclo de vida: launch · pause · resume · cancel** (acciones del hook). *Begin*
+activa (`activateJourney`, sella `journeyStartedAt`). *Pause* (`pauseJourney`)
+lo saca de `activeJourneyIds` pero **conserva** progreso, milestones y Dream
+Reward → reanudable. *Resume* (`resumeJourney`) lo devuelve a activos sin tocar
+nada. *Cancel* (`cancelJourney`) **resetea el sprint**: progreso a 0, borra los
+milestones del Journey (`journeyMilestoneIds`), lo saca de completados y borra
+`journeyStartedAt` (conserva el Dream Reward). "Pausado" se distingue de "sin
+empezar" por la presencia de `journeyStartedAt`. Los controles viven en la
+pantalla Journey (Pause/Cancel activo; Resume/Cancel pausado, con confirmación
+inline para cancelar); el picker muestra el estado ("Paused · Day N of 7").
+
+**Today's plan (acción prescrita del día).** Con Journeys activos, Today lista
+para cada uno la **acción de HOY** del plan (`todaysDayPlan(j, daysDone)` →
+`plan[daysDone]`, o null si el sprint está completo): "Day N · título" + un botón
+que lanza el Dare prescrito de ese día directamente al Detail
+(`startJourneyDay`, pone el Journey en foco para que completar avance SU sprint;
+si el día no fija `dareId`, cae al check-in). Así se ve de un vistazo qué toca
+hoy de cada Journey en marcha (p. ej. fuerza de Iron Quiet + respiración de Still
+Water). Con más de uno, sube y marca (`· today`) el recomendado por el check-in
+("choose your lane").
 
 **Capítulos por COMPLETADO, no por calendario** (`chapterState` /
 `unlockedChapterCount` / `currentChapter` en `journeys.ts`): el capítulo I nace
