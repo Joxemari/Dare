@@ -31,14 +31,17 @@ export function TodayHeader({
         <DareWord style={{ fontSize: 14, letterSpacing: "0.34em", textIndent: "0.34em" }} />
       </div>
 
-      {/* Hero con la imagen del día + degradado + fecha y headline encima */}
+      {/* Hero con la imagen del día + fecha y headline encima. Las imágenes son
+          un objeto centrado sobre fondo casi negro, así que:
+          - `contain`: se ve el objeto ENTERO (con `cover` se recortaba, p. ej.
+            los bulbos del reloj de arena).
+          - posición a la DERECHA: deja el margen izquierdo para fecha/headline.
+          - máscara radial: FUNDE los bordes a transparente para que la imagen se
+            derrita en el fondo #111 (sin el "seam" duro del rectángulo). */}
       <div
         style={{
           position: "relative",
-          borderRadius: 20,
-          overflow: "hidden",
-          minHeight: 230,
-          background: C.card2,
+          minHeight: 210,
           display: "flex",
         }}
       >
@@ -49,19 +52,23 @@ export function TodayHeader({
               position: "absolute",
               inset: 0,
               backgroundImage: `url(${bgUrl})`,
-              backgroundSize: "cover",
-              // Un poco a la derecha (feedback): el objeto del dibujo respira mejor.
-              backgroundPosition: "62% center",
+              backgroundSize: "contain",
+              backgroundPosition: "right center",
+              backgroundRepeat: "no-repeat",
+              WebkitMaskImage:
+                "radial-gradient(115% 118% at 72% 42%, #000 46%, transparent 82%)",
+              maskImage:
+                "radial-gradient(115% 118% at 72% 42%, #000 46%, transparent 82%)",
             }}
           />
         )}
-        {/* Degradado para legibilidad: transparente arriba → casi negro abajo. */}
+        {/* Degradado inferior para legibilidad de fecha/headline. */}
         <div
           aria-hidden="true"
           style={{
             position: "absolute",
             inset: 0,
-            background: "linear-gradient(180deg, rgba(14,14,12,0.10) 0%, rgba(14,14,12,0.40) 48%, rgba(14,14,12,0.94) 100%)",
+            background: "linear-gradient(180deg, transparent 0%, transparent 42%, rgba(17,17,17,0.72) 82%, #111 100%)",
           }}
         />
         <div style={{ position: "relative", alignSelf: "flex-end", padding: "18px 18px 20px", width: "100%" }}>
