@@ -44,7 +44,10 @@ export type JourneyId =
 
 export type Tier = "common" | "rare" | "golden";
 
-/** Efectos esperados — categorías de sensación, no neuroquímica. */
+/** Efectos esperados — categorías de sensación, no neuroquímica.
+ *  Set ampliado para que el detalle nunca se sienta pobre (solo Calm/Mood).
+ *  `Stress` es un efecto de REDUCCIÓN: se renderiza con "↓" (ver Effects.tsx),
+ *  y su intensidad 1..3 mide cuánto baja el estrés. */
 export type Effect =
   | "Energy"
   | "Focus"
@@ -52,7 +55,11 @@ export type Effect =
   | "Calm"
   | "Strength"
   | "Confidence"
-  | "Recovery";
+  | "Recovery"
+  | "Clarity"
+  | "Stress"
+  | "Sleep"
+  | "Momentum";
 
 /** Intensidad de un efecto: 1 (+), 2 (++), 3 (+++). */
 export type EffectMap = Partial<Record<Effect, 1 | 2 | 3>>;

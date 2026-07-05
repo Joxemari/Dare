@@ -781,6 +781,16 @@ export function totalMilestones(j: Journey): number {
   return j.chapters.reduce((n, c) => n + c.milestones.length, 0);
 }
 
+/** ¿Están completados TODOS los milestones de TODOS los capítulos?
+ *  Es la señal de "Journey completado" (spec): al marcar el último milestone
+ *  del último capítulo, el Journey se da por terminado —aunque hayan pasado
+ *  menos de 7 días de calendario— y dispara la celebración. Requiere que el
+ *  Journey tenga al menos un milestone (nunca completo un Journey vacío). */
+export function journeyComplete(j: Journey, done: Record<string, boolean>): boolean {
+  const total = totalMilestones(j);
+  return total > 0 && j.chapters.every((c) => chapterCompleted(c, done));
+}
+
 /* ---- Variantes de dificultad de un día (spec: ◌ Soft / ◆ Real / ⟁ Bold) ---- */
 export type VariantKey = "soft" | "real" | "bold";
 export interface DayVariant {

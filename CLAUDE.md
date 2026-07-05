@@ -93,8 +93,8 @@ src/
                MilestoneModal, ShareCardButton, Briefing, layout; y los de
                Today: AtmosphereHero, TodayDareRevealCard, ActiveJourneyList.
   screens/     Pantallas (Onboarding, Dream, Reentry, Home, Card, Checkin,
-               Detail, Timer, Complete, Journey, Journeys, Progress, You).
-               Consumen el hook.
+               Detail, Timer, Complete, JourneyComplete, Journey, Journeys,
+               Progress, You). Consumen el hook.
   App.tsx      "Router" por estado: decide qué pantalla mostrar.
 ```
 
@@ -170,14 +170,11 @@ conservan (no romper datos guardados): **First Flame ✦** (slot `ember`),
 `treat`, `proof` y una ficha corta `scienceTitle`/`scienceBody` ("Science Behind
 Today's Dare"). La ciencia usa lenguaje cuidadoso ("may support", "is associated
 with", "research suggests"); sin claims médicos. El helper puro `dayVariants(p)`
-(orden ◌→◆→⟁, "real" cae a `dare`) alimenta la UI.
-
-**Briefing de día** (`DayModal`): en la pantalla Journey, tocar un día hecho o el
-actual abre su plan — selector ◌/◆/⟁ (efímero, por defecto Real), Trigger,
-Companion, Treat, Proof y la ficha de ciencia. Los días futuros siguen sellados
-(no accionables). El timeline usa "Day N" (no Today/Tomorrow). Pendiente: persistir
-la variante elegida por día (necesitaría subir la versión del store) y llevar la
-ficha de ciencia del día a Today.
+(orden ◌→◆→⟁, "real" cae a `dare`) queda disponible para el selector
+Soft/Real/Bold del detalle del día (pendiente de UI). La pantalla Journey **ya no
+muestra ninguna línea de tiempo de días** ("Days Ahead"): el `plan` alimenta el
+contenido de cada día pero la pantalla Journey se centra solo en capítulos,
+milestones, % de completion y Dream Reward activo.
 
 **Arranque explícito y multi-journey.** Ningún Journey arranca solo: el
 onboarding lleva a Today sin activar nada. Un Journey se empieza pulsando
@@ -190,9 +187,23 @@ solo cuenta si está activo.
 **Capítulos por COMPLETADO, no por calendario** (`chapterState` /
 `unlockedChapterCount` / `currentChapter` en `journeys.ts`): el capítulo I nace
 desbloqueado; el N+1 se desbloquea en cuanto TODOS los milestones del N están
-hechos, aunque sea el mismo día. La línea de tiempo de la pantalla Journey usa
-etiquetas de SECUENCIA (**Day 1..Day 7**), no de calendario; la fila semanal de
-Progress (Today/Tomorrow/…) sí es de calendario.
+hechos, aunque sea el mismo día. La pantalla Journey NO usa línea de tiempo de
+días; la fila semanal de Progress (Today/Tomorrow/…) sí es de calendario.
+
+**Completion del Journey por MILESTONES + celebración** (`journeyComplete()` en
+`journeys.ts`): un Journey se da por terminado cuando TODOS los milestones de
+TODOS sus capítulos están hechos —aunque hayan pasado menos de 7 días—, no por
+un contador de días. `useDare.applyMilestones` centraliza la detección: al
+marcar el último milestone de un Journey ACTIVO no terminado, lo añade a
+`journeysCompleted`, desbloquea su Badge/identidad final (`journey.identity.id`
++ extras: First Flame→`proof-of-fire`, Iron Quiet→`proof-of-iron`/`quiet-power`/
+`builder`), enfoca ese Journey y navega a la pantalla `journeyComplete`
+(celebración: Dream Reward como héroe + identidad + siguiente paso). Es
+**idempotente** (solo se celebra una vez por Journey, vía `journeysCompleted`) e
+**independiente** (terminar uno no afecta a otros activos). `finishDare` ya NO
+completa Journeys por contador de días. La pantalla `Complete` (fin de Dare) es
+independiente: Treat como héroe, sin badges ni cita de proof; los dos flujos no
+colisionan.
 
 Por qué así:
 

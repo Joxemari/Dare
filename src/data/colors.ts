@@ -47,7 +47,9 @@ export const CATS: Record<Cat, { color: string; label: string }> = {
 
 export const LEVELS: Record<Level, number> = { Easy: 1, Medium: 2, Strong: 3 };
 
-/** Color por efecto esperado (feeling-based, no neuroquímica). */
+/** Color por efecto esperado (feeling-based, no neuroquímica).
+ *  Agrupados por familia: energía=verde, foco/ánimo=oro, calma/recuperación/
+ *  sueño=púrpura, fuerza/confianza=coral, claridad/estrés=turquesa. */
 export const EFFECT_COLOR: Record<Effect, string> = {
   Energy: C.green,
   Focus: C.gold,
@@ -56,6 +58,10 @@ export const EFFECT_COLOR: Record<Effect, string> = {
   Strength: C.coral,
   Confidence: C.coral,
   Recovery: C.purple,
+  Clarity: C.teal,
+  Stress: C.teal,
+  Sleep: C.purple,
+  Momentum: C.green,
 };
 
 export const colorOf = (d: Dare): string => (d.wild ? C.gold : CATS[d.cat].color);

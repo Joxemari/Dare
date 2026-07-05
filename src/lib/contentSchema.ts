@@ -25,6 +25,7 @@ export const LOCS_VALID: readonly Loc[] = ["home", "outside", "forest", "pool", 
 export const LEVELS_VALID: readonly Level[] = ["Easy", "Medium", "Strong"];
 export const EFFECTS_VALID: readonly Effect[] = [
   "Energy", "Focus", "Mood", "Calm", "Strength", "Confidence", "Recovery",
+  "Clarity", "Stress", "Sleep", "Momentum",
 ];
 export const STATES_VALID: readonly MentalState[] = ["blocked", "tired", "normal", "active", "stressed"];
 

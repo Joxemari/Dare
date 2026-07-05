@@ -112,7 +112,18 @@ export function Detail({ app }: { app: DareApp }) {
             <Effects effects={d.effects} />
           </Section>
 
-          {/* 4 · Steps */}
+          {/* 4 · Science Behind Today's Dare */}
+          {science && (
+            <Section symKey="science" title="Science Behind Today's Dare" color={C.gold}>
+              <p style={{ fontSize: 13, fontWeight: 500, marginBottom: 6 }}>{science.title}</p>
+              <p style={{ fontSize: 13.5, lineHeight: 1.55, color: C.dim }}>{science.text}</p>
+              <p className="lbl" style={{ fontSize: 8.5, marginTop: 10, color: C.faint }}>
+                Evidence: {science.evidence}
+              </p>
+            </Section>
+          )}
+
+          {/* 5 · Steps */}
           <Section symKey="steps" title="Steps">
             {d.steps.map((s, i) => (
               <div
@@ -131,17 +142,6 @@ export function Detail({ app }: { app: DareApp }) {
             ))}
           </Section>
 
-          {/* 5 · Science Behind Today's Dare */}
-          {science && (
-            <Section symKey="science" title="Science Behind Today's Dare" color={C.gold}>
-              <p style={{ fontSize: 13, fontWeight: 500, marginBottom: 6 }}>{science.title}</p>
-              <p style={{ fontSize: 13.5, lineHeight: 1.55, color: C.dim }}>{science.text}</p>
-              <p className="lbl" style={{ fontSize: 8.5, marginTop: 10, color: C.faint }}>
-                Evidence: {science.evidence}
-              </p>
-            </Section>
-          )}
-
           {/* 6 · Treat Locked */}
           <Section symKey="treat" title="Treat Locked" color={C.gold}>
             <p style={{ fontSize: 13.5, lineHeight: 1.45, color: C.dim }}>
@@ -154,19 +154,22 @@ export function Detail({ app }: { app: DareApp }) {
             )}
           </Section>
 
+          {/* 7 · Why this Dare today — la última explicación antes de comprometerse,
+                justo encima de Start dare (primero la acción, este cierre, y a empezar). */}
+          <Section symKey="why" title="Why this Dare today" color={C.purple}>
+            <p style={{ fontSize: 14, lineHeight: 1.55, color: C.text }}>{why}</p>
+          </Section>
+
+          {/* 8 · Start dare — inmediatamente después de "Why this Dare today". */}
           <button className="btn btn-green" style={{ marginTop: 6 }} onClick={() => app.startDare()}>
             Start dare
           </button>
+          {/* 9 · No energy → versión de 3 minutos */}
           <div style={{ textAlign: "center", marginTop: 16 }}>
             <button className="link" onClick={() => app.swapToSmall()}>
               {SYMBOLS.soft} No energy → 3-minute version
             </button>
           </div>
-
-          {/* 7 · Why this Dare today — al final: primero qué hacer, luego el porqué */}
-          <Section symKey="why" title="Why this Dare today" color={C.purple}>
-            <p style={{ fontSize: 14, lineHeight: 1.55, color: C.text }}>{why}</p>
-          </Section>
         </div>
       </div>
     </div>

@@ -1,31 +1,28 @@
 import { useState } from "react";
 import { C } from "../data/colors";
 import { SYMBOLS } from "../data/symbols";
-import { MS_T, SPRINT_DAYS, totalMilestones, chapterState } from "../data/journeys";
+import { MS_T, totalMilestones, chapterState } from "../data/journeys";
 import { Ico } from "../components/Ico";
 import { Nav } from "../components/Nav";
 import { MilestoneModal } from "../components/MilestoneModal";
-import { DayModal } from "../components/DayModal";
 import { wrap, pad } from "../components/layout";
 import type { Milestone } from "../types";
 import type { DareApp } from "../lib/useDare";
 
 export function Journey({ app }: { app: DareApp }) {
-  const { journey, daysDone, chapter, store, isJourneyActive } = app;
+  const { journey, chapter, store, isJourneyActive } = app;
   const [openCh, setOpenCh] = useState<number | null>(chapter.idx);
   const [modal, setModal] = useState<Milestone | null>(null);
-  const [dayOpen, setDayOpen] = useState<number | null>(null);
   const isPlaceholder = journey.plan.length === 0;
   const dreamReward = store.dreamRewards[journey.id];
 
   const allMs = journey.chapters.flatMap((c) => c.milestones);
   const mDone = allMs.filter((m) => store.milestones[m.id]).length;
   const mTot = totalMilestones(journey);
-  const currentDay = Math.min(SPRINT_DAYS, daysDone + 1);
 
-  // La pantalla Journey usa una línea de tiempo de SECUENCIA (Day 1..7), no de
-  // calendario: un usuario puede terminar el sprint en menos de 7 días reales.
-  const dayLabel = (i: number) => `Day ${i + 1}`;
+  // La pantalla Journey NO muestra ninguna línea de tiempo de días ("Days
+  // Ahead"): el progreso se representa solo por capítulos, milestones y % de
+  // completion. La fila semanal de calendario vive en la pestaña Progress.
 
   return (
     <div className="dare-root">
@@ -84,84 +81,25 @@ export function Journey({ app }: { app: DareApp }) {
             </div>
           )}
 
-          {/* the days ahead (solo cuando el Journey está activo) */}
+          {/* progresión SOLO por capítulos + milestones (sin "Days Ahead") */}
           {isJourneyActive && (
           <>
-          <p className="lbl" style={{ marginBottom: 12 }}>
-            The days ahead
-          </p>
-          <div className="hscroll" style={{ marginBottom: 10 }}>
-            {journey.plan.map((p, i) => {
-              const isDone = i < daysDone;
-              const isToday = i === daysDone;
-              const isDream = !!p.dream;
-              const isChapter = !!p.chapter;
-              const gold = isDream || isChapter;
-              const border = isToday ? journey.color : isDone ? C.green : gold ? C.gold + "77" : C.line;
-              const fg = isToday ? journey.color : isDone ? C.green : gold ? C.gold : C.dim;
-              const glyph = isDone ? "✓" : isToday ? SYMBOLS.spark : isDream ? SYMBOLS.dream : isChapter ? SYMBOLS.dream : SYMBOLS.cycle;
-              const label = isDone ? "Done" : isToday ? "Current" : isDream ? "Dream" : isChapter ? "Chapter" : "Locked";
-              const tappable = i <= daysDone; // solo días hechos o el actual (los futuros siguen sellados)
-              return (
-                <button
-                  key={i}
-                  onClick={() => tappable && setDayOpen(i)}
-                  disabled={!tappable}
-                  style={{
-                    minWidth: 64,
-                    textAlign: "center",
-                    background: "none",
-                    border: "none",
-                    padding: 0,
-                    fontFamily: "inherit",
-                    cursor: tappable ? "pointer" : "default",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 52,
-                      height: 52,
-                      margin: "0 auto 6px",
-                      borderRadius: 99,
-                      border: `1px solid ${border}`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 17,
-                      color: fg,
-                      opacity: isToday || isDone ? 1 : 0.75,
-                      boxShadow: isToday ? `0 0 22px -8px ${journey.color}` : gold && !isDone ? `0 0 18px -8px ${C.gold}` : "none",
-                    }}
-                  >
-                    {glyph}
-                  </div>
-                  <p style={{ fontSize: 10, color: isToday ? C.text : C.faint }}>{dayLabel(i)}</p>
-                  <p className="lbl" style={{ fontSize: 7.5, marginTop: 2, color: fg }}>
-                    {label}
-                  </p>
-                </button>
-              );
-            })}
-          </div>
-          <p style={{ fontSize: 12.5, color: C.dim, marginBottom: 18 }}>
-            Day {currentDay} of {SPRINT_DAYS} — {journey.plan[Math.min(SPRINT_DAYS - 1, daysDone)]?.title}. Tap a day for its plan; finish a chapter to unlock the next.
-          </p>
-
-          {/* planned dares + dates (explican el color) */}
-          {(store.plannedDares.length > 0 || store.dates.length > 0) && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 22 }}>
-              {store.plannedDares.map((pd) => (
-                <span key={pd.id} className="pill" style={{ padding: "6px 12px", fontSize: 11, width: "auto", borderColor: C.purple + "77", color: C.purple }}>
-                  {SYMBOLS.focus} Planned · {pd.label}
-                </span>
-              ))}
-              {store.dates.map((d, i) => (
-                <span key={i} className="pill" style={{ padding: "6px 12px", fontSize: 11, width: "auto", borderColor: C.gold + "77", color: C.gold }}>
-                  {SYMBOLS.treat} Date · {d.when}
-                </span>
-              ))}
+          {/* Active Dream Reward — el norte del Journey, sin fila de calendario */}
+          {dreamReward && (
+            <div className="card" style={{ padding: "12px 16px", marginBottom: 22, borderColor: C.gold + "33", display: "flex", gap: 10, alignItems: "center" }}>
+              <span style={{ color: C.gold, fontSize: 18 }}>{SYMBOLS.dream}</span>
+              <div>
+                <p className="lbl" style={{ fontSize: 8, color: C.gold, marginBottom: 2 }}>
+                  Dream Reward
+                </p>
+                <p style={{ fontSize: 13.5 }}>{dreamReward}</p>
+              </div>
             </div>
           )}
+
+          <p className="lbl" style={{ marginBottom: 12 }}>
+            Chapters
+          </p>
 
           {/* milestone path — capítulos en orden, desbloqueo por COMPLETADO */}
           {journey.chapters.map((c, i) => {
@@ -307,16 +245,6 @@ export function Journey({ app }: { app: DareApp }) {
       </div>
 
       {modal && <MilestoneModal app={app} ms={modal} color={journey.color} onClose={() => setModal(null)} />}
-      {dayOpen !== null && journey.plan[dayOpen] && (
-        <DayModal
-          app={app}
-          journey={journey}
-          day={journey.plan[dayOpen]}
-          dayIndex={dayOpen}
-          isCurrent={dayOpen === daysDone}
-          onClose={() => setDayOpen(null)}
-        />
-      )}
     </div>
   );
 }

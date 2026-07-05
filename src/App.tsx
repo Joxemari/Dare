@@ -8,6 +8,7 @@ import { Checkin } from "./screens/Checkin";
 import { Detail } from "./screens/Detail";
 import { Timer } from "./screens/Timer";
 import { Complete } from "./screens/Complete";
+import { JourneyComplete } from "./screens/JourneyComplete";
 import { Journey } from "./screens/Journey";
 import { Journeys } from "./screens/Journeys";
 import { Progress } from "./screens/Progress";
@@ -32,6 +33,8 @@ export default function App() {
       return app.currentDare ? <Timer app={app} /> : <Home app={app} />;
     case "complete":
       return <Complete app={app} />;
+    case "journeyComplete":
+      return app.justCompletedJourney ? <JourneyComplete app={app} /> : <Home app={app} />;
     case "journeys":
       return <Journeys app={app} />;
     case "journey":
