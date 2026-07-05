@@ -187,7 +187,10 @@ NINGUNA es Today (que queda mínimo):
 - **Ritual de apertura, UNA VEZ AL DÍA y SALTABLE.** Al abrir la app, si aún no
   hay carta hoy y no se ha resuelto el ritual, la pantalla `Card` aparece con las
   3 cartas boca abajo (*"Draw your card."*) ANTES de Today. Elegir una la revela
-  a pantalla completa y entra a Today; **"Skip for now"** (`skipCardIntro`) lo
+  a pantalla completa; al continuar, la carta **"viaja" hacia la esquina de You**
+  (translate+scale+fade, hint *"Saved in You"*; respeta `prefers-reduced-motion`)
+  para que se entienda que NO se pierde —queda guardada en You— y entra a Today.
+  **"Skip for now"** (`skipCardIntro`) lo
   salta sin sacar carta. El gate es puro (`shouldOpenCardIntro` en `useDare`:
   `onboarded && dailyCard.cardId == null && cardIntroDate !== hoy`) y se decide en
   el inicializador del `screen`; tanto sacar (`pickCard`) como saltar sellan
