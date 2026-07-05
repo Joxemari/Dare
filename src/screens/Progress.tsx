@@ -84,6 +84,7 @@ export function Progress({ app }: { app: DareApp }) {
                       fontSize: 13,
                       color: fg,
                       opacity: done || isToday ? 1 : 0.6,
+                      boxShadow: isToday && !done ? `0 0 16px -8px ${journey.color}` : "none",
                     }}
                   >
                     {done ? (d.count > 1 ? d.count : "✓") : isToday ? SYMBOLS.spark : ""}
@@ -222,6 +223,7 @@ export function Progress({ app }: { app: DareApp }) {
                       justifyContent: "center",
                       fontSize: 20,
                       color: got ? C.gold : C.faint,
+                      boxShadow: got ? `0 0 20px -8px ${C.gold}` : "none",
                     }}
                   >
                     {SYMBOLS[tr.sym]}

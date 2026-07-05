@@ -240,20 +240,34 @@ promocionar (Dares/Wildcards → `dares.ts`/`wildcards.ts`, Treats → `rewards.
 por `tier`) y borrar el fichero de `_proposed/`. Detalle en
 `docs/content-pipeline.md`.
 
-### Clave visual — base editorial sobria + calor en 3 momentos
+### Clave visual — editorial con COLOR y vida (no sobrio-plano)
 
-DARE busca calidad percibida en clave **híbrida**: una **base editorial sobria**
-(mucho aire, tipografía como jerarquía, casi sin adornos) y **calor concentrado
-SOLO en 3 momentos**: **Splash + Onboarding**, **Daily Card** (ritual) y
-**Completion** (`Complete` de Dare + `JourneyComplete`). Regla dura: el **glow**
-(`box-shadow` de color) y las animaciones cálidas se **reservan** a esos momentos;
-las superficies rutinarias (Detail, Journey, Journeys, Progress, You, Dream)
-llevan solo **borde/hairline**, sin glow. **Excepción documentada:** Today lleva
-un **toque cálido tenue y ESTÁTICO** (glow suave en el masthead, sin pulso y sin
-un segundo sparkle), aunque no sea uno de los 3 momentos. El **color por Journey**
-se mantiene (identidad propia). Cuerpo en **weight 400** (antes 300) para más peso
-editorial sobre `#111`. Al añadir un `box-shadow`/glow o una animación de "magia"
-nueva, pregúntate si estás en uno de los 3 momentos; si no, va sobrio.
+DARE busca calidad percibida en clave **híbrida**: estructura editorial
+(tipografía como jerarquía, aire, capas de superficie) **con color que aporta
+identidad y vida** — no un gris uniforme. Historia: una primera pasada dejó la UI
+**demasiado sobria** (headers de sección neutros, glow retirado de casi todo) y se
+corrigió por feedback de dirección. Reglas vigentes:
+
+- **Calor pleno** (glow amplio, glifos flotando, animación cálida) en los 3
+  momentos: **Splash + Onboarding**, **Daily Card** (ritual) y **Completion**
+  (`Complete` + `JourneyComplete`, con decoración *contenida*: 3 glifos, no lluvia).
+- **Color de identidad SÍ en superficies clave** (con disciplina, no arcoíris que
+  rebota): el **color por Journey / categoría** tiñe y da glow tenue a piezas con
+  significado — icono del Dare (`Detail`), card revelada de Today, "Next step" y
+  nodo de capítulo activo (`Journey`), card del Journey seleccionado (`Journeys`),
+  día de hoy y badges ganados (`Progress`).
+- **`Detail` con color por sección + jerarquía**: cada header lleva su acento
+  (What this is=verde, Steps=color del Dare, Companion=púrpura, Why=oro,
+  Effect=verde) para que se distingan, PERO se mantiene la jerarquía `primary`
+  (label `.lbl`) vs `muted` (label `.lbl-sm`) — color **y** orden.
+- **Today** mantiene un toque cálido tenue y estático (glow tras el wordmark).
+- Se conserva lo editorial que NO era el problema: escala tipográfica tokenizada,
+  masthead de Today compacto, capas de superficie (`card`/`card2`), cuerpo en
+  weight 400.
+
+Regla al añadir glow/color: úsalo con **significado** (identidad de Journey/
+categoría, o uno de los 3 momentos) y **con disciplina** (un acento por pieza, no
+cinco colores compitiendo sin orden).
 
 **Capas de superficie.** Tres niveles: fondo `#111`, `card` (#1C1C1C, superficie
 PRIMARIA/elevada) y `card2` (#141412, superficie RECESIVA de apoyo — más cerca del

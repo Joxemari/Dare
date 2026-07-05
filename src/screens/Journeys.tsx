@@ -63,6 +63,7 @@ export function Journeys({ app }: { app: DareApp }) {
                   color: C.text,
                   opacity: placeholder ? 0.55 : 1,
                   borderColor: cur ? j.color + "88" : C.line,
+                  boxShadow: cur ? `0 0 30px -14px ${j.color}` : "none",
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
