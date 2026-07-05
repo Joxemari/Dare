@@ -178,19 +178,24 @@ El "Another dare" del revelado del flujo rápido sigue siendo aleatorio
 (`anotherQuickDare`); `anotherDare` (rechazar + `Checkin`) queda disponible.
 
 **El check-in es CORTO a propósito** (TRES preguntas, todas HARD FILTERS del
-generador): **Time** (5 / 10 / 20 / 30+ min) · **Place** (Home / City / Park /
-Mountain, en una fila; + **"Take me somewhere ✦"** a todo el ancho en la fila
-de abajo) · **Energy** (Tired / Calm / Normal / High). **Energy es
+generador): **Time** (5 / 10 / 20 / 30+ min) · **Place** (SEIS opciones en un
+grid de 4 columnas: Home / City / Park / Bed / Office / Gym, + **"Take me
+somewhere ✦"** ocupando 2 columnas —1 alto × 2 ancho— al cierre de la 2ª fila)
+· **Energy** (Tired / Calm / Normal / High). **Energy es
 ahora una pregunta DIRECTA** (`EnergyLevel` en `types.ts`; ya no se deriva del
 Mood): `energyForLevel` la traduce a un número 1–10 (tired→2, calm→4, normal→6,
 high→9) y `stateForLevel` la traduce a `MentalState` (high→"active"; "calm" es
 un `MentalState` nuevo) para reutilizar el scoring y las etiquetas `Dare.states`
 existentes. Sin opciones marcadas por defecto: el CTA ("Get my dare") queda
 atenuado hasta responder las tres. Al abrir, la pantalla hace `scrollTo(top)`
-(sin router, el scroll no se resetea solo). **Mountain** es un Place directo que
-mapea a la loc de Dare `forest` (monte/bosque/senderos: pinos, colinas, rutas;
-vía `placeToLocs("mountain")`). La última opción **"Take me somewhere ✦"** (loc
-`"anywhere"`): en vez de fijar un lugar, el generador **elige el destino**
+(sin router, el scroll no se resetea solo). **Mapeo de Places a locs de Dare**
+(`placeToLocs`): Home→`home` · City→`city` · Park→`park` · **Bed**→`home` (en
+casa a mínima fricción; la intensidad la acota Energy, no el Place) ·
+**Office**→`home`+`city` (escritorio o salir a la calle) · **Gym**→`gym`
+(fuerza/cardio: los Dares físicos de `dumbbells`/`carry`/`tabata`/`fitboxing`
+con copy neutra de música/podcast llevan `gym` en sus `locs` además de `home`,
+para que Gym tenga contenido real). La última opción **"Take me somewhere ✦"**
+(loc `"anywhere"`): en vez de fijar un lugar, el generador **elige el destino**
 (piscina/gym/bosque/padel/…, vía `placeToLocs("anywhere")`).
 
 **Place es el filtro MÁS FUERTE, y es un HARD FILTER real** (`placeToLocs` +

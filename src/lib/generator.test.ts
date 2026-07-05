@@ -41,15 +41,26 @@ describe("placeToLocs", () => {
     expect(placeToLocs("home")).toEqual(["home"]);
     expect(placeToLocs("city")).toEqual(["city"]);
     expect(placeToLocs("park")).toEqual(["park"]);
-    // Mountain = monte/bosque/senderos → loc de Dare `forest`.
-    expect(placeToLocs("mountain")).toEqual(["forest"]);
+    // Bed = en casa a mínima fricción → misma loc que Home.
+    expect(placeToLocs("bed")).toEqual(["home"]);
+    // Office = escritorio (home) o salir a la calle (city).
+    expect(placeToLocs("office")).toEqual(["home", "city"]);
+    // Gym = fuerza/cardio → loc `gym`.
+    expect(placeToLocs("gym")).toEqual(["gym"]);
   });
 
-  it("Mountain solo devuelve Dares de bosque (nunca City/Park/Home)", () => {
+  it("Gym solo devuelve Dares de gimnasio (nunca City/Park/Forest)", () => {
     for (let i = 0; i < 40; i++) {
-      const { dare } = generateDare({ ...base, loc: "mountain", energy: 6, time: 20 }, [], {}, ember);
-      expect(dare.locs.includes("forest"), `${dare.id} no es de bosque`).toBe(true);
-      expect(dare.locs.some((l) => l === "city" || l === "park" || l === "home")).toBe(false);
+      const { dare } = generateDare({ ...base, loc: "gym", energy: 7, time: 20 }, [], {}, ember);
+      expect(dare.locs.includes("gym"), `${dare.id} no es de gym`).toBe(true);
+      expect(dare.locs.some((l) => l === "city" || l === "park" || l === "forest")).toBe(false);
+    }
+  });
+
+  it("Bed nunca manda fuera de casa (misma loc que Home)", () => {
+    for (let i = 0; i < 40; i++) {
+      const { dare } = generateDare({ ...base, loc: "bed", energy: 4 }, [], {}, ember);
+      expect(dare.locs.includes("home"), `${dare.id} no es de casa`).toBe(true);
     }
   });
 

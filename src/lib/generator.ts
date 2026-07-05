@@ -39,14 +39,17 @@ export function placeToLocs(loc: CurrentLoc): Loc[] {
       return ["city"];
     case "park":
       return ["park"];
-    // Monte/bosque/senderos: mapea a la loc de Dare `forest` (pinos, colinas,
-    // rutas). Es un Place directo, no un destino de "anywhere".
-    case "mountain":
-      return ["forest"];
-    // Heredados: la UI ya no los ofrece, pero un check-in guardado puede
-    // traerlos. Se tratan como equivalentes urbanos razonables.
+    // En la cama / en casa a mínima fricción: misma loc que Home (`home`). La
+    // intensidad la acota la pregunta de Energy, no el Place.
+    case "bed":
+      return ["home"];
+    // Oficina: tareas de escritorio (loc `home`) o salir a la calle (`city`).
     case "office":
       return ["home", "city"];
+    // Gimnasio: fuerza/cardio (loc `gym`).
+    case "gym":
+      return ["gym"];
+    // Heredado: la UI ya no lo ofrece, pero un check-in guardado puede traerlo.
     case "travelling":
       return ["city"];
     // "Take me somewhere": DARE elige un DESTINO (no te quedas donde estás,
