@@ -30,7 +30,7 @@ function Screen1({ app }: { app: DareApp }) {
       </div>
 
       <div className="rise">
-        <h1 className="serif" style={{ fontSize: 40, lineHeight: 1.12, margin: "0 0 16px" }}>
+        <h1 className="serif t-display" style={{ lineHeight: 1.12, margin: "0 0 16px" }}>
           You don't need
           <br />
           motivation.
@@ -85,7 +85,7 @@ function Screen2({ app }: { app: DareApp }) {
               >
                 <span style={{ color: col, fontSize: 26 }}>{g}</span>
               </div>
-              <p className="lbl" style={{ fontSize: 8.5, marginTop: 8, color: col }}>
+              <p className="lbl-sm" style={{ marginTop: 8, color: col }}>
                 {label}
               </p>
             </div>
@@ -97,7 +97,7 @@ function Screen2({ app }: { app: DareApp }) {
       </div>
 
       <div className="rise">
-        <h1 className="serif" style={{ fontSize: 38, lineHeight: 1.12, margin: "0 0 16px" }}>
+        <h1 className="serif t-display" style={{ lineHeight: 1.12, margin: "0 0 16px" }}>
           Start first.
           <br />
           Feel better second.

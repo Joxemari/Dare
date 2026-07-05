@@ -49,7 +49,7 @@ export function TodayHeader({
       </div>
 
       <span className="lbl">{dayLabel}</span>
-      <h1 className="serif" style={{ fontSize: 34, lineHeight: 1.14, color: C.text, marginTop: 10 }}>
+      <h1 className="serif t-title" style={{ lineHeight: 1.14, color: C.text, marginTop: 10 }}>
         {greeting}.
         <br />
         Today is yours.

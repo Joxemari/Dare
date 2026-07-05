@@ -118,7 +118,7 @@ export function Progress({ app }: { app: DareApp }) {
                   >
                     <div>
                       <p style={{ fontSize: 14, color: C.text }}>{p.label}</p>
-                      <p className="lbl" style={{ fontSize: 8.5, marginTop: 3, color: C.faint }}>
+                      <p className="lbl-sm" style={{ marginTop: 3, color: C.faint }}>
                         {WHEN_LABEL[p.when]}
                       </p>
                     </div>
@@ -142,7 +142,7 @@ export function Progress({ app }: { app: DareApp }) {
               <p className="lbl" style={{ marginBottom: 6 }}>
                 Proof collected
               </p>
-              <p className="serif" style={{ fontSize: 36 }}>
+              <p className="serif t-display">
                 {proofCount} <span style={{ color: C.green, fontSize: 18 }}>{SYMBOLS.spark}</span>
               </p>
               <p style={{ fontSize: 12, color: C.dim }}>{proofCount === 1 ? "proof" : "proofs"}</p>
@@ -151,7 +151,7 @@ export function Progress({ app }: { app: DareApp }) {
               <p className="lbl" style={{ marginBottom: 6 }}>
                 Momentum
               </p>
-              <p className="serif" style={{ fontSize: 36 }}>
+              <p className="serif t-display">
                 {store.momentum.count} <span style={{ color: C.coral, fontSize: 18 }}>{SYMBOLS.momentum}</span>
               </p>
               <p style={{ fontSize: 12, color: C.dim }}>day momentum · no pressure</p>
@@ -163,7 +163,7 @@ export function Progress({ app }: { app: DareApp }) {
             <p className="lbl" style={{ marginBottom: 6 }}>
               Current Identity
             </p>
-            <p className="serif" style={{ fontSize: 24 }}>
+            <p className="serif t-heading">
               {identity ? `${SYMBOLS[identity.sym]} ${identity.name}` : `${SYMBOLS.spark} Starter`}
             </p>
             <p style={{ fontSize: 12.5, color: C.dim, marginTop: 4 }}>{identity?.line ?? "Starts before feeling ready."}</p>
@@ -257,10 +257,10 @@ export function Progress({ app }: { app: DareApp }) {
                   >
                     <span style={{ color: d ? CATS[d.cat].color : C.green, fontSize: 11 }}>{SYMBOLS.spark}</span>
                     <div style={{ flex: 1 }}>
-                      <p className="serif" style={{ fontSize: 14.5, fontStyle: "italic", lineHeight: 1.35 }}>
+                      <p className="serif t-quote" style={{ fontStyle: "italic", lineHeight: 1.35 }}>
                         "{p.text}"
                       </p>
-                      <p className="lbl" style={{ fontSize: 8, marginTop: 3, color: C.faint }}>
+                      <p className="lbl-sm" style={{ marginTop: 3, color: C.faint }}>
                         {p.date}
                         {d ? ` · ${d.title}` : ""}
                       </p>

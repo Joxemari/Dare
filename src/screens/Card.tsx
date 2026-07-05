@@ -51,7 +51,7 @@ export function Card({ app }: { app: DareApp }) {
           </div>
 
           <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-            <p className="serif" style={{ fontSize: 26, textAlign: "center", marginBottom: 8 }}>
+            <p className="serif t-heading" style={{ textAlign: "center", marginBottom: 8 }}>
               Draw your card.
             </p>
             <p style={{ fontSize: 13, color: C.dim, textAlign: "center", marginBottom: 30 }}>

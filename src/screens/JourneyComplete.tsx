@@ -68,7 +68,7 @@ export function JourneyComplete({ app }: { app: DareApp }) {
               {SYMBOLS.dream}
             </div>
 
-            <h2 className="serif" style={{ fontSize: 38, marginBottom: 6 }}>
+            <h2 className="serif t-display" style={{ marginBottom: 6 }}>
               Journey complete.
             </h2>
             <p style={{ color: C.dim, fontSize: 14, marginBottom: 26 }}>
@@ -84,7 +84,7 @@ export function JourneyComplete({ app }: { app: DareApp }) {
                 className="card flip"
                 style={{ padding: 22, margin: "0 auto 22px", maxWidth: 300, borderColor: C.gold + "66", boxShadow: `0 0 44px -14px ${C.gold}` }}
               >
-                <p className="serif" style={{ fontSize: 22, marginBottom: 8 }}>
+                <p className="serif t-heading" style={{ marginBottom: 8 }}>
                   {SYMBOLS.dream} {dreamReward}
                 </p>
                 <p style={{ fontSize: 13, color: C.dim, lineHeight: 1.5 }}>
@@ -95,7 +95,7 @@ export function JourneyComplete({ app }: { app: DareApp }) {
 
             {/* identidad ganada — una sola, sin spam de badges */}
             <div className="card" style={{ padding: "14px 18px", margin: "0 auto 26px", maxWidth: 300, background: C.card2 }}>
-              <p className="serif" style={{ fontSize: 20, marginBottom: 4 }}>
+              <p className="serif t-subhead" style={{ marginBottom: 4 }}>
                 {identSym} {identName}
               </p>
               <p style={{ fontSize: 12.5, color: C.dim }}>{identLine}</p>

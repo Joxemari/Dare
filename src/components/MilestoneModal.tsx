@@ -138,7 +138,7 @@ export function MilestoneModal({
             ✕
           </button>
         </div>
-        <h3 className="serif" style={{ fontSize: 24, lineHeight: 1.2, marginBottom: 16 }}>
+        <h3 className="serif t-heading" style={{ lineHeight: 1.2, marginBottom: 16 }}>
           {ms.title}
         </h3>
 

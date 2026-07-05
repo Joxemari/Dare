@@ -255,6 +255,15 @@ se mantiene (identidad propia). Cuerpo en **weight 400** (antes 300) para más p
 editorial sobre `#111`. Al añadir un `box-shadow`/glow o una animación de "magia"
 nueva, pregúntate si estás en uno de los 3 momentos; si no, va sobrio.
 
+**Escala tipográfica (tokens en `index.css`).** Los títulos serif usan **5 pasos**
+únicos (no tamaños inline sueltos): `.t-display` (40, marca/celebración) ·
+`.t-title` (32, título de pantalla) · `.t-heading` (24, título de card) ·
+`.t-subhead` (20, subtítulo/capítulo/stat) · `.t-quote` (17, cita/serif body). Se
+aplican junto a `.serif` (`className="serif t-title"`), sin `fontSize` inline. Las
+labels tienen piso de legibilidad: `.lbl` (10px) y `.lbl-sm` (9px, tracking menor)
+— **no** bajar de 9px. Al maquetar texto nuevo, elige el paso más cercano en vez
+de inventar un tamaño.
+
 ### Vocabulario del producto (UI en inglés)
 
 DARE no es un tracker de fitness: es un *Chief Energy Officer*. El vocabulario de

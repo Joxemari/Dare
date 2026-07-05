@@ -15,10 +15,10 @@ export function Reentry({ app }: { app: DareApp }) {
             <div className="pulse" style={{ color: C.green, fontSize: 22, marginBottom: 26 }}>
               ✦
             </div>
-            <h1 className="serif" style={{ fontSize: 44, lineHeight: 1.15, marginBottom: 12 }}>
+            <h1 className="serif t-display" style={{ lineHeight: 1.15, marginBottom: 12 }}>
               No reset.
             </h1>
-            <p className="serif" style={{ fontStyle: "italic", fontSize: 20, color: C.dim, marginBottom: 8 }}>
+            <p className="serif t-subhead" style={{ fontStyle: "italic", color: C.dim, marginBottom: 8 }}>
               Take the next dare.
             </p>
             <p style={{ fontSize: 13, color: C.faint, marginBottom: 34 }}>
@@ -41,7 +41,7 @@ export function Reentry({ app }: { app: DareApp }) {
                   ✦
                 </div>
                 <div>
-                  <p className="serif" style={{ fontSize: 21 }}>
+                  <p className="serif t-subhead">
                     {comeback.title}
                   </p>
                   <p style={{ fontSize: 12.5, color: C.dim, marginTop: 2 }}>

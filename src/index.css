@@ -53,9 +53,46 @@ body {
   font-family: "Cormorant Garamond", Georgia, serif;
   font-weight: 400;
 }
+/* ---- Escala tipográfica (editorial): 5 pasos serif ----
+   Colapsa los ~12 tamaños serif que había inline a un ritmo único. Se usan
+   junto a `.serif`. line-height incluido para un ritmo vertical consistente.
+     t-display  celebración / marca (Onboarding, Complete, JourneyComplete)
+     t-title    título de pantalla (Detail, Journey, Today, Timer, Checkin, Dream)
+     t-heading  título de card grande (identidad, treat, dare revelado, modal)
+     t-subhead  subtítulo / nombre de capítulo / stat
+     t-quote    cita serif / body serif */
+.t-display {
+  font-size: 40px;
+  line-height: 1.08;
+}
+.t-title {
+  font-size: 32px;
+  line-height: 1.14;
+}
+.t-heading {
+  font-size: 24px;
+  line-height: 1.2;
+}
+.t-subhead {
+  font-size: 20px;
+  line-height: 1.25;
+}
+.t-quote {
+  font-size: 17px;
+  line-height: 1.4;
+}
 .lbl {
   font-size: 10px;
   letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #8b8b85;
+  font-weight: 400;
+}
+/* Label pequeña con piso de legibilidad: 9px (antes había 7.5–8.5 inline) y el
+   tracking baja con el tamaño para que no aprieten las letras. */
+.lbl-sm {
+  font-size: 9px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #8b8b85;
   font-weight: 400;

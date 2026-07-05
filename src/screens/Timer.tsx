@@ -26,7 +26,7 @@ export function Timer({ app }: { app: DareApp }) {
     <div className="dare-root">
       <div style={{ ...wrap, textAlign: "center" }}>
         <div style={{ ...pad, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-          <p className="serif" style={{ fontSize: 30, marginBottom: 4 }}>
+          <p className="serif t-title" style={{ marginBottom: 4 }}>
             On the move.
           </p>
           <p style={{ color: C.dim, fontSize: 13, marginBottom: 20 }}>{d.title}</p>
@@ -37,7 +37,7 @@ export function Timer({ app }: { app: DareApp }) {
             <p className="lbl" style={{ color: C.purple, marginBottom: 4 }}>
               {SYMBOLS.rhythm} Companion · {comp.word}
             </p>
-            <p className="serif" style={{ fontSize: 16, color: C.text }}>
+            <p className="serif t-quote" style={{ color: C.text }}>
               {comp.label}
             </p>
           </div>
@@ -70,7 +70,7 @@ export function Timer({ app }: { app: DareApp }) {
               <span className="lbl" style={{ marginBottom: 4 }}>
                 Time left
               </span>
-              <span className="serif" style={{ fontSize: 40 }}>
+              <span className="serif t-display">
                 {mm}:{ss}
               </span>
               <button

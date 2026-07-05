@@ -37,7 +37,7 @@ export function Checkin({ app }: { app: DareApp }) {
             <span className="lbl">Quick check-in</span>
             <span style={{ width: 16 }} />
           </div>
-          <h2 className="serif" style={{ fontSize: 30, marginBottom: 4 }}>
+          <h2 className="serif t-title" style={{ marginBottom: 4 }}>
             How are you today?
           </h2>
           <p style={{ color: C.dim, fontSize: 13, marginBottom: 18 }}>This helps me choose your perfect dare.</p>
