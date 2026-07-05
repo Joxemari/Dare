@@ -1,4 +1,4 @@
-import type { Chapter, DayPlan, Journey, MilestoneType } from "../types";
+import type { Chapter, DayPlan, Journey, JourneyId, MilestoneType } from "../types";
 import type { SymbolKey } from "./symbols";
 import { JOURNEY_COLOR } from "./colors";
 
@@ -167,13 +167,13 @@ export const JOURNEYS: Journey[] = [
         ],
       },
       {
-        n: "II", name: "Make It Play", sym: "strong", goal: "Make training less boring.", days: [2, 3],
+        n: "II", name: "Make It Yours", sym: "strong", goal: "Make strength less boring.", days: [2, 3],
         milestones: [
-          { id: "iq-2-letter", t: "letter", title: "Play counts as training", body: "The best training is the kind you'd do anyway. Water, a bag to hit, a game with a friend. If it doesn't feel like homework, you'll come back. That's the whole strategy." },
-          { id: "iq-2-action", t: "action", title: "Create your Boss Playlist", action: "bossPlaylist", body: "The one that makes you feel unstoppable. Name it, pick the platform, choose the first song. It's the soundtrack to your Tabatas." },
-          { id: "iq-2-goal", t: "goal", title: "Complete one standing tabata", goalHint: "8 minutes, standing — check in with energy 5+ at home." },
-          { id: "iq-2-goal2", t: "goal", title: "Complete one water, padel or play-based Dare", goalHint: "Choose Pool or Padel as your destination in the check-in." },
-          { id: "iq-2-science", t: "science", title: "Why short intensity works", scienceId: "tabata" },
+          { id: "iq-2-letter", t: "letter", title: "Strength you'd do anyway", body: "The best training is the kind you'd do anyway. A show you love, a playlist that makes you feel unstoppable, weights within reach. If it doesn't feel like homework, you'll come back. That's the whole strategy." },
+          { id: "iq-2-action", t: "action", title: "Create your Boss Playlist", action: "bossPlaylist", body: "The one that makes you feel unstoppable. Name it, pick the platform, choose the first song. It's the soundtrack to your sets." },
+          { id: "iq-2-goal", t: "goal", title: "Complete one loaded carry Dare", goalHint: "Pick things up and carry them — farmer carries, laps or stairs." },
+          { id: "iq-2-goal2", t: "goal", title: "Complete one strength Dare with your Boss Playlist", goalHint: "Same weights, better soundtrack. Dumbbells or kettlebell at home." },
+          { id: "iq-2-science", t: "science", title: "Why carries build real strength", scienceId: "carries" },
         ],
       },
       {
@@ -201,30 +201,127 @@ export const JOURNEYS: Journey[] = [
         dare: "12 min dumbbells: goblet squat, dumbbell row, shoulder press, farmer hold.", soft: "One round only.", bold: "Three full rounds.",
         trigger: "No gym. Just two weights.", companion: "Netflix.", treat: "Hot shower.", proof: "Chose strength without drama.",
         scienceTitle: "Muscle tissue and neuromuscular coordination", scienceBody: "Lifting recruits muscle tissue and trains neuromuscular coordination. Regular loading is associated with steadier energy and everyday strength over time." },
-      { day: 2, title: "Water Energy", cat: "pool", dareId: "water-reset",
-        dare: "20 min pool or easy swim.", soft: "Shower + 5 min standing mobility.", bold: "30 min varied swim.",
-        trigger: "Let water do half the work.", companion: "Calm playlist or silence.", treat: "Nice body lotion.", proof: "Used water to reset my body.",
-        scienceTitle: "Parasympathetic activation and sensory input", scienceBody: "Water and rhythmic movement can support parasympathetic activation — the 'rest and recover' side of the nervous system — which may leave you calmer afterwards." },
-      { day: 3, title: "Standing Tabata", cat: "tabata", dareId: "micro-tabata",
-        dare: "8 min standing tabata, 20s on / 10s off (squats, reverse lunges, shadowboxing, fast feet, curls, presses).", soft: "4 min, one move.", bold: "12 min, two-move rounds.",
-        trigger: "Eight minutes. No negotiation.", companion: "Boss playlist.", treat: "Cold drink.", proof: "Did intensity without overthinking.",
-        scienceTitle: "Heart rate, endorphins and perceived energy", scienceBody: "Short bursts of effort raise heart rate and are associated with a release of endorphins, which can lift perceived energy for hours afterwards." },
-      { day: 4, title: "Hit Back", cat: "fitboxing", dareId: "shadow-rounds",
-        dare: "Fitboxing class if available, or 12 min shadowboxing.", soft: "3 min shadowboxing.", bold: "20 min with combinations.",
-        trigger: "Hit resistance back.", companion: "High-energy music.", treat: "Long shower.", proof: "Turned stress into movement.",
-        scienceTitle: "Coordination, rhythm and stress discharge", scienceBody: "Rhythmic, coordinated movement can give stress somewhere to go, and is associated with a shift out of a wound-up state." },
-      { day: 5, title: "Carry Strength", cat: "carry", dareId: "carry-strength",
+      { day: 2, title: "Carry Strength", cat: "carry", dareId: "carry-strength",
         dare: "Farmer carry + squats + presses, 12–15 min.", soft: "Carry bags or dumbbells for 3 short rounds.", bold: "Heavier carries, longer distance.",
-        trigger: "Pick things up. Carry them.", companion: "Netflix or music.", treat: "Protein-rich snack.", proof: "Built strength in small sets.",
+        trigger: "Pick things up. Carry them.", companion: "A short podcast.", treat: "Big glass of cold water.", proof: "Carried more than I thought.",
         scienceTitle: "Grip strength and loaded movement", scienceBody: "Carrying load trains grip and whole-body strength. Grip strength is associated with overall resilience and healthy ageing." },
+      { day: 3, title: "Boss Playlist Sets", cat: "tabata", dareId: "sweat-eight",
+        dare: "8 min standing intervals, 20s on / 10s off, to your Boss Playlist.", soft: "4 min, one move.", bold: "12 min, two-move rounds.",
+        trigger: "Boss playlist. Eight minutes.", companion: "Your Boss Playlist.", treat: "Cold drink.", proof: "Trained with intensity, not boredom.",
+        scienceTitle: "Music and perceived effort", scienceBody: "Music you love can lower perceived effort, so a hard set feels more doable. The effort is the same; the brain just negotiates less." },
+      { day: 4, title: "One Weight Flow", cat: "dumbbells", dareId: "kettlebell-flow",
+        dare: "14 min flow: swings, goblet squats, presses with one weight.", soft: "Two easy rounds.", bold: "Four rounds, heavier.",
+        trigger: "No gym. Just one weight.", companion: "Podcast or playlist.", treat: "Protein-rich snack.", proof: "Moved one weight with control.",
+        scienceTitle: "Loaded hinge and full-body strength", scienceBody: "Hip-hinge movements like swings train the strong muscles of the back and legs, and loaded full-body work is associated with steadier everyday energy over time." },
+      { day: 5, title: "Loaded Walk", cat: "walk", dareId: "stair-climb",
+        dare: "12 min: stairs or a brisk walk carrying something with intent.", soft: "One steady climb, then home.", bold: "Add a loaded backpack.",
+        trigger: "Take the stairs on purpose.", companion: "One driving song.", treat: "Coffee in the sun.", proof: "Used the climb as fuel.",
+        scienceTitle: "Everyday load and energy", scienceBody: "Climbing and carrying use large muscle groups and raise heart rate gently — a low-friction way to build capacity that carries into daily life." },
       { day: 6, title: "Active Recovery", cat: "recovery",
-        dare: "Active recovery: pool, walk, standing mobility or light dumbbells.", soft: "7 min walk.", bold: "Mobility flow + easy swim.",
+        dare: "10 min standing mobility, or light dumbbells with no intensity.", soft: "7 min neck, shoulders, hips.", bold: "Full mobility flow.",
         trigger: "Recovery is still training.", companion: "Soft playlist.", treat: "Early night ritual.", proof: "Recovered without stopping.",
         scienceTitle: "HRV and nervous system recovery", scienceBody: "Easy movement and rest support heart rate variability, a marker associated with a well-recovered nervous system." },
       { day: 7, title: "Quiet Power", cat: "dumbbells", chapter: true, dream: true,
-        dare: "Your favourite from the week: dumbbells, pool, Fitboxing, padel or standing tabata.", soft: "The easiest version of it.", bold: "The strongest version you've done.",
+        dare: "Your strongest session of the week: dumbbells, kettlebell or carries.", soft: "The easiest version of it.", bold: "The strongest version you've done.",
         trigger: "Choose your strongest proof.", companion: "Best companion.", treat: "Dream Reward unlock.", proof: "Became someone who trains strength.",
         scienceTitle: "Self-efficacy", scienceBody: "Choosing and completing your own strength Dare builds self-efficacy, which is associated with continuing a habit long after a program ends." },
+    ],
+  },
+
+  // ======================= BRIGHT PULSE ◆ =======================
+  {
+    id: "pulse",
+    name: "Bright Pulse",
+    sym: "strong",
+    color: JOURNEY_COLOR.pulse,
+    tag: "Fun cardio. Fast energy.",
+    problem: "I want energy and a lift, but 'cardio' sounds like a punishment.",
+    promise: "Get energised through rhythm, music and short intensity.",
+    lesson: "Intensity is a mood, not a chore.",
+    bias: ["tabata", "fitboxing", "padel", "walk"],
+    identity: { id: "bright-mover", name: "Bright Mover", line: "Turns energy up on purpose." },
+    completionLine:
+      "You stopped waiting to feel energetic. You learned to turn it up — eight minutes at a time.",
+    dreamPrompt: "What would feeling switched-on again be worth?",
+    dreamOptions: [
+      { id: "headphones", emoji: "🎧", label: "New headphones" },
+      { id: "class", emoji: "🥊", label: "Fitboxing class pack" },
+      { id: "top", emoji: "🎽", label: "New training top" },
+      { id: "concert", emoji: "🎫", label: "Concert or gig" },
+      { id: "speaker", emoji: "🔊", label: "Bluetooth speaker" },
+      { id: "trainers", emoji: "👟", label: "New trainers" },
+      { id: "smoothie", emoji: "🥤", label: "Smoothie bar week" },
+      { id: "custom", emoji: "✍️", label: "Create my own", custom: true },
+    ],
+    chapters: [
+      {
+        n: "I", name: "Turn It Up", sym: "strong", goal: "Make intensity feel like a lift, not a chore.", days: [1, 1],
+        milestones: [
+          { id: "bp-1-letter", t: "letter", title: "Cardio has a bad name", body: "You've been sold long, grim, joyless cardio. Forget it. Eight minutes to a song you love changes your state faster than a lecture on discipline ever could. This is energy on demand — not a punishment for existing." },
+          { id: "bp-1-action", t: "action", title: "Create your Boss Playlist", action: "bossPlaylist", body: "Three to five songs that make you feel unstoppable. Name it, pick the platform, choose the first track. It's the fuel for every session here." },
+          { id: "bp-1-goal", t: "goal", title: "Complete one 8-minute intensity Dare", goalHint: "Standing intervals or dance cardio at home — energy 5+." },
+          { id: "bp-1-science", t: "science", title: "Why short intervals work", scienceId: "tabata" },
+          { id: "bp-1-proof", t: "proof", title: "I raised my own pulse on purpose." },
+        ],
+      },
+      {
+        n: "II", name: "Find the Rhythm", sym: "rhythm", goal: "Use music and coordination to move.", days: [2, 3],
+        milestones: [
+          { id: "bp-2-letter", t: "letter", title: "Rhythm carries you", body: "When the movement matches the beat, your brain stops counting reps and starts riding the song. Shadowboxing, dance, fast feet — coordination plus music is the least boring way to get a fast, real lift." },
+          { id: "bp-2-goal", t: "goal", title: "Complete one fitboxing or shadowboxing Dare", goalHint: "Jab, cross, hook — three rounds to a loud playlist." },
+          { id: "bp-2-goal2", t: "goal", title: "Complete one dance cardio Dare", goalHint: "No choreography. Just keep moving to three songs." },
+          { id: "bp-2-science", t: "science", title: "Coordination, rhythm and stress", scienceId: "fitboxing" },
+          { id: "bp-2-proof", t: "proof", title: "I turned music into movement." },
+        ],
+      },
+      {
+        n: "III", name: "Make It Social", sym: "reset", goal: "Add play and other people.", days: [4, 5],
+        milestones: [
+          { id: "bp-3-letter", t: "letter", title: "Play is the best cardio", body: "A padel game, a rally, a friend on a fast walk — you'll push harder and enjoy it more when it stops feeling like training. Movement you get to do beats movement you have to do, every time." },
+          { id: "bp-3-goal", t: "goal", title: "Complete one play or padel Dare", goalHint: "Book a court or rally against a wall — it counts." },
+          { id: "bp-3-motivator", t: "motivator", title: "Sweat can be joyful", body: "You don't have to suffer to get a real lift. The best sessions leave you brighter, not wrecked. Chase the buzz, not the exhaustion." },
+          { id: "bp-3-proof", t: "proof", title: "I got a lift from playing." },
+        ],
+      },
+      {
+        n: "IV", name: "Bright Return", sym: "dream", goal: "Make energy-on-demand an identity.", days: [6, 7],
+        milestones: [
+          { id: "bp-4-letter", t: "letter", title: "You can change your own state", body: "You proved it this week: eight minutes and a song, and the whole day tilts brighter. That's a switch you now own. Use it on the flat days, not just the good ones." },
+          { id: "bp-4-goal", t: "goal", title: "Complete your favourite Pulse Dare", goalHint: "The session that gave you the biggest lift — repeat it." },
+          { id: "bp-4-reflection", t: "reflection", title: "What lifted me most?", body: "One line. Which session flipped your state fastest this week? Keep it — that's your reset button." },
+          { id: "bp-4-badge", t: "badge", title: "◆ Bright Mover", body: "Turns energy up on purpose." },
+        ],
+      },
+    ],
+    plan: [
+      { day: 1, title: "Eight Bright Minutes", cat: "tabata", dareId: "sweat-eight",
+        dare: "8 min standing intervals, 20s on / 10s off, to your Boss Playlist.", soft: "4 min, one move.", bold: "12 min, two-move rounds.",
+        trigger: "Boss playlist. Eight minutes.", companion: "Your Boss Playlist.", treat: "Cold drink.", proof: "Raised my own pulse on purpose.",
+        scienceTitle: "Short intervals and perceived energy", scienceBody: "Short bursts of effort raise heart rate quickly and are associated with a release of endorphins, which can lift perceived energy for hours afterwards." },
+      { day: 2, title: "Shadow Rounds", cat: "fitboxing", dareId: "fitboxing-flow",
+        dare: "15 min fitboxing flow: jab, cross, hook to a loud playlist.", soft: "3 rounds of shadowboxing.", bold: "20 min with combinations.",
+        trigger: "Hit resistance back.", companion: "High-energy playlist.", treat: "Long shower.", proof: "Turned stress into movement.",
+        scienceTitle: "Coordination, rhythm and stress discharge", scienceBody: "Rhythmic, coordinated movement can give stress somewhere to go, and is associated with a shift out of a wound-up state." },
+      { day: 3, title: "Dance Cardio", cat: "tabata", dareId: "dance-cardio",
+        dare: "12 min dance cardio — three songs, no choreography.", soft: "One song, just move.", bold: "Five songs, full commitment.",
+        trigger: "Nobody's watching. Move anyway.", companion: "Your loudest playlist.", treat: "Fresh smoothie.", proof: "Turned music into movement.",
+        scienceTitle: "Music, mood and movement", scienceBody: "Moving to music you love is associated with a lift in mood and lower perceived effort — the session feels shorter and brighter than the clock says." },
+      { day: 4, title: "Play a Game", cat: "padel", dareId: "book-the-court",
+        dare: "Book padel with a friend, or rally against a wall.", soft: "15 min wall rally, solo.", bold: "Full match.",
+        trigger: "This is play, not training.", companion: "A friend.", treat: "Matcha or coffee after.", proof: "Got a lift from playing.",
+        scienceTitle: "Social play and adherence", scienceBody: "Social, playful movement raises heart rate while it lifts mood, and is associated with better adherence — it feels like something you get to do." },
+      { day: 5, title: "Fast Feet Outside", cat: "walk", dareId: "stair-climb",
+        dare: "12 min: brisk intervals, stairs or a fast loop.", soft: "One steady climb.", bold: "6 hill or stair repeats.",
+        trigger: "Take the stairs on purpose.", companion: "One driving song.", treat: "Cold drink in the sun.", proof: "Used the climb as fuel.",
+        scienceTitle: "Brisk movement and alertness", scienceBody: "Short brisk efforts raise heart rate and blood flow, which is associated with a quick lift in alertness and mood." },
+      { day: 6, title: "Easy Reset", cat: "recovery",
+        dare: "10 min gentle mobility — let the body come down.", soft: "5 min neck and shoulders.", bold: "Full mobility flow + long exhales.",
+        trigger: "Bright doesn't mean burnt out.", companion: "Calm playlist.", treat: "Body lotion ritual.", proof: "Balanced intensity with rest.",
+        scienceTitle: "Recovery between efforts", scienceBody: "The body adapts between efforts, not only during them. Easy movement is associated with a well-recovered, more responsive nervous system." },
+      { day: 7, title: "Bright Return", cat: "tabata", chapter: true, dream: true,
+        dare: "Your favourite Pulse session of the week.", soft: "The gentlest version of it.", bold: "The most intense version you've done.",
+        trigger: "Turn it up one more time.", companion: "Best companion.", treat: "Dream Reward unlock.", proof: "Became someone who changes their own state.",
+        scienceTitle: "Self-efficacy", scienceBody: "Choosing and finishing your own session builds self-efficacy, which is associated with keeping a habit long after a plan ends." },
     ],
   },
 
@@ -715,6 +812,23 @@ export const JOURNEYS: Journey[] = [
 
 
 export const SPRINT_DAYS = 7;
+
+/* ---- MVP: solo 4 Journeys se ofrecen para empezar ----
+   DARE es physical-energy-first. El MVP arranca con 4 Journeys físicos:
+   Iron Quiet (fuerza), Bright Pulse (cardio divertido), Wild Ground (fuera)
+   y Still Water (recuperación). El resto del set (First Flame, Clear Signal,
+   Steady Current, Quiet Fire) se conservan en los datos como CONCEPTOS DE
+   ROADMAP y para no romper el progreso guardado, pero NO aparecen en la
+   selección de Journeys. Ver CLAUDE.md. */
+export const MVP_JOURNEY_IDS: JourneyId[] = ["iron", "pulse", "wild", "water"];
+
+/** Los Journeys del MVP, en el orden en que se ofrecen. */
+export const MVP_JOURNEYS: Journey[] = MVP_JOURNEY_IDS
+  .map((id) => JOURNEYS.find((j) => j.id === id))
+  .filter((j): j is Journey => !!j);
+
+/** ¿Es `id` uno de los Journeys del MVP (ofrecibles)? */
+export const isMvpJourney = (id: string): boolean => (MVP_JOURNEY_IDS as string[]).includes(id);
 
 export function journeyById(id: string): Journey {
   return JOURNEYS.find((j) => j.id === id) ?? JOURNEYS[0];

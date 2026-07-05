@@ -57,7 +57,9 @@ concentran en la frontera (hook + `storage`), no repartidos por las pantallas.
 ```
 src/
   data/        Datos de dominio (constantes, sin lógica): dares, wildcards,
-               journeys (planes de 7 días + milestones tipados), tarot,
+               modes (MovementMode + CAT_MODE: capa de "tipo de movimiento"
+               sobre las categorías), journeys (planes de 7 días + milestones
+               tipados; MVP_JOURNEY_IDS marca los 4 ofrecibles), tarot,
                symbols (mapa central de glifos), science (biblioteca),
                traits (BADGES: hitos difíciles; persisten bajo la clave
                `traits` del store), rewards (treats/dates/dream,
@@ -76,6 +78,9 @@ src/
                                   de contenido generativo.
                  generationInput.ts  buildGenerationInput(): resume el store en
                                   la señal de feedback que alimenta la generación
+                 recommend.ts     recommendJourney(): qué Journey del MVP
+                                  destacar HOY en Today según el check-in
+                                  (estado+energía). Puro, prioriza los activos
                  share.ts         capa social: texto/payload PUROS para compartir
                                   la Daily Card vía Web Share API (ver más abajo)
                  briefing.ts      "lectura del día" estilo Co-Star: contenido del
@@ -105,7 +110,12 @@ La pestaña Today (`screens/Home.tsx`) es deliberadamente MÍNIMA: header
 de línea + textos, modular por props para variar por estado/journey), un
 `TodayDareRevealCard` (un Dare oculto que se **revela inline de un toque**, sin
 navegar; estados cerrado/revelado/completado), y `ActiveJourneyList` (filas
-compactas: símbolo + próxima acción + Start, que abre la pestaña Journey). Bajo
+compactas: símbolo + próxima acción + Start, que abre la pestaña Journey). Con
+**varios Journeys activos**, Today prioriza el "Today's Body Dare": sube y
+marca (`· today`) el Journey recomendado por el check-in (`recommendJourney` en
+`lib/recommend.ts`: energía baja → Still Water, con ganas → Iron Quiet, atascado
+→ Wild Ground, con energía alta → Bright Pulse, overwhelmed → Still Water,
+returning → el activo más suave). Bajo
 el hero se mantiene el widget `Briefing` (la "lectura del día" estilo Co-Star,
 parte de la atmósfera diaria). NO muestra proofs, métricas ni calendario — eso
 vive en Progress. El **ritual de
@@ -157,13 +167,44 @@ milestone: `letter/goal/action/motivator/science/proof/reflection/badge`. Los
 milestones son accionables (modal `MilestoneModal`): cada tipo tiene su CTA real
 y persiste en `store.milestones`.
 
-**Set final: 7 Journeys** (`JourneyId`), cada uno con símbolo, color propio
-(`JOURNEY_COLOR`) y Badge final (`identity`, 1 por Journey; su id existe también
-como Trait para el render del anillo). Los ids internos `ember/iron/water` se
-conservan (no romper datos guardados): **First Flame ✦** (slot `ember`),
-**Iron Quiet △** (`iron`), **Still Water ☾** (`water`), **Clear Signal ◇**
-(`clear`), **Steady Current ⌁** (`current`), **Wild Ground ↟** (`wild`),
-**Quiet Fire ⟁** (`fire`). Todos tienen `plan` completo (ya no hay placeholders).
+**MVP: 4 Journeys ofrecibles** — DARE es **physical-energy-first**: el objetivo
+es ayudar a construir el hábito de moverse (fuerza, cardio, aire libre,
+recuperación) sin aburrimiento. El picker (`Journeys.tsx`) y la lista de Today
+solo ofrecen estos 4 (`MVP_JOURNEY_IDS = ["iron","pulse","wild","water"]`):
+
+- **Iron Quiet △** (`iron`) — fuerza: mancuernas, kettlebell, carries. Sin gym.
+- **Bright Pulse ◆** (`pulse`) — cardio divertido: fitboxing, shadowboxing,
+  standing tabata, dance cardio, sesiones cortas y sudadas. **Journey nuevo.**
+- **Wild Ground ↟** (`wild`) — fuera: caminar, luz, bosque, rutas, colinas,
+  escaleras, microaventuras.
+- **Still Water ☾** (`water`) — recuperación: piscina, movilidad suave,
+  respiración, apagado de la noche.
+
+Cada Journey tiene símbolo, color propio (`JOURNEY_COLOR`) y Badge final
+(`identity`, 1 por Journey; su id existe también como Trait para el render del
+anillo). El de Bright Pulse es **Bright Mover** (`bright-mover`).
+
+**Roadmap (en datos, NO ofrecibles).** Los otros 4 del set histórico se
+conservan en `JOURNEYS` como conceptos de roadmap y para no romper el progreso
+guardado, pero **no** aparecen en la selección: **First Flame ✦** (`ember`, hoy
+concepto de onboarding/primera activación), **Clear Signal ◇** (`clear`, foco),
+**Steady Current ⌁** (`current`, consistencia), **Quiet Fire ⟁** (`fire`,
+coraje). Los ids internos `ember/iron/water` se conservan (no romper datos
+guardados). Al reintroducir uno, basta con añadir su id a `MVP_JOURNEY_IDS`.
+
+**Modos de movimiento** (`src/data/modes.ts`): `MovementMode` (Strong · Sweaty ·
+Outside · Water · Recovery · Soft · Play · Social · Travel) es una capa por
+encima de las categorías (`CAT_MODE`). Regla **anti-aburrimiento**: el generador
+penaliza repetir el mismo MODO más de dos veces seguidas (además de la
+penalización por `Cat`). Cada Journey rota modos, companions y treats a lo largo
+de sus 7 días para no sentirse repetitivo.
+
+**Ejercicios permitidos/prohibidos.** Nunca: push-ups, planks, burpees, mountain
+climbers, trabajo de suelo con manos apoyadas, HIIT largo, lenguaje de calorías/
+peso/vergüenza (lo refuerza `contentSchema` + `data.test.ts`). Permitido:
+mancuernas, kettlebells, bandas, carries, sentadillas goblet, zancadas, press,
+remo, curls, shadowboxing, fitboxing, padel, natación, caminar, colinas,
+escaleras, dance cardio, movilidad de pie.
 
 **Variantes de dificultad por día** (`DayPlan`): `soft` (◌ baja energía),
 `dare`/`real` (◆ recomendada), `bold` (⟁ más dura), más `trigger`, `companion`,

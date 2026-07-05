@@ -7,6 +7,7 @@ import type { DareApp } from "../lib/useDare";
 /** Journey picker — cada Journey conserva su propio progreso. */
 export function Journeys({ app }: { app: DareApp }) {
   const { store, journeys } = app;
+  const store_recommended = app.recommendedJourneyId;
 
   return (
     <div className="dare-root">
@@ -33,13 +34,13 @@ export function Journeys({ app }: { app: DareApp }) {
             const dream = store.dreamRewards[j.id];
             const remaining = Math.max(0, SPRINT_DAYS - p);
 
+            const recommended = j.id === store_recommended && !active && !completed;
             let status: string;
             if (placeholder) status = "Coming soon";
             else if (completed) status = "Completed";
             else if (active && p > 0) status = `In progress · ${remaining} ${remaining === 1 ? "day" : "days"} remaining`;
             else if (active) status = "Started";
-            else if (j.id === "iron") status = "Not started · Recommended after First Flame";
-            else if (j.id === "fire") status = "Not started · Advanced — after First Flame or Iron Quiet";
+            else if (recommended) status = "Recommended today";
             else status = "Not started";
 
             return (
@@ -67,7 +68,7 @@ export function Journeys({ app }: { app: DareApp }) {
                       {SYMBOLS[j.sym]} &nbsp;{j.name}
                     </p>
                     <p style={{ fontSize: 13, color: C.dim, marginTop: 4 }}>{j.tag}</p>
-                    <p className="lbl" style={{ marginTop: 8, color: completed ? j.color : C.dim }}>
+                    <p className="lbl" style={{ marginTop: 8, color: completed || recommended ? j.color : C.dim }}>
                       {status}
                     </p>
                     {dream && !placeholder && (

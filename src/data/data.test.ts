@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { DARES } from "./dares";
 import { WILDCARDS } from "./wildcards";
-import { JOURNEYS, totalMilestones, chapterCompleted, unlockedChapterCount, currentChapter, nextAction, SPRINT_DAYS } from "./journeys";
+import { JOURNEYS, MVP_JOURNEYS, MVP_JOURNEY_IDS, isMvpJourney, totalMilestones, chapterCompleted, unlockedChapterCount, currentChapter, nextAction, SPRINT_DAYS } from "./journeys";
 import { SCIENCE, findScience } from "./science";
 import { TRAITS, findTrait } from "./traits";
 import { SYMBOLS, JOURNEY_SYM } from "./symbols";
@@ -134,10 +134,12 @@ describe("desbloqueo de capítulos por completado", () => {
   });
 });
 
-describe("Journey system — los 7 Journeys del set final", () => {
-  const EXPECTED_IDS = ["ember", "iron", "water", "clear", "current", "wild", "fire"];
+describe("Journey system — el set completo (MVP + roadmap)", () => {
+  // Los 4 del MVP (Iron Quiet, Bright Pulse, Wild Ground, Still Water) + los
+  // conceptos de roadmap que se conservan en datos (ember/clear/current/fire).
+  const EXPECTED_IDS = ["ember", "iron", "pulse", "water", "clear", "current", "wild", "fire"];
 
-  it("están los 7 Journeys esperados", () => {
+  it("están los Journeys esperados", () => {
     expect(JOURNEYS.map((j) => j.id).sort()).toEqual([...EXPECTED_IDS].sort());
   });
 
@@ -224,6 +226,31 @@ describe("Journey system — los 7 Journeys del set final", () => {
     const ember = JOURNEYS.find((j) => j.id === "ember")!;
     const allDoneMap = Object.fromEntries(ember.chapters.flatMap((c) => c.milestones).map((m) => [m.id, true]));
     expect(nextAction(ember, allDoneMap)).toBe(ember.promise);
+  });
+});
+
+describe("MVP — solo 4 Journeys ofrecibles", () => {
+  it("MVP_JOURNEY_IDS son exactamente los 4 físicos del MVP", () => {
+    expect([...MVP_JOURNEY_IDS].sort()).toEqual(["iron", "pulse", "water", "wild"].sort());
+  });
+
+  it("MVP_JOURNEYS resuelve los 4 y respeta el orden declarado", () => {
+    expect(MVP_JOURNEYS.map((j) => j.id)).toEqual(MVP_JOURNEY_IDS);
+    expect(MVP_JOURNEYS).toHaveLength(4);
+  });
+
+  it("isMvpJourney distingue MVP de roadmap", () => {
+    expect(isMvpJourney("iron")).toBe(true);
+    expect(isMvpJourney("pulse")).toBe(true);
+    expect(isMvpJourney("ember")).toBe(false);
+    expect(isMvpJourney("fire")).toBe(false);
+  });
+
+  it("Bright Pulse existe con su Badge final y símbolo ◆", () => {
+    const pulse = JOURNEYS.find((j) => j.id === "pulse")!;
+    expect(pulse.identity.id).toBe("bright-mover");
+    expect(findTrait("bright-mover")).toBeTruthy();
+    expect(SYMBOLS[pulse.sym]).toBe("◆");
   });
 });
 

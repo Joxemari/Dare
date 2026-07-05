@@ -15,8 +15,9 @@ import { DARES } from "../data/dares";
 import { TAROT } from "../data/tarot";
 import { TRAITS } from "../data/traits";
 import { CATS } from "../data/colors";
-import { JOURNEYS, journeyById, currentChapter, SPRINT_DAYS } from "../data/journeys";
+import { JOURNEYS, MVP_JOURNEYS, journeyById, currentChapter, SPRINT_DAYS } from "../data/journeys";
 import { generateDare, recentDareIds } from "./generator";
+import { recommendJourney } from "./recommend";
 import { rollTreat, sample } from "./random";
 import { findDare, findCard } from "./lookup";
 import { earnedTraits } from "./achievements";
@@ -78,6 +79,7 @@ const BADGE_PRIORITY = [
   // Badges finales de Journey (máxima prioridad al destacar en completion).
   "first-mover",
   "quiet-builder",
+  "bright-mover",
   "regulator",
   "clear-mind",
   "returner",
@@ -157,6 +159,14 @@ export function useDare() {
   /** Journeys arrancados por el usuario (pueden ser varios a la vez). */
   const activeJourneys = JOURNEYS.filter((j) => store.activeJourneyIds.includes(j.id));
   const isJourneyActive = store.activeJourneyIds.includes(store.journeyId);
+  /** Journey del MVP a destacar HOY según el último check-in (Today's Body Dare).
+   *  Puro (recommend.ts): prioriza los activos; si no hay, sugiere uno. */
+  const recommendedJourneyId = recommendJourney({
+    state: store.lastCheckin?.state ?? "normal",
+    energy: store.lastCheckin?.energy ?? 5,
+    active: store.activeJourneyIds,
+    returning: away,
+  });
   const catFeedback = catFeedbackMap(store);
   const today = todayStr();
   const proofCount = store.proofLibrary.length;
@@ -657,6 +667,7 @@ export function useDare() {
     chapter,
     activeJourneys,
     isJourneyActive,
+    recommendedJourneyId,
     catFeedback,
     currentDare,
     daresToday,
@@ -682,7 +693,7 @@ export function useDare() {
     fbNote,
     // constantes útiles
     traitDefs: TRAITS,
-    journeys: JOURNEYS,
+    journeys: MVP_JOURNEYS,
     // acciones
     completeOnboarding,
     replayOnboarding,

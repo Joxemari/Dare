@@ -36,6 +36,7 @@ export type MentalState = "blocked" | "tired" | "normal" | "active" | "stressed"
 export type JourneyId =
   | "ember" // First Flame (id histórico conservado para no romper datos guardados)
   | "iron" // Iron Quiet
+  | "pulse" // Bright Pulse (MVP — cardio divertido)
   | "water" // Still Water
   | "clear" // Clear Signal
   | "current" // Steady Current
