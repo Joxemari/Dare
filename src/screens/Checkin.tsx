@@ -7,13 +7,14 @@ import type { CurrentLoc, EnergyLevel } from "../types";
 import type { DareApp } from "../lib/useDare";
 
 // Check-in de 3 preguntas (spec): Time / Place / Energy. Place es el filtro
-// más fuerte — "Take me somewhere ✦" (loc "anywhere") es la única excepción,
-// donde DARE elige el destino en vez de quedarse donde estás.
+// más fuerte. Cuatro Places directos en una fila (como Time/Energy); "Take me
+// somewhere ✦" (loc "anywhere") va aparte, a todo el ancho: DARE elige el
+// destino en vez de quedarse donde estás.
 const places: [CurrentLoc, string][] = [
   ["home", "Home"],
   ["city", "City"],
   ["park", "Park"],
-  ["anywhere", "Take me somewhere ✦"],
+  ["mountain", "Mountain"],
 ];
 const energyLevels: [EnergyLevel, string][] = [
   ["tired", "Tired"],
@@ -73,7 +74,7 @@ export function Checkin({ app }: { app: DareApp }) {
           <p className="lbl" style={{ marginBottom: 10 }}>
             Place
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8, marginBottom: 22 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 8 }}>
             {places.map(([id, t]) => (
               <button
                 key={id}
@@ -86,6 +87,15 @@ export function Checkin({ app }: { app: DareApp }) {
               </button>
             ))}
           </div>
+          {/* "Take me somewhere" a todo el ancho, en su propia fila. */}
+          <button
+            className={"pill" + (draft.loc === "anywhere" ? " on" : "")}
+            style={{ width: "100%", fontSize: 12, marginBottom: 22 }}
+            aria-pressed={draft.loc === "anywhere"}
+            onClick={() => setDraft({ ...draft, loc: "anywhere" })}
+          >
+            Take me somewhere {SYMBOLS.spark}
+          </button>
 
           <p className="lbl" style={{ marginBottom: 10 }}>
             Energy

@@ -359,7 +359,7 @@ export function Journey({ app }: { app: DareApp }) {
             </div>
           )}
         </div>
-        <Nav tab="journey" go={app.setScreen} />
+        <Nav tab="journey" go={app.navigateTab} />
       </div>
 
       {modal && <MilestoneModal app={app} ms={modal} color={journey.color} onClose={() => setModal(null)} />}

@@ -179,17 +179,19 @@ El "Another dare" del revelado del flujo rápido sigue siendo aleatorio
 
 **El check-in es CORTO a propósito** (TRES preguntas, todas HARD FILTERS del
 generador): **Time** (5 / 10 / 20 / 30+ min) · **Place** (Home / City / Park /
-"Take me somewhere ✦") · **Energy** (Tired / Calm / Normal / High). **Energy es
+Mountain, en una fila; + **"Take me somewhere ✦"** a todo el ancho en la fila
+de abajo) · **Energy** (Tired / Calm / Normal / High). **Energy es
 ahora una pregunta DIRECTA** (`EnergyLevel` en `types.ts`; ya no se deriva del
 Mood): `energyForLevel` la traduce a un número 1–10 (tired→2, calm→4, normal→6,
 high→9) y `stateForLevel` la traduce a `MentalState` (high→"active"; "calm" es
 un `MentalState` nuevo) para reutilizar el scoring y las etiquetas `Dare.states`
 existentes. Sin opciones marcadas por defecto: el CTA ("Get my dare") queda
 atenuado hasta responder las tres. Al abrir, la pantalla hace `scrollTo(top)`
-(sin router, el scroll no se resetea solo). Place incluye una última opción
-**"Take me somewhere ✦"** (loc `"anywhere"`): en vez de fijar un lugar, el
-generador **elige el destino** (piscina/gym/bosque/padel/…, vía
-`placeToLocs("anywhere")`).
+(sin router, el scroll no se resetea solo). **Mountain** es un Place directo que
+mapea a la loc de Dare `forest` (monte/bosque/senderos: pinos, colinas, rutas;
+vía `placeToLocs("mountain")`). La última opción **"Take me somewhere ✦"** (loc
+`"anywhere"`): en vez de fijar un lugar, el generador **elige el destino**
+(piscina/gym/bosque/padel/…, vía `placeToLocs("anywhere")`).
 
 **Place es el filtro MÁS FUERTE, y es un HARD FILTER real** (`placeToLocs` +
 `generateDare` en `lib/generator.ts`): salvo "Take me somewhere", un Dare
@@ -498,6 +500,23 @@ onboarding lleva a Today sin activar nada. Un Journey se empieza pulsando
 su setup primero). Pueden estar **varios activos a la vez**
 (`store.activeJourneyIds`): arrancar uno no detiene otro. El progreso/completion
 de un Journey solo cuenta si está activo.
+
+**Aterrizaje de la pestaña Journey (`navigateTab` en `useDare`).** El Nav
+inferior no llama a `setScreen` directo sino a `navigateTab`: idéntico salvo por
+la pestaña **Journey**, que **si no hay NINGÚN Journey activo** (primera vez, o
+tras terminar/cancelar/pausar todos) aterriza **directo en el picker con TODOS
+los Journeys** (`journeys`), sin tener que pulsar "All journeys"; con al menos
+uno activo, entra a su Journey en foco (`journey`). Las navegaciones INTERNAS a
+"journey" (`chooseJourney`, `resumeJourney`, `startJourney`…) usan `setScreen`
+directo y NO pasan por `navigateTab`. Por eso el picker (`Journeys.tsx`) lleva su
+propio `Nav` abajo (es raíz de pestaña cuando no hay activo) y su flecha atrás
+solo aparece cuando se llegó como sub-página (con un Journey activo, vía "All
+journeys"). El **resalte** de las cards del picker (glow + borde + título en el
+color del Journey) YA NO es permanente sobre el "seleccionado": se aplica al
+**hover** (`.jcard:hover` en `index.css`, con el color propio vía la custom prop
+`--jcolor`; `@media (hover: hover)` para no dejar estados pegados en táctil), e
+igual para los Journeys ya activos. Un Journey activo se sigue distinguiendo por
+su badge "● active" y su línea de estado, no por un glow estático.
 
 **Ciclo de vida: launch · pause · resume · cancel** (acciones del hook). *Begin*
 activa (`activateJourney`, sella `journeyStartedAt`). *Pause* (`pauseJourney`)

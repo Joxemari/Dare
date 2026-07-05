@@ -797,6 +797,21 @@ export function useDare() {
     setScreen("journey");
   }
 
+  /** Navegación de las PESTAÑAS del Nav inferior. Idéntica a `setScreen` salvo
+   *  por la pestaña Journey: si el usuario no tiene NINGÚN Journey activo
+   *  (primera vez, o tras terminar/cancelar/pausar todos), aterriza directo en
+   *  el picker con TODOS los Journeys disponibles, sin tener que pulsar "All
+   *  journeys". Con al menos uno activo, entra a su Journey en foco. Las
+   *  navegaciones INTERNAS a "journey" (chooseJourney, resumeJourney…) siguen
+   *  usando `setScreen` directo y NO pasan por aquí. */
+  function navigateTab(s: Screen) {
+    if (s === "journey" && store.activeJourneyIds.length === 0) {
+      setScreen("journeys");
+      return;
+    }
+    setScreen(s);
+  }
+
   // ---- milestones ----
   /**
    * Aplica un cambio en los milestones y, si con ello algún Journey ACTIVO
@@ -1015,6 +1030,7 @@ export function useDare() {
     // navegación
     screen,
     setScreen,
+    navigateTab,
     away,
     setAway,
     obIdx,

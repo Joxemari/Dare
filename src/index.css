@@ -347,6 +347,24 @@ body {
   transform: translateY(-4px);
   border-color: #ffc85799;
 }
+/* Journey picker cards: el resalte (glow + borde + título en color) se aplica
+   al pasar el cursor, NO de forma permanente sobre el "seleccionado". El color
+   es el propio de cada Journey, inyectado como `--jcolor` inline. Solo en
+   dispositivos con hover real (evita estados "pegados" en táctil) y sobre los
+   ofrecibles (los placeholders "Coming soon" van :disabled). */
+.jcard {
+  transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
+}
+@media (hover: hover) {
+  .jcard:not(:disabled):hover {
+    transform: translateY(-3px);
+    border-color: var(--jcolor);
+    box-shadow: 0 0 30px -14px var(--jcolor);
+  }
+  .jcard:not(:disabled):hover .jtitle {
+    color: var(--jcolor);
+  }
+}
 .nav-b {
   background: none;
   border: none;
@@ -388,7 +406,8 @@ button:focus-visible {
     animation: none;
   }
   .btn,
-  .tcard {
+  .tcard,
+  .jcard {
     transition: none;
   }
 }
