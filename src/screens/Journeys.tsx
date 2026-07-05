@@ -1,10 +1,12 @@
 import { C } from "../data/colors";
 import { SYMBOLS } from "../data/symbols";
-import { SPRINT_DAYS } from "../data/journeys";
+import { SPRINT_DAYS, ROADMAP_JOURNEYS } from "../data/journeys";
 import { wrap, pad } from "../components/layout";
 import type { DareApp } from "../lib/useDare";
 
-/** Journey picker — cada Journey conserva su propio progreso. */
+/** Journey picker — cada Journey conserva su propio progreso. Debajo de los 4
+ *  del MVP, los Journeys de roadmap aparecen como "Coming soon": solo un
+ *  preview (nombre, tag, promesa y la estructura de capítulos), sin CTA. */
 export function Journeys({ app }: { app: DareApp }) {
   const { store, journeys } = app;
   const store_recommended = app.recommendedJourneyId;
@@ -84,6 +86,34 @@ export function Journeys({ app }: { app: DareApp }) {
               </button>
             );
           })}
+
+          {/* Roadmap — solo preview, sin CTA. Estructura topline: los capítulos. */}
+          <p className="lbl" style={{ margin: "26px 0 4px", color: C.dim }}>
+            Coming soon
+          </p>
+          <p style={{ fontSize: 12, color: C.faint, marginBottom: 14 }}>
+            Future journeys, in preview. Not yet startable.
+          </p>
+          {ROADMAP_JOURNEYS.map((j) => (
+            <div
+              key={j.id}
+              className="card"
+              style={{ padding: 18, marginBottom: 12, opacity: 0.6, borderStyle: "dashed" }}
+              aria-label={`${j.name} — coming soon`}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                <p className="serif" style={{ fontSize: 20, color: C.text }}>
+                  {SYMBOLS[j.sym]} &nbsp;{j.name}
+                </p>
+                <span className="lbl" style={{ fontSize: 8.5, color: C.faint }}>Soon</span>
+              </div>
+              <p style={{ fontSize: 12.5, color: C.dim, marginTop: 4 }}>{j.tag}</p>
+              <p style={{ fontSize: 12, color: C.faint, marginTop: 6, lineHeight: 1.5 }}>{j.promise}</p>
+              <p className="lbl" style={{ marginTop: 10, fontSize: 8, color: C.faint, lineHeight: 1.8 }}>
+                {j.chapters.map((c) => c.name).join(" · ")}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
     </div>

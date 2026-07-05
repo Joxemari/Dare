@@ -184,13 +184,29 @@ Cada Journey tiene símbolo, color propio (`JOURNEY_COLOR`) y Badge final
 (`identity`, 1 por Journey; su id existe también como Trait para el render del
 anillo). El de Bright Pulse es **Bright Mover** (`bright-mover`).
 
-**Roadmap (en datos, NO ofrecibles).** Los otros 4 del set histórico se
-conservan en `JOURNEYS` como conceptos de roadmap y para no romper el progreso
-guardado, pero **no** aparecen en la selección: **First Flame ✦** (`ember`, hoy
-concepto de onboarding/primera activación), **Clear Signal ◇** (`clear`, foco),
+**Roadmap (en datos, NO empezables).** Los otros 4 del set histórico se
+conservan en `JOURNEYS` (`ROADMAP_JOURNEYS`) como conceptos de roadmap y para no
+romper el progreso guardado: **First Flame ✦** (`ember`, hoy concepto de
+onboarding/primera activación), **Clear Signal ◇** (`clear`, foco),
 **Steady Current ⌁** (`current`, consistencia), **Quiet Fire ⟁** (`fire`,
-coraje). Los ids internos `ember/iron/water` se conservan (no romper datos
+coraje). En el picker aparecen al final como **"Coming soon"**: solo un preview
+(nombre, tag, promesa y la estructura de capítulos), sin CTA — no se pueden
+empezar. Los ids internos `ember/iron/water` se conservan (no romper datos
 guardados). Al reintroducir uno, basta con añadir su id a `MVP_JOURNEY_IDS`.
+
+**Contenido de los Journeys del MVP** — estándar de calidad (aplicado a los 4):
+las *letters* citan trabajos y autores concretos (BJ Fogg, Wendy Wood, Katy
+Milkman, James Clear, Bandura, Tabata, Gibala, Karageorghis, Kelly McGonigal,
+Stuart Brown, los Kaplan, Qing Li, Oppezzo, Keltner, Benson, el trial de
+cyclic sighing de Stanford 2023, Wallace J. Nichols, Cal Newport, Masicampo &
+Baumeister, Matthew Walker…); cada capítulo incluye *setup actions* que cambian
+conducta (pesos a la vista, mínimo de dos reps, temptation bundle, lift log,
+anclar el hueco diario, three-song ladder, invitar a alguien, agendar el agua,
+shutdown shelf…); la ciencia va con referencias pero lenguaje prudente ("is
+associated with", "may support"); y los *proofs* son específicos, nunca de
+relleno. La biblioteca (`science.ts`) tiene fichas reutilizables para esto
+(habit-automaticity, temptation-bundling, progressive-overload, grip-longevity,
+exercise-snacks, awe-walks, cyclic-sighing, shutdown-ritual, blue-mind…).
 
 **Modos de movimiento** (`src/data/modes.ts`): `MovementMode` (Strong · Sweaty ·
 Outside · Water · Recovery · Soft · Play · Social · Travel) es una capa por

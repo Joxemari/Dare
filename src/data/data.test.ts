@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { DARES } from "./dares";
 import { WILDCARDS } from "./wildcards";
-import { JOURNEYS, MVP_JOURNEYS, MVP_JOURNEY_IDS, isMvpJourney, totalMilestones, journeyMilestoneIds, todaysDayPlan, chapterCompleted, unlockedChapterCount, currentChapter, nextAction, SPRINT_DAYS } from "./journeys";
+import { JOURNEYS, MVP_JOURNEYS, MVP_JOURNEY_IDS, ROADMAP_JOURNEYS, isMvpJourney, totalMilestones, journeyMilestoneIds, todaysDayPlan, chapterCompleted, unlockedChapterCount, currentChapter, nextAction, SPRINT_DAYS } from "./journeys";
 import { SCIENCE, findScience } from "./science";
 import { TRAITS, findTrait } from "./traits";
 import { SYMBOLS, JOURNEY_SYM } from "./symbols";
@@ -251,6 +251,17 @@ describe("MVP — solo 4 Journeys ofrecibles", () => {
     expect(pulse.identity.id).toBe("bright-mover");
     expect(findTrait("bright-mover")).toBeTruthy();
     expect(SYMBOLS[pulse.sym]).toBe("◆");
+  });
+
+  it("ROADMAP_JOURNEYS son los 4 restantes, disjuntos del MVP y con preview completo", () => {
+    expect(ROADMAP_JOURNEYS.map((j) => j.id).sort()).toEqual(["clear", "current", "ember", "fire"]);
+    for (const j of ROADMAP_JOURNEYS) {
+      expect(isMvpJourney(j.id), j.id).toBe(false);
+      // El preview "Coming soon" del picker necesita tag, promesa y capítulos.
+      expect(j.tag && j.promise, `${j.id} preview copy`).toBeTruthy();
+      expect(j.chapters.length, `${j.id} chapters`).toBe(4);
+    }
+    expect(MVP_JOURNEYS.length + ROADMAP_JOURNEYS.length).toBe(JOURNEYS.length);
   });
 });
 
