@@ -218,6 +218,18 @@ describe("coherencia de duración y destino (check-in)", () => {
     expect(timeFitScore(10, 8)).toBeGreaterThan(timeFitScore(30, 8));
   });
 
+  it("energía baja NO capa la duración: con mucho tiempo, un Dare suave puede ser largo", () => {
+    // blocked/tired ⇒ solo Easy (baja intensidad), pero NO se fuerza corto:
+    // con 30 min disponibles el generador puede elegir un Easy largo (>12 min).
+    let long = 0;
+    for (let i = 0; i < 60; i++) {
+      const { dare } = generateDare({ ...base, time: 30, energy: 3, loc: "park", state: "blocked" }, [], {}, ember);
+      expect(dare.level).not.toBe("Strong"); // sigue siendo baja intensidad
+      if (dare.min > 12) long++;
+    }
+    expect(long).toBeGreaterThan(0); // ya no hay tope duro de 12 min
+  });
+
   it("no ofrece un Dare mucho más corto que el tiempo disponible (30 min ≠ 2 min)", () => {
     let tooShort = 0;
     for (let i = 0; i < 60; i++) {

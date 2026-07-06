@@ -447,4 +447,17 @@ export const DARES: Dare[] = [
     trigger: "No route. Just out.", companion: "One slow album.", proof: "Took the slow loop on purpose.",
     effects: { Energy: 2, Calm: 1, Mood: 1 }, scienceId: "walking-outdoors",
     steps: ["Album on before you sit back down", "Out the door, pick the softer direction", "Walk one unhurried loop", "Home when the album says so"] },
+  // --- Reset gentle largo en casa (energía baja + tiempo amplio: suave, no corto) ---
+  { id: "long-wind-down", title: "The Long Wind-Down", cat: "recovery", min: 30, level: "Easy", energy: [1, 6], locs: ["home"], states: ["tired", "stressed", "blocked"],
+    trigger: "Dim the lights. Slow everything down.", companion: "A warm drink.", proof: "Gave the day a real ending.",
+    effects: { Calm: 3, Recovery: 2, Sleep: 1 }, scienceId: "shutdown-ritual",
+    steps: ["Lower the lights and put screens away", "Make a warm drink, no rush", "Slow stretches on the floor for a while", "Long, slow breaths until you feel the day close"] },
+  { id: "restore-reset", title: "Restore & Reset", cat: "recovery", min: 25, level: "Easy", energy: [1, 7], locs: ["home"], states: ["tired", "stressed"],
+    trigger: "Floor, blanket, no rush.", companion: "A long, soft playlist.", proof: "Let my body recover on purpose.",
+    effects: { Recovery: 3, Calm: 2 }, scienceId: "breath-recovery",
+    steps: ["Lie down somewhere comfortable", "Gentle mobility: neck, shoulders, hips", "Exhale longer than you inhale", "Stay until the playlist runs out"] },
+  { id: "long-soak", title: "The Long Soak", cat: "recovery", min: 30, level: "Easy", energy: [1, 7], locs: ["home"], states: ["tired", "stressed", "blocked"],
+    trigger: "Run it hot. No clock.", companion: "The water.", proof: "Chose a real reset.",
+    effects: { Calm: 3, Recovery: 2, Stress: 2 }, scienceId: "blue-mind",
+    steps: ["Run a hot bath or a long shower", "Leave the phone in another room", "Get in and stop counting the minutes", "Out only when you feel reset"] },
 ];

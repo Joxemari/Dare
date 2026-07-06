@@ -160,7 +160,11 @@ export function generateDare(
   } else {
     pool = DARES.filter((d) => d.cat !== "small" && d.min <= ci.time + 2 && at(d));
     if (ci.energy <= 3 || ci.state === "blocked" || ci.state === "tired") {
-      const easy = pool.filter((d) => d.level === "Easy" && d.min <= 12);
+      // Energía baja ⇒ baja INTENSIDAD (solo Easy), NO menos duración: si el
+      // usuario tiene 30 min pero está cansado, un Dare SUAVE de 30 min es
+      // válido (paseo lento, baño largo). La coherencia con el tiempo elegido
+      // la pone `timeFitScore` en el scoring, no un tope duro de duración.
+      const easy = pool.filter((d) => d.level === "Easy");
       pool = easy.length ? easy : DARES.filter((d) => d.cat === "small");
     }
   }
