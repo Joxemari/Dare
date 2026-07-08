@@ -267,6 +267,16 @@ compuerta que el corpus vivo (`npm test`) antes de abrir una PR para tu
 validación humana. La generación es **aditiva** (ids nuevos, nunca mutar/borrar
 los existentes: romperia las referencias guardadas).
 
+El **prompt del generador** (`buildPrompt`) lleva el brief de contenido de la
+**Wave 2**: SOLO energía física (+ Body Reset), rellenar la matriz Place × Time
+× Energy con Dares creativos/variados/divertidos y con base científica prudente,
+las modalidades nuevas (yoga de pie, tai chi, qigong, escalada), **Place como
+intención** (Bed = despertar/dormir suave; Office = resets de silla/entre
+reuniones, sin asumir deporte), energía como intensidad real (`energy[lo,hi]`
+coherente con Tired/Calm/Normal/High) y duración coherente con el hueco de Time.
+El `stub` determinista (sin `ANTHROPIC_API_KEY`) refleja ese estilo para que el
+pipeline corra offline. Ver `docs/content-pipeline.md`.
+
 **Qué se auto-propone y qué no** (regla de producto): la generación cubre solo
 lo que es aditivo por `id`/texto, lo valida un validador automático y no es
 sensible ni columna vertebral:
@@ -474,18 +484,27 @@ relleno. La biblioteca (`science.ts`) tiene fichas reutilizables para esto
 exercise-snacks, awe-walks, cyclic-sighing, shutdown-ritual, blue-mind…).
 
 **Modos de movimiento** (`src/data/modes.ts`): `MovementMode` (Strong · Sweaty ·
-Outside · Water · Recovery · Soft · Play · Social · Travel) es una capa por
-encima de las categorías (`CAT_MODE`). Regla **anti-aburrimiento**: el generador
-penaliza repetir el mismo MODO más de dos veces seguidas (además de la
-penalización por `Cat`). Cada Journey rota modos, companions y treats a lo largo
-de sus 7 días para no sentirse repetitivo.
+**Flow** · Outside · Water · Recovery · Soft · Play · Social · Travel) es una capa
+por encima de las categorías (`CAT_MODE`). **Flow** es el modo de movimiento
+consciente (Wave 2): agrupa las categorías nuevas `yoga`/`taichi`/`qigong`.
+Regla **anti-aburrimiento**: el generador penaliza repetir el mismo MODO más de
+dos veces seguidas (además de la penalización por `Cat`). Cada Journey rota
+modos, companions y treats a lo largo de sus 7 días para no sentirse repetitivo.
+
+**Categorías nuevas (Wave 2).** Al `Cat` físico se añaden `yoga` · `taichi` ·
+`qigong` (modo Flow) y `climbing` (modo Play), para dar variedad de modalidad
+al catálogo. Como cualquier `Cat`, requieren entrada en `CATS` (color/label,
+`colors.ts`), `CAT_ICO` (`icons.tsx`) y `CAT_MODE` (`modes.ts`) — si añades otra
+categoría, actualiza los tres o TS/`data.test.ts` lo delatan.
 
 **Ejercicios permitidos/prohibidos.** Nunca: push-ups, planks, burpees, mountain
 climbers, trabajo de suelo con manos apoyadas, HIIT largo, lenguaje de calorías/
 peso/vergüenza (lo refuerza `contentSchema` + `data.test.ts`). Permitido:
 mancuernas, kettlebells, bandas, carries, sentadillas goblet, zancadas, press,
-remo, curls, shadowboxing, fitboxing, padel, natación, caminar, colinas,
-escaleras, dance cardio, movilidad de pie.
+remo, curls, shadowboxing, fitboxing, padel, escalada, natación, caminar,
+colinas, escaleras, dance cardio, movilidad de pie, **yoga (SIN suelo con manos:
+de pie / sentado / restaurativo — nada de chaturanga, plancha ni perro boca
+abajo largo)**, tai chi y qigong.
 
 **Variantes de dificultad por día** (`DayPlan`): `soft` (◌ baja energía),
 `dare`/`real` (◆ recomendada), `bold` (⟁ más dura), más `trigger`, `companion`,

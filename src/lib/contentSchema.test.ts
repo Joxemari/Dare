@@ -40,7 +40,7 @@ describe("validateDare", () => {
   });
 
   it("rechaza cat/level inválidos", () => {
-    expect(validateDare({ ...base, cat: "yoga" as Dare["cat"] }, CTX).join()).toMatch(/cat inválida/);
+    expect(validateDare({ ...base, cat: "pilates" as Dare["cat"] }, CTX).join()).toMatch(/cat inválida/);
     expect(validateDare({ ...base, level: "Extreme" as Dare["level"] }, CTX).join()).toMatch(/level inválido/);
   });
 

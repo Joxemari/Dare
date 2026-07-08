@@ -134,6 +134,11 @@ export const CAT_ICO: Record<Cat, string> = {
   recovery: "moon",
   focus: "eye",
   small: "spark",
+  // movimiento consciente / Flow (Wave 2)
+  yoga: "sine",
+  taichi: "waves",
+  qigong: "moon",
+  climbing: "goal",
   // anti-procrastinación / activación
   admin: "letter",
   communication: "chat",

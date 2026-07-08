@@ -20,6 +20,7 @@ import type { Cat, Dare, Effect, Level, Loc, MentalState } from "../types";
 export const CATS_VALID: readonly Cat[] = [
   "forest", "walk", "dumbbells", "fitboxing", "pool",
   "padel", "tabata", "carry", "recovery", "focus", "small",
+  "yoga", "taichi", "qigong", "climbing",
   "admin", "communication", "bodyreset", "environment", "creative",
   "social", "decision", "emotion", "phone", "taskcontact", "close",
 ];

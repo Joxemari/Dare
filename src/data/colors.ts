@@ -45,6 +45,11 @@ export const CATS: Record<Cat, { color: string; label: string }> = {
   recovery: { color: C.purple, label: "Recovery" },
   focus: { color: C.gold, label: "Focus" },
   small: { color: C.green, label: "Small Dare" },
+  // movimiento consciente / Flow (Wave 2)
+  yoga: { color: C.teal, label: "Yoga" },
+  taichi: { color: C.teal, label: "Tai Chi" },
+  qigong: { color: C.teal, label: "Qigong" },
+  climbing: { color: C.gold, label: "Climbing" },
   // anti-procrastinación / activación
   admin: { color: C.gold, label: "Admin" },
   communication: { color: C.teal, label: "Communication" },
