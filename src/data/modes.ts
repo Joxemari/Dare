@@ -13,11 +13,12 @@ import type { Cat } from "../types";
 export type MovementMode =
   | "Strong" // fuerza: mancuernas, kettlebells, carries
   | "Sweaty" // cardio divertido: fitboxing, tabata, dance cardio
+  | "Flow" // movimiento consciente: yoga, tai chi, qigong, movilidad
   | "Outside" // aire libre: caminar, colinas, bosque, rutas
   | "Water" // piscina, reset acuático
   | "Recovery" // movilidad suave, respiración, apagado del día
   | "Soft" // mínimo de baja energía / claridad mental
-  | "Play" // juego: padel, rallies — entrenar sin que lo parezca
+  | "Play" // juego: padel, rallies, escalada — entrenar sin que lo parezca
   | "Social" // movimiento con otra persona / clase
   | "Travel"; // movimiento adaptado a estar fuera de casa
 
@@ -25,6 +26,7 @@ export type MovementMode =
 export const MODES: Record<MovementMode, { label: string; line: string }> = {
   Strong: { label: "Strong", line: "No gym. Just two weights." },
   Sweaty: { label: "Sweaty", line: "Boss playlist. Eight minutes." },
+  Flow: { label: "Flow", line: "Slow is a skill." },
   Outside: { label: "Outside", line: "The outside changes you." },
   Water: { label: "Water", line: "Let water do half the work." },
   Recovery: { label: "Recovery", line: "Recovery is still training." },
@@ -47,6 +49,11 @@ export const CAT_MODE: Record<Cat, MovementMode> = {
   recovery: "Recovery",
   focus: "Soft",
   small: "Soft",
+  // movimiento consciente / Flow (Wave 2)
+  yoga: "Flow",
+  taichi: "Flow",
+  qigong: "Flow",
+  climbing: "Play",
   // Categorías de anti-procrastinación / activación (check-in rápido de Today):
   // no son "movimiento" físico, así que caen en modos de baja fricción — Soft
   // por defecto, Recovery para el reset corporal/emocional y Social para lo que

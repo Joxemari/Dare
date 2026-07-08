@@ -47,20 +47,61 @@ function isoWeek(d = new Date()) {
 function buildPrompt({ ids, titles, scienceIds, feedback, count }) {
   return [
     "Eres el editor de contenido de DARE (Daily Actions. Real Energy).",
-    "Propón contenido NUEVO: Dares, Wildcards y Treats. NO Journeys ni Ciencia.",
+    "MISIÓN (Wave 2): rellenar la matriz Place × Time × Energy con Dares FÍSICOS,",
+    "CREATIVOS, VARIADOS y DIVERTIDOS, con base científica. Propón Dares, Wildcards y Treats.",
+    "NO Journeys ni fichas de Ciencia.",
+    "",
+    "SCOPE — SOLO energía física (+ Body Reset). Categorías PERMITIDAS:",
+    "  Fuerza: dumbbells, carry · Cardio: tabata, fitboxing · Flow (movimiento consciente):",
+    "  yoga, taichi, qigong · Fuera: walk, forest · Agua: pool · Juego: padel, climbing ·",
+    "  Recuperación/Reset: recovery, bodyreset · y small (mínimos de 3 min).",
+    "  PROHIBIDO generar categorías de 'activación/vida' (admin, communication, environment,",
+    "  creative, social, decision, emotion, phone, taskcontact, close) y 'focus'.",
     "",
     "REGLAS DURAS (obligatorias):",
     "- Todo en INGLÉS (title, trigger, companion, proof, steps, text de treats).",
-    "- NUNCA trabajo de suelo con manos apoyadas (push-ups, planks, burpees, mountain climbers).",
+    "- NUNCA trabajo de suelo con manos apoyadas: push-ups, planks, burpees, mountain climbers.",
+    "  El YOGA va SIN suelo con manos (de pie / sentado / restaurativo): NADA de chaturanga,",
+    "  plancha ni perro boca abajo largo. Sun salutations en versión de PIE.",
     "- Sin gamificación ni fitness tracker: sin XP, niveles, 'streak failed', calorías ni 'burn'.",
     "- Aditivo: ids NUEVOS en kebab-case (los wildcards empiezan por 'w-'); sin colisiones.",
-    "- scienceId debe ser uno de la biblioteca (o se omite).",
+    "- scienceId debe ser uno de la biblioteca (o se omite). Lenguaje prudente: 'is associated",
+    "  with', 'may support'; nunca claims médicos.",
+    "",
+    "PLACE = INTENCIÓN, no solo ubicación. Genera para el sitio con contenido específico:",
+    "- Bed (locs ['home']): SOLO despertar/cerrar el día, energía baja, 5–10 min. Estiramientos",
+    "  suaves de columna al amanecer o para dormir. NUNCA fuerza ni cardio.",
+    "- Office (locs ['home']): resets en la SILLA o de pie entre reuniones, 5–10 min. Espalda,",
+    "  cuello, cadera, movilidad, taichi/qigong. SIN asumir que va a entrenar ni sudar.",
+    "- Home (locs ['home']): interior, poco material — fuerza de pie, dance cardio, yoga, movilidad.",
+    "- City (locs ['city']): calle, escaleras, cuestas, paseos urbanos.",
+    "- Park (locs ['park']): verde, aire libre, yoga de pie, descalzo, paseos.",
+    "- Gym (locs ['home','gym'] o ['gym']): fuerza, cardio, fitboxing, clases.",
+    "- Destino ['forest'|'pool'|'padel'|'climbing'... ] SOLO alcanzable vía 'Take me somewhere'.",
+    "",
+    "MODALIDADES a cubrir (sé creativo y sorpréndeme, no 'haz 20 sentadillas'): fuerza de pie,",
+    "carries, intervalos de pie, fitboxing/shadowbox, dance cardio, YOGA de pie, TAI CHI, QIGONG,",
+    "movilidad, paseo/awe walk, escaleras/cuestas, natación, padel, ESCALADA, respiración,",
+    "reset de escritorio, estiramiento de despertar/dormir, y COSAS INESPERADAS (andar hacia",
+    "atrás, descalzo en la hierba, retos de equilibrio, comba).",
+    "",
+    "ENERGÍA = intensidad REAL. El rango energy:[lo,hi] debe reflejar el nivel:",
+    "  Tired → [1,3] Easy · Calm → [2,5] Easy · Normal → [4,7] Easy/Medium · High → [7,10] Medium/Strong.",
+    "  Con energía baja, Dares SUAVES; con High, intensos. Distingue Calm de Tired y Normal de High.",
+    "TIME = duración coherente: `min` encaja el hueco (5→2-5, 10→8-10, 20→15-20, 30→25-30);",
+    "  ofrece variantes de la misma actividad a 5/10/20 min. NUNCA propongas 5 min para un hueco de 20.",
+    "",
+    "COMPANION concreto y AJUSTADO al tipo/dificultad (temptation bundling, DURANTE la acción):",
+    "  Strong/High → modo identidad o playlist que empuja · Flow/Recovery → lo-fi, vela, calma ·",
+    "  Walk → podcast/audiolibro, ruta nueva · Play → alguien, algo nuevo. VARÍA — no repitas.",
     "",
     "Dare/Wildcard: { id, title, cat, min, level, energy:[lo,hi], locs:[], companion, trigger, proof, effects:{Effect:1|2|3}, steps:[], scienceId?, wild? }",
-    "Treat: { tier:'common'|'rare'|'golden', text, fits?:Cat[], avoid?:Cat[], special? } (special solo en golden)",
-    `cats: forest walk dumbbells fitboxing pool padel tabata carry recovery focus small`,
-    `levels: Easy Medium Strong · locs: home city park forest pool gym padel (forest/pool/gym/padel son DESTINO, nunca los pongas junto a "city")`,
-    `effects: Energy Focus Mood Calm Strength Confidence Recovery (1..3)`,
+    "Treat: { tier:'common'|'rare'|'golden', text, fits?:Cat[], avoid?:Cat[], special? } (special solo en golden).",
+    "  Treats CONCRETOS y específicos (cosas reales de comprar/hacer), no 'un snack'. Los golden",
+    "  para lo difícil/largo; usa fits/avoid por categoría.",
+    `cats permitidas: dumbbells carry tabata fitboxing yoga taichi qigong walk forest pool padel climbing recovery bodyreset small`,
+    `levels: Easy Medium Strong · locs: home city park forest pool gym padel (forest/pool/gym/padel son DESTINO, nunca junto a "city"/"park")`,
+    `effects: Energy Focus Mood Calm Strength Confidence Recovery Clarity Stress Sleep Momentum (1..3)`,
     `scienceIds válidos: ${scienceIds.join(", ")}`,
     "",
     `IDs ya usados (NO repetir): ${ids.join(", ")}`,
@@ -68,7 +109,7 @@ function buildPrompt({ ids, titles, scienceIds, feedback, count }) {
     "",
     feedback
       ? `SEÑAL DEL USUARIO (prioriza lo que le da energía):\n${JSON.stringify(feedback, null, 2)}`
-      : "Sin feedback del usuario todavía: propón variedad equilibrada.",
+      : "Sin feedback del usuario todavía: reparte por Place/Energy/Time y prioriza huecos (Bed, Office, destinos).",
     "",
     `Devuelve SOLO un objeto JSON { "dares": [...${count}], "wildcards": [...2], "treats": [...3] }, sin texto alrededor.`,
   ].join("\n");
@@ -93,24 +134,30 @@ async function askModel(prompt) {
   return { dares: obj.dares || [], wildcards: obj.wildcards || [], treats: obj.treats || [] };
 }
 
-/** Stub determinista para que el pipeline corra sin red. */
+/** Stub determinista para que el pipeline corra sin red. Refleja el estilo
+    Wave 2: modalidades nuevas (yoga de pie, tai chi de oficina), Place como
+    intención (Bed/Office), y treats concretos. */
 function stub(week, ids) {
   const id = `gen-${week.toLowerCase()}`;
-  if (ids.includes(`${id}-walk`)) return { dares: [], wildcards: [], treats: [] };
+  if (ids.includes(`${id}-sunflow`)) return { dares: [], wildcards: [], treats: [] };
   return {
     dares: [
-      { id: `${id}-walk`, title: "The Unhurried Loop", cat: "walk", min: 15, level: "Easy", energy: [2, 7],
-        locs: ["city", "park"], companion: "One slow album.", trigger: "No route. Just out.",
-        proof: "Moved before negotiating.", effects: { Energy: 2, Calm: 1, Mood: 1 }, scienceId: "walking-outdoors",
-        steps: ["Album on before you sit back down", "Out the door, pick the softer direction", "Walk one unhurried loop", "Home when the album says so"] },
+      { id: `${id}-sunflow`, title: "Standing Sun Flow", cat: "yoga", min: 10, level: "Easy", energy: [2, 6],
+        locs: ["park", "home"], companion: "A calm-focus playlist, low.", trigger: "Reach before you think.",
+        proof: "Moved with the breath, not the clock.", effects: { Calm: 2, Mood: 2, Energy: 1 }, scienceId: "breath-recovery",
+        steps: ["Stand tall, feet hip-width", "Reach up on the inhale, fold with soft knees on the exhale", "Rise to a gentle standing warrior, both sides", "Repeat with the breath — all standing, no hands to the floor"] },
+      { id: `${id}-cloudhands`, title: "Cloud Hands", cat: "taichi", min: 5, level: "Easy", energy: [1, 4],
+        locs: ["home"], companion: "One long exhale per sweep.", trigger: "Slow is the point.",
+        proof: "Reset between meetings without a sweat.", effects: { Calm: 3, Stress: 2, Clarity: 1 }, scienceId: "cyclic-sighing",
+        steps: ["Stand behind your chair, knees soft", "Shift your weight slowly side to side", "Let your arms float and cross like clouds", "Two minutes, breath leading the hands"] },
     ],
     wildcards: [
-      { id: `w-${id}-dusk`, title: "Dusk Detour", cat: "walk", wild: true, min: 15, level: "Easy", energy: [3, 8],
-        locs: ["city"], companion: "The changing light.", trigger: "Turn where you never turn.", proof: "Let the evening surprise me.",
-        effects: { Calm: 2, Mood: 2 }, scienceId: "daylight",
-        steps: ["Head out at dusk", "Take one street you never take", "Follow it until it surprises you", "Find your way back slowly"] },
+      { id: `w-${id}-barefoot`, title: "Barefoot Grass Reset", cat: "recovery", wild: true, min: 10, level: "Easy", energy: [2, 7],
+        locs: ["park"], companion: "No phone, eyes up.", trigger: "Shoes off. Feet down.", proof: "Let the ground hold me for a while.",
+        effects: { Calm: 2, Recovery: 1, Stress: 2 }, scienceId: "nature",
+        steps: ["Find grass or bare earth", "Shoes and socks off", "Walk slowly, notice temperature and texture", "Stay until you feel reset"] },
     ],
-    treats: [{ tier: "common", text: "Ten quiet minutes with the good tea." }],
+    treats: [{ tier: "rare", text: "Buy the grippy yoga mat you keep eyeing.", fits: ["yoga", "taichi", "recovery"] }],
   };
 }
 

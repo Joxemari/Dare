@@ -20,6 +20,11 @@ export type Cat =
   | "recovery"
   | "focus"
   | "small"
+  // --- movimiento consciente / Flow (Wave 2): modalidades nuevas ---
+  | "yoga" // yoga SIN suelo con manos (de pie / sentado / restaurativo)
+  | "taichi" // tai chi: lento, equilibrio, respiración
+  | "qigong" // qigong: sacudida/barridos suaves, liberar tensión
+  | "climbing" // escalada (destino Play)
   // --- anti-procrastinación / activación (Today: check-in rápido en casa) ---
   | "admin" // papeleo, correos, trámites: hacer contacto sin terminar
   | "communication" // mensajes, llamadas, responder lo pendiente
